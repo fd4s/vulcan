@@ -3,7 +3,7 @@ scala:
   - 2.11.12
   - 2.12.8
 jdk:
-  - openjdk11
+  - oraclejdk8
 cache:
   directories:
     - $HOME/.ivy2/cache
