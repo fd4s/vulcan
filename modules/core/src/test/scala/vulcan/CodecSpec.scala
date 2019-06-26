@@ -1056,7 +1056,11 @@ final class CodecSpec extends BaseSpec {
         }
 
         it("should encode as long") {
-          val value = Instant.now()
+          val value = {
+            val instant = Instant.now()
+            instant.minusNanos(instant.getNano().toLong)
+          }
+
           assertEncodeIs[Instant](
             value,
             Right(java.lang.Long.valueOf(value.toEpochMilli()))
@@ -1101,7 +1105,11 @@ final class CodecSpec extends BaseSpec {
         }
 
         it("should decode as Instant") {
-          val value = Instant.now()
+          val value = {
+            val instant = Instant.now()
+            instant.minusNanos(instant.getNano().toLong)
+          }
+
           assertDecodeIs[Instant](
             unsafeEncode(value),
             Right(value)
