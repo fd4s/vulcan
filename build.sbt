@@ -68,7 +68,7 @@ lazy val mdocSettings = Seq(
   unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core),
   target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
   cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
-  docusaurusCreateSite := docusaurusCreateSite.dependsOn(unidoc in Compile).value,
+  docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(unidoc in Compile).value,
   // format: off
   scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
     "-doc-source-url", s"https://github.com/ovotech/vulcan/tree/v${(latestVersion in ThisBuild).value}€{FILE_PATH}.scala",
