@@ -1118,6 +1118,56 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("imapError") {
+      sealed abstract class PosInt(val value: Int) {
+        override def equals(any: Any): Boolean =
+          any.isInstanceOf[PosInt] && any.asInstanceOf[PosInt].value == value
+      }
+
+      object PosInt {
+        def apply(value: Int): Either[AvroError, PosInt] =
+          if (value > 0) Right(new PosInt(value) {})
+          else Left(AvroError(s"$value is not positive"))
+
+        implicit val posIntCodec: Codec[PosInt] =
+          Codec[Int].imapError(apply)(_.value)
+      }
+
+      describe("schema") {
+        it("should use the schema of the underlying codec") {
+          assertSchemaIs[PosInt] {
+            """"int""""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode using the underlying codec") {
+          assertEncodeIs[PosInt](
+            PosInt(1).right.get,
+            Right(unsafeEncode(1))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should succeed for valid values") {
+          assertDecodeIs[PosInt](
+            unsafeEncode(1),
+            PosInt(1)
+          )
+        }
+
+        it("should error for invalid values") {
+          assertDecodeError[PosInt](
+            unsafeEncode(0),
+            unsafeSchema[PosInt],
+            "0 is not positive"
+          )
+        }
+      }
+    }
+
     describe("int") {
       describe("schema") {
         it("should be encoded as int") {
