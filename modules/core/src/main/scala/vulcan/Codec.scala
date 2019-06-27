@@ -1349,26 +1349,30 @@ final object Codec {
                   schema =>
                     field.default
                       .traverse(field.codec.encode(_, schema))
-                      .map { default =>
-                        List {
-                          val schemaField =
-                            new Schema.Field(
-                              field.name,
-                              schema,
-                              field.doc.orNull,
-                              default.orNull,
-                              field.order.getOrElse(Schema.Field.Order.ASCENDING)
-                            )
+                      .map {
+                        default =>
+                          List {
+                            val schemaField =
+                              new Schema.Field(
+                                field.name,
+                                schema,
+                                field.doc.orNull,
+                                default.map {
+                                  case null  => Schema.Field.NULL_DEFAULT_VALUE
+                                  case other => other
+                                }.orNull,
+                                field.order.getOrElse(Schema.Field.Order.ASCENDING)
+                              )
 
-                          field.aliases.foreach(schemaField.addAlias)
+                            field.aliases.foreach(schemaField.addAlias)
 
-                          field.props.foreach {
-                            case (name, value) =>
-                              schemaField.addProp(name, value)
+                            field.props.foreach {
+                              case (name, value) =>
+                                schemaField.addProp(name, value)
+                            }
+
+                            schemaField
                           }
-
-                          schemaField
-                        }
                       }
                 }
             }

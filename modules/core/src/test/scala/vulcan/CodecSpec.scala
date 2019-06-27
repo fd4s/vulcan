@@ -1837,6 +1837,19 @@ final class CodecSpec extends BaseSpec {
               """org.apache.avro.AvroTypeException: Invalid default for field value: "invalid" not a "int""""
           }
         }
+
+        it("should support None as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(None)).map(Test(_))
+            }
+
+          assertSchemaIs[Test] {
+            """{"type":"record","name":"Test","fields":[{"name":"value","type":["null","int"],"default":null}]}"""
+          }
+        }
       }
 
       describe("encode") {
