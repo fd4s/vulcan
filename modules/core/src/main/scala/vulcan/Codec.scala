@@ -60,6 +60,17 @@ sealed abstract class Codec[A] {
       (b, schema) => encode(g(b), schema),
       (a, schema) => decode(a, schema).map(f)
     )
+
+  /**
+    * Like [[imap]], but where the mapping to `B` might
+    * be unsuccessful.
+    */
+  final def imapError[B](f: A => Either[AvroError, B])(g: B => A): Codec[B] =
+    Codec.instance(
+      schema,
+      (b, schema) => encode(g(b), schema),
+      (a, schema) => decode(a, schema).flatMap(f)
+    )
 }
 
 final object Codec {
