@@ -5,6 +5,9 @@
     "previous": "Previous",
     "tagline": "Functional Avro for Scala",
     "docs": {
+      "codecs": {
+        "title": "Codecs"
+      },
       "overview": {
         "title": "Overview"
       }
