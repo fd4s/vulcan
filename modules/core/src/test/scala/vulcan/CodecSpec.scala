@@ -296,6 +296,19 @@ final class CodecSpec extends BaseSpec {
             """org.apache.avro.AvroRuntimeException: Nested union: [["null","string"]]"""
           }
         }
+
+        it("should fail if CNil schema is not union") {
+          implicit val _: Codec[CNil] =
+            Codec.instance(
+              Right(SchemaBuilder.builder().nullType()),
+              (_, _) => Left(AvroError("encode")),
+              (_, _) => Left(AvroError("decode"))
+            )
+
+          assertSchemaError[Int :+: String :+: CNil] {
+            """Unexpected schema type NULL in Coproduct"""
+          }
+        }
       }
 
       describe("encode") {
@@ -353,7 +366,7 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should encode first in coproduct using first type") {
+        it("should decode first in coproduct using first type") {
           type A = Int :+: String :+: CNil
           assertDecodeIs[A](
             unsafeEncode(Coproduct[A](123)),
@@ -361,11 +374,56 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should encode second in coproduct using second type") {
+        it("should decode second in coproduct using second type") {
           type A = Int :+: String :+: CNil
           assertDecodeIs[A](
             unsafeEncode(Coproduct[A]("abc")),
             Right(Coproduct[A]("abc"))
+          )
+        }
+
+        it("should decode coproduct with records") {
+          type A = CaseClassField :+: CaseClassTwoFields :+: Int :+: CNil
+          assertDecodeIs[A](
+            unsafeEncode(Coproduct[A](CaseClassField(10))),
+            Right(Coproduct[A](CaseClassField(10)))
+          )
+
+          assertDecodeIs[A](
+            unsafeEncode(Coproduct[A](CaseClassTwoFields("name", 10))),
+            Right(Coproduct[A](CaseClassTwoFields("name", 10)))
+          )
+
+          assertDecodeIs[A](
+            unsafeEncode(Coproduct[A](123)),
+            Right(Coproduct[A](123))
+          )
+        }
+
+        it("should error if no schema in union with container name") {
+          type A = Int :+: CaseClassField :+: CNil
+          assertDecodeError[A](
+            unsafeEncode(Coproduct[A](CaseClassField(10))),
+            unsafeSchema[Int :+: String :+: CNil],
+            "Missing schema vulcan.examples.CaseClassField in union for type Coproduct"
+          )
+        }
+
+        it("should error when not enough union schemas") {
+          type A = Int :+: String :+: CNil
+          assertDecodeError[A](
+            unsafeEncode(Coproduct[A]("abc")),
+            Schema.createUnion(),
+            "Not enough types in union schema while decoding type Coproduct"
+          )
+        }
+
+        it("should error when not enough union schemas when decoding record") {
+          type A = Int :+: CaseClassField :+: CNil
+          assertDecodeError[A](
+            unsafeEncode(Coproduct[A](CaseClassField(10))),
+            unsafeSchema[CNil],
+            "Not enough types in union schema while decoding type Coproduct"
           )
         }
       }
@@ -2283,7 +2341,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[Unit](
             unsafeEncode(10),
             unsafeSchema[Unit],
-            "Got unexpected type java.lang.Integer while decoding Unit, expected type Null"
+            "Got unexpected type java.lang.Integer while decoding Unit, expected type null"
           )
         }
 
