@@ -369,16 +369,15 @@ final object Codec {
     Codec.instance(
       AvroError.catchNonFatal {
         headCodec.schema.flatMap { first =>
-          tailCodec.value.schema.map { rest =>
-            val schemas =
-              first :: {
-                if (rest.getType() == Schema.Type.UNION)
-                  rest.getTypes().asScala.toList
-                else
-                  Nil
-              }
+          tailCodec.value.schema.flatMap { rest =>
+            rest.getType() match {
+              case Schema.Type.UNION =>
+                val schemas = first :: rest.getTypes().asScala.toList
+                Right(Schema.createUnion(schemas.asJava))
 
-            Schema.createUnion(schemas.asJava)
+              case schemaType =>
+                Left(AvroError(s"Unexpected schema type $schemaType in Coproduct"))
+            }
           }
         }
       },
@@ -410,20 +409,51 @@ final object Codec {
       (value, schema) => {
         schema.getType() match {
           case Schema.Type.UNION =>
-            schema.getTypes().asScala.toList match {
-              case head :: tail =>
-                headCodec.decode(value, head) match {
-                  case Right(decoded) =>
-                    Right(Inl(decoded))
+            value match {
+              case container: GenericContainer =>
+                headCodec.schema.flatMap {
+                  headSchema =>
+                    val name = container.getSchema().getFullName()
+                    if (headSchema.getFullName() == name) {
+                      val subschema =
+                        schema
+                          .getTypes()
+                          .asScala
+                          .find(_.getFullName() == name)
+                          .toRight(AvroError.decodeMissingUnionSchema(name, "Coproduct"))
 
-                  case Left(_) =>
-                    tailCodec.value
-                      .decode(value, Schema.createUnion(tail.asJava))
-                      .map(Inr(_))
+                      subschema
+                        .flatMap(headCodec.decode(value, _))
+                        .map(Inl(_))
+                    } else {
+                      schema.getTypes().asScala.toList match {
+                        case _ :: tail =>
+                          tailCodec.value
+                            .decode(value, Schema.createUnion(tail.asJava))
+                            .map(Inr(_))
+
+                        case Nil =>
+                          Left(AvroError.decodeNotEnoughUnionSchemas("Coproduct"))
+                      }
+                    }
                 }
 
-              case Nil =>
-                Left(AvroError.decodeNotEnoughUnionSchemas("Coproduct"))
+              case other =>
+                schema.getTypes().asScala.toList match {
+                  case head :: tail =>
+                    headCodec.decode(other, head) match {
+                      case Right(decoded) =>
+                        Right(Inl(decoded))
+
+                      case Left(_) =>
+                        tailCodec.value
+                          .decode(other, Schema.createUnion(tail.asJava))
+                          .map(Inr(_))
+                    }
+
+                  case Nil =>
+                    Left(AvroError.decodeNotEnoughUnionSchemas("Coproduct"))
+                }
             }
 
           case schemaType =>
@@ -650,7 +680,19 @@ final object Codec {
                 }
 
               case other =>
-                Left(AvroError.decodeUnexpectedType(other, "GenericContainer", typeName))
+                val schemaTypes = schema.getTypes().asScala.toList
+                val subtypes = sealedTrait.subtypes.toList
+
+                subtypes
+                  .zip(schemaTypes)
+                  .collectFirstSome {
+                    case (subtype, schema) =>
+                      val decoded = subtype.typeclass.decode(other, schema)
+                      if (decoded.isRight) Some(decoded) else None
+                  }
+                  .getOrElse {
+                    Left(AvroError.decodeUnexpectedType(other, "GenericContainer", typeName))
+                  }
             }
 
           case schemaType =>
@@ -780,7 +822,6 @@ final object Codec {
 
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "GenericEnumSymbol", typeName))
-
             }
 
           case schemaType =>
@@ -1378,7 +1419,7 @@ final object Codec {
       AvroError.catchNonFatal {
         val fields =
           free.analyze {
-            λ[Field[A, ?] ~> λ[a => Either[AvroError, List[Schema.Field]]]] {
+            λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]] {
               field =>
                 field.codec.schema.flatMap {
                   schema =>
@@ -1386,7 +1427,7 @@ final object Codec {
                       .traverse(field.codec.encode(_, schema))
                       .map {
                         default =>
-                          List {
+                          Chain.one {
                             val schemaField =
                               new Schema.Field(
                                 field.name,
@@ -1420,7 +1461,7 @@ final object Codec {
               doc.orNull,
               namespace.orNull,
               false,
-              fields.asJava
+              fields.toList.asJava
             )
 
           aliases.foreach(record.addAlias)
@@ -1442,13 +1483,13 @@ final object Codec {
 
               val fields =
                 free.analyze {
-                  λ[Field[A, ?] ~> λ[a => Either[AvroError, List[(Any, Int)]]]] { field =>
+                  λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[(Any, Int)]]]] { field =>
                     schemaFields
                       .collectFirst {
                         case schemaField if schemaField.name == field.name =>
                           field.codec
                             .encode(field.access(a), schemaField.schema)
-                            .map(result => List((result, schemaField.pos())))
+                            .map(result => Chain.one((result, schemaField.pos())))
                       }
                       .getOrElse(Left(AvroError.encodeMissingRecordField(field.name, typeName)))
                   }
@@ -1456,8 +1497,8 @@ final object Codec {
 
               fields.map { values =>
                 val record = new GenericData.Record(schema)
-                values.foreach {
-                  case (value, pos) =>
+                values.foldLeft(()) {
+                  case ((), (value, pos)) =>
                     record.put(pos, value)
                 }
 
@@ -1486,19 +1527,16 @@ final object Codec {
                   val recordFields = recordSchema.getFields()
 
                   free.foldMap {
-                    λ[Field[A, ?] ~> Either[AvroError, ?]] {
-                      field =>
-                        val schemaField = recordSchema.getField(field.name)
-                        if (schemaField != null) {
-                          val value = record.get(recordFields.indexOf(schemaField))
-                          field.codec.decode(value, schemaField.schema())
-                        } else {
-                          field.default match {
-                            case Some(value) => Right(value)
-                            case None =>
-                              Left(AvroError.decodeMissingRecordField(field.name, typeName))
-                          }
+                    λ[Field[A, ?] ~> Either[AvroError, ?]] { field =>
+                      val schemaField = recordSchema.getField(field.name)
+                      if (schemaField != null) {
+                        val value = record.get(recordFields.indexOf(schemaField))
+                        field.codec.decode(value, schemaField.schema())
+                      } else {
+                        field.default.toRight {
+                          AvroError.decodeMissingRecordField(field.name, typeName)
                         }
+                      }
                     }
                   }
                 } else
@@ -1676,7 +1714,7 @@ final object Codec {
         schema.getType() match {
           case Schema.Type.NULL =>
             if (value == null) Right(())
-            else Left(AvroError.decodeUnexpectedType(value, "Null", "Unit"))
+            else Left(AvroError.decodeUnexpectedType(value, "null", "Unit"))
 
           case schemaType =>
             Left {

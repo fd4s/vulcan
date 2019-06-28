@@ -88,6 +88,7 @@ final class RoundtripSpec extends BaseSpec {
 
   describe("derived.sealedTrait") {
     it("SealedTraitCaseClassAvroNamespace") { roundtrip[SealedTraitCaseClassAvroNamespace] }
+    it("SealedTraitCaseClassCustom") { roundtrip[SealedTraitCaseClassCustom] }
   }
 
   describe("derived.enum") {
