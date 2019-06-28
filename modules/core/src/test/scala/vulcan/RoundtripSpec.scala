@@ -82,15 +82,16 @@ final class RoundtripSpec extends BaseSpec {
   }
 
   describe("derived.caseClass") {
-    it("roundtrip") {
-      roundtrip[CaseClassField]
-    }
+    it("CaseClassField") { roundtrip[CaseClassField] }
+    it("CaseClassAvroNamespace") { roundtrip[CaseClassAvroNamespace] }
   }
 
   describe("derived.sealedTrait") {
-    it("roundtrip") {
-      roundtrip[SealedTraitEnum]
-    }
+    it("SealedTraitCaseClassAvroNamespace") { roundtrip[SealedTraitCaseClassAvroNamespace] }
+  }
+
+  describe("derived.enum") {
+    it("SealedTraitEnumDerived") { roundtrip[SealedTraitEnumDerived] }
   }
 
   describe("Double") { it("roundtrip") { roundtrip[Double] } }

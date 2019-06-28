@@ -802,6 +802,12 @@ final class CodecSpec extends BaseSpec {
             """{"type":"enum","name":"CaseClassAvroDoc","namespace":"vulcan.examples","doc":"documentation","symbols":["first"]}"""
           }
         }
+
+        it("should use namespace annotation") {
+          assertSchemaIs[SealedTraitEnumDerived] {
+            """{"type":"enum","name":"SealedTraitEnumDerived","namespace":"com.example","symbols":["first","second"]}"""
+          }
+        }
       }
     }
 

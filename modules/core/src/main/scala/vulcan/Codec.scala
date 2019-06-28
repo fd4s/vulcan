@@ -227,7 +227,14 @@ final object Codec {
     )
 
   final def combine[A](caseClass: CaseClass[Codec, A]): Codec[A] = {
-    val typeName = caseClass.typeName.full
+    val namespace =
+      caseClass.annotations
+        .collectFirst { case AvroNamespace(namespace) => namespace }
+        .getOrElse(caseClass.typeName.owner)
+
+    val typeName =
+      s"$namespace.${caseClass.typeName.short}"
+
     Codec.instance(
       AvroError.catchNonFatal {
         if (caseClass.isValueClass) {
@@ -252,7 +259,7 @@ final object Codec {
               caseClass.annotations.collectFirst {
                 case AvroDoc(doc) => doc
               }.orNull,
-              caseClass.typeName.owner,
+              namespace,
               false,
               fields.asJava
             )
@@ -543,13 +550,26 @@ final object Codec {
     encode: A => String,
     decode: String => Either[AvroError, A]
   )(implicit tag: WeakTypeTag[A]): Codec[A] = {
-    val name = tag.tpe.typeSymbol.name.decodedName.toString
-    val namespace = tag.tpe.typeSymbol.fullName.dropRight(name.length + 1)
-    val doc = tag.tpe.typeSymbol.annotations.collectFirst {
-      case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroDoc" =>
-        val doc = annotation.tree.children.last.toString
-        doc.substring(1, doc.length - 1)
-    }
+    val name =
+      tag.tpe.typeSymbol.name.decodedName.toString
+
+    val namespace =
+      tag.tpe.typeSymbol.annotations
+        .collectFirst {
+          case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroNamespace" =>
+            val namespace = annotation.tree.children.last.toString
+            namespace.substring(1, namespace.length - 1)
+        }
+        .getOrElse {
+          tag.tpe.typeSymbol.fullName.dropRight(name.length + 1)
+        }
+
+    val doc =
+      tag.tpe.typeSymbol.annotations.collectFirst {
+        case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroDoc" =>
+          val doc = annotation.tree.children.last.toString
+          doc.substring(1, doc.length - 1)
+      }
 
     Codec.enum(
       name = name,
@@ -574,19 +594,23 @@ final object Codec {
       (a, schema) => {
         schema.getType() match {
           case Schema.Type.UNION =>
-            sealedTrait.dispatch(a) { subtype =>
-              val subtypeName =
-                subtype.typeName.full
+            sealedTrait.dispatch(a) {
+              subtype =>
+                subtype.typeclass.schema.flatMap {
+                  subtypeSchema =>
+                    val subtypeName =
+                      subtypeSchema.getFullName()
 
-              val subschema =
-                schema.getTypes.asScala
-                  .collectFirst {
-                    case schema if schema.getFullName() == subtypeName =>
-                      Right(schema)
-                  }
-                  .getOrElse(Left(AvroError.encodeMissingUnionSchema(subtypeName, typeName)))
+                    val subschema =
+                      schema.getTypes.asScala
+                        .collectFirst {
+                          case schema if schema.getFullName() == subtypeName =>
+                            Right(schema)
+                        }
+                        .getOrElse(Left(AvroError.encodeMissingUnionSchema(subtypeName, typeName)))
 
-              subschema.flatMap(subtype.typeclass.encode(subtype.cast(a), _))
+                    subschema.flatMap(subtype.typeclass.encode(subtype.cast(a), _))
+                }
             }
 
           case schemaType =>
@@ -616,7 +640,7 @@ final object Codec {
 
                 def subtype =
                   sealedTrait.subtypes
-                    .find(_.typeName.full == name)
+                    .find(_.typeclass.schema.exists(_.getFullName() == name))
                     .toRight(AvroError.decodeMissingUnionSubtype(name, typeName))
 
                 subschema.flatMap { subschema =>
