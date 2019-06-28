@@ -30,7 +30,7 @@ object Main {
             if (minorVersions.size <= 2) minorVersions.mkString(" and ")
             else minorVersions.init.mkString(", ") ++ " and " ++ minorVersions.last
           },
-          "API_BASE_URL" -> s"https://oss.sonatype.org/service/local/repositories/releases/archive/com/ovoenergy/vulcan_$scalaMinorVersion/$latestVersion/vulcan_$scalaMinorVersion-$latestVersion-javadoc.jar/!/vulcan",
+          "API_BASE_URL" -> s"/vulcan/api/vulcan",
           "AVRO_VERSION" -> avroVersion,
           "CATS_VERSION" -> catsVersion,
           "MAGNOLIA_VERSION" -> magnoliaVersion,

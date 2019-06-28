@@ -1,7 +1,5 @@
 {
   "docs": {
-    "Documentation": [
-      "overview"
-    ]
+    "Documentation": ["overview", "codecs"]
   }
 }
