@@ -1,0 +1,282 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Codecs · Vulcan</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;[&lt;code&gt;Codec&lt;/code&gt;][codec] is the central concept in the library. [&lt;code&gt;Codec&lt;/code&gt;][codec]s represent an Avro &lt;code&gt;schema&lt;/code&gt;, together with an &lt;code&gt;encode&lt;/code&gt; and &lt;code&gt;decode&lt;/code&gt; function for converting between Scala types and types recognized by the Apache Avro Java library. The library defines default [&lt;code&gt;Codec&lt;/code&gt;][codec]s for many standard library types. For example, we can check what the default &lt;code&gt;Option[Instant]&lt;/code&gt; encoding is by asking for a [&lt;code&gt;Codec&lt;/code&gt;][codec] instance.&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Codecs · Vulcan"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ovotech.github.io/vulcan/vulcan/"/><meta property="og:description" content="&lt;p&gt;[&lt;code&gt;Codec&lt;/code&gt;][codec] is the central concept in the library. [&lt;code&gt;Codec&lt;/code&gt;][codec]s represent an Avro &lt;code&gt;schema&lt;/code&gt;, together with an &lt;code&gt;encode&lt;/code&gt; and &lt;code&gt;decode&lt;/code&gt; function for converting between Scala types and types recognized by the Apache Avro Java library. The library defines default [&lt;code&gt;Codec&lt;/code&gt;][codec]s for many standard library types. For example, we can check what the default &lt;code&gt;Option[Instant]&lt;/code&gt; encoding is by asking for a [&lt;code&gt;Codec&lt;/code&gt;][codec] instance.&lt;/p&gt;
+"/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/vulcan/img/favicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script src="/vulcan/js/scrollSpy.js"></script><link rel="stylesheet" href="/vulcan/css/main.css"/><script src="/vulcan/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/vulcan/"><img class="logo" src="/vulcan/img/vulcan.white.svg" alt="Vulcan"/><h2 class="headerTitleWithLogo">Vulcan</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/vulcan/api/vulcan/index.html" target="_self">API Docs</a></li><li class="siteNavGroupActive"><a href="/vulcan/docs/overview" target="_self">Documentation</a></li><li class=""><a href="https://github.com/ovotech/vulcan" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Documentation</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Documentation</h3><ul class=""><li class="navListItem"><a class="navItem" href="/vulcan/docs/overview">Overview</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/vulcan/docs/codecs">Codecs</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Codecs</h1></header><article><div><span><p><a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> is the central concept in the library. <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s represent an Avro <code>schema</code>, together with an <code>encode</code> and <code>decode</code> function for converting between Scala types and types recognized by the Apache Avro Java library. The library defines default <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for many standard library types. For example, we can check what the default <code>Option[Instant]</code> encoding is by asking for a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> instance.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> java.time.<span class="hljs-type">Instant</span>
+<span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">Codec</span>
+
+<span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Instant</span>]]
+<span class="hljs-comment">// res0: Codec[Option[Instant]] = Codec([ "null", {</span>
+<span class="hljs-comment">//   "type" : "long",</span>
+<span class="hljs-comment">//   "logicalType" : "timestamp-millis"</span>
+<span class="hljs-comment">// } ])</span>
+</code></pre>
+<p>In some cases, it's not possible to generate Avro schemas. This is why <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> <code>schema</code>s are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. For example, Avro doesn't support nested unions, so what would happen when we try to ask for a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> for <code>Option[Option[Instant]]</code>?</p>
+<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Instant</span>]]]
+<span class="hljs-comment">// res1: Codec[Option[Option[Instant]]] = AvroError(org.apache.avro.AvroRuntimeException: Nested union: ["null",["null",{"type":"long","logicalType":"timestamp-millis"}]])</span>
+</code></pre>
+<p>Encoding and decoding with a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> might also be unsuccessful, so results are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. Encoding and decoding accepts a value and Avro <code>Schema</code>, and attempts encoding or decoding with respect to the schema. What happens if we encode <code>Int</code>s using a <code>Boolean</code> schema?</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> org.apache.avro.<span class="hljs-type">SchemaBuilder</span>
+
+<span class="hljs-type">Codec</span>[<span class="hljs-type">Int</span>].encode(<span class="hljs-number">10</span>, <span class="hljs-type">SchemaBuilder</span>.builder.booleanType)
+<span class="hljs-comment">// res2: Either[vulcan.AvroError, Any] = Left(</span>
+<span class="hljs-comment">//   AvroError(Got unexpected schema type BOOLEAN while encoding Int, expected schema type INT)</span>
+<span class="hljs-comment">// )</span>
+</code></pre>
+<p>Since the Apache Avro library encodes and decodes using <code>Object</code>, <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s encode and decode between Scala types and <code>Any</code>. This means type safety is lost and tests should be used to ensure <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s work as intended. This becomes important when we define <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s from scratch. Note <code>Schemas</code>s are treated as effectively immutable, even though they're in fact mutable.</p>
+<p><a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s form <a href="https://typelevel.org/cats/typeclasses/invariant.html">invariant functors</a>, which means you can easily use an existing <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> to encode and decode a different type, by mapping back-and-forth between the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>'s existing type and the new type. This becomes useful when dealing with newtypes, like <code>InstallationTime</code> in the following example.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InstallationTime</span>(<span class="hljs-params">value: <span class="hljs-type">Instant</span></span>)</span>
+
+<span class="hljs-type">Codec</span>[<span class="hljs-type">Instant</span>].imap(<span class="hljs-type">InstallationTime</span>(_))(_.value)
+<span class="hljs-comment">// res3: Codec[InstallationTime] = Codec({</span>
+<span class="hljs-comment">//   "type" : "long",</span>
+<span class="hljs-comment">//   "logicalType" : "timestamp-millis"</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<p>When we have a newtype where we ensure values are valid, we can use <code>imapError</code> instead.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">AvroError</span>
+
+<span class="hljs-keyword">sealed</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SerialNumber</span>(<span class="hljs-params">value: <span class="hljs-type">String</span></span>)</span>
+
+<span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">SerialNumber</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">apply</span></span>(value: <span class="hljs-type">String</span>): <span class="hljs-type">Either</span>[<span class="hljs-type">AvroError</span>, <span class="hljs-type">SerialNumber</span>] =
+    <span class="hljs-keyword">if</span>(value.length == <span class="hljs-number">12</span> &amp;&amp; value.forall(_.isDigit))
+      <span class="hljs-type">Right</span>(<span class="hljs-keyword">new</span> <span class="hljs-type">SerialNumber</span>(value) {})
+    <span class="hljs-keyword">else</span> <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$value</span> is not a serial number"</span>))
+}
+
+<span class="hljs-type">Codec</span>[<span class="hljs-type">String</span>].imapError(<span class="hljs-type">SerialNumber</span>(_))(_.value)
+<span class="hljs-comment">// res4: Codec[SerialNumber] = Codec("string")</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="decimals"></a><a href="#decimals" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Decimals</h2>
+<p>Avro decimals closely correspond to <code>BigDecimal</code>s with a fixed precision and scale.</p>
+<p><code>Codec.decimal</code> can be used to create a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> for <code>BigDecimal</code> given the precision and scale. When encoding, the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> checks the precision and scale of the <code>BigDecimal</code> to make sure it matches the precision and scale defined in the schema. When decoding, we check the precision is not exceeded.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.decimal(precision = <span class="hljs-number">10</span>, scale = <span class="hljs-number">2</span>)
+<span class="hljs-comment">// res5: Codec[BigDecimal] = Codec({</span>
+<span class="hljs-comment">//   "type" : "bytes",</span>
+<span class="hljs-comment">//   "logicalType" : "decimal",</span>
+<span class="hljs-comment">//   "precision" : 10,</span>
+<span class="hljs-comment">//   "scale" : 2</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="enumerations"></a><a href="#enumerations" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Enumerations</h2>
+<p>Avro enumerations closely correspond to <code>sealed trait</code>s with <code>case object</code>s.</p>
+<p><code>Codec.deriveEnum</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for enumeration types.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.{<span class="hljs-type">AvroDoc</span>, <span class="hljs-type">AvroNamespace</span>}
+
+<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"A selection of different fruits"</span>)
+<span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">trait</span> <span class="hljs-title">Fruit</span></span>
+<span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Apple</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
+<span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Banana</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
+<span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Cherry</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
+
+<span class="hljs-type">Codec</span>.deriveEnum[<span class="hljs-type">Fruit</span>](
+  symbols = <span class="hljs-type">List</span>(<span class="hljs-string">"apple"</span>, <span class="hljs-string">"banana"</span>, <span class="hljs-string">"cherry"</span>),
+  encode = {
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Apple</span>  =&gt; <span class="hljs-string">"apple"</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Banana</span> =&gt; <span class="hljs-string">"banana"</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Cherry</span> =&gt; <span class="hljs-string">"cherry"</span>
+  },
+  decode = {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"apple"</span>  =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Apple</span>)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"banana"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Banana</span>)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"cherry"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Cherry</span>)
+    <span class="hljs-keyword">case</span> other    =&gt; <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$other</span> is not a Fruit"</span>))
+  }
+)
+<span class="hljs-comment">// res6: Codec[Fruit] = Codec({</span>
+<span class="hljs-comment">//   "type" : "enum",</span>
+<span class="hljs-comment">//   "name" : "Fruit",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "A selection of different fruits",</span>
+<span class="hljs-comment">//   "symbols" : [ "apple", "banana", "cherry" ]</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<p>Annotations like <code>@AvroDoc</code> can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like <a href="https://github.com/lloydmeta/enumeratum">Enumeratum</a> for enumerations, in which case we can use <code>Codec.deriveEnum</code> to easily derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s.</p>
+<p>If we need more precise control of how enumerations are encoded, we can use <code>Codec.enum</code>.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.enum[<span class="hljs-type">Fruit</span>](
+  name = <span class="hljs-string">"Fruit"</span>,
+  namespace = <span class="hljs-type">Some</span>(<span class="hljs-string">"com.example"</span>),
+  doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"A selection of different fruits"</span>),
+  symbols = <span class="hljs-type">List</span>(<span class="hljs-string">"apple"</span>, <span class="hljs-string">"banana"</span>, <span class="hljs-string">"cherry"</span>),
+  encode = {
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Apple</span>  =&gt; <span class="hljs-string">"apple"</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Banana</span> =&gt; <span class="hljs-string">"banana"</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Cherry</span> =&gt; <span class="hljs-string">"cherry"</span>
+  },
+  decode = {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"apple"</span>  =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Apple</span>)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"banana"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Banana</span>)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"cherry"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Cherry</span>)
+    <span class="hljs-keyword">case</span> other    =&gt; <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$other</span> is not a Fruit"</span>))
+  },
+  <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">Banana</span>)
+)
+<span class="hljs-comment">// res7: Codec[Fruit] = Codec({</span>
+<span class="hljs-comment">//   "type" : "enum",</span>
+<span class="hljs-comment">//   "name" : "Fruit",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "A selection of different fruits",</span>
+<span class="hljs-comment">//   "symbols" : [ "apple", "banana", "cherry" ],</span>
+<span class="hljs-comment">//   "default" : "banana"</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="records"></a><a href="#records" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Records</h2>
+<p>Avro records closely correspond to <code>case class</code>es.</p>
+<p><code>Codec.derive</code> can be used to automatically derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for <code>case class</code>es.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"Person with a first name, last name, and optional age"</span>)
+<span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span>(<span class="hljs-params">firstName: <span class="hljs-type">String</span>, lastName: <span class="hljs-type">String</span>, age: <span class="hljs-type">Option</span>[<span class="hljs-type">Int</span>]</span>)</span>
+
+<span class="hljs-type">Codec</span>.derive[<span class="hljs-type">Person</span>]
+<span class="hljs-comment">// res8: Codec.Typeclass[Person] = Codec({</span>
+<span class="hljs-comment">//   "type" : "record",</span>
+<span class="hljs-comment">//   "name" : "Person",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "Person with a first name, last name, and optional age",</span>
+<span class="hljs-comment">//   "fields" : [ {</span>
+<span class="hljs-comment">//     "name" : "firstName",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   }, {</span>
+<span class="hljs-comment">//     "name" : "lastName",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   }, {</span>
+<span class="hljs-comment">//     "name" : "age",</span>
+<span class="hljs-comment">//     "type" : [ "null", "int" ]</span>
+<span class="hljs-comment">//   } ]</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<p>Annotations like <code>@AvroDoc</code> can be used to customize the derivation. If we need more precise control over how records are encoded, e.g. in order to specify default field values, we can instead use <code>Codec.record</code> and explicitly specify the encoding.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.implicits._
+
+<span class="hljs-type">Codec</span>.record[<span class="hljs-type">Person</span>](
+  name = <span class="hljs-string">"Person"</span>,
+  namespace = <span class="hljs-type">Some</span>(<span class="hljs-string">"com.example"</span>),
+  doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"Person with a full name and optional age"</span>)
+) { field =&gt;
+  field(<span class="hljs-string">"fullName"</span>, p =&gt; <span class="hljs-string">s"<span class="hljs-subst">${p.firstName}</span> <span class="hljs-subst">${p.lastName}</span>"</span>) *&gt;
+  (
+    field(<span class="hljs-string">"firstName"</span>, _.firstName),
+    field(<span class="hljs-string">"lastName"</span>, _.lastName, doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"the last name"</span>)),
+    field(<span class="hljs-string">"age"</span>, _.age, <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">None</span>))
+  ).mapN(<span class="hljs-type">Person</span>(_, _, _))
+}
+<span class="hljs-comment">// res9: Codec[Person] = Codec({</span>
+<span class="hljs-comment">//   "type" : "record",</span>
+<span class="hljs-comment">//   "name" : "Person",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "Person with a full name and optional age",</span>
+<span class="hljs-comment">//   "fields" : [ {</span>
+<span class="hljs-comment">//     "name" : "fullName",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   }, {</span>
+<span class="hljs-comment">//     "name" : "firstName",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   }, {</span>
+<span class="hljs-comment">//     "name" : "lastName",</span>
+<span class="hljs-comment">//     "type" : "string",</span>
+<span class="hljs-comment">//     "doc" : "the last name"</span>
+<span class="hljs-comment">//   }, {</span>
+<span class="hljs-comment">//     "name" : "age",</span>
+<span class="hljs-comment">//     "type" : [ "null", "int" ],</span>
+<span class="hljs-comment">//     "default" : null</span>
+<span class="hljs-comment">//   } ]</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="unions"></a><a href="#unions" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Unions</h2>
+<p>Avro unions closely correspond to <code>sealed trait</code>s.</p>
+<p><code>Codec.derive</code> can be used to automatically derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for <code>sealed trait</code>s.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">trait</span> <span class="hljs-title">FirstOrSecond</span></span>
+
+<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">First</span>(<span class="hljs-params">value: <span class="hljs-type">Int</span></span>) <span class="hljs-keyword">extends</span> <span class="hljs-title">FirstOrSecond</span></span>
+
+<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Second</span>(<span class="hljs-params">value: <span class="hljs-type">String</span></span>) <span class="hljs-keyword">extends</span> <span class="hljs-title">FirstOrSecond</span></span>
+
+<span class="hljs-type">Codec</span>.derive[<span class="hljs-type">FirstOrSecond</span>]
+<span class="hljs-comment">// res10: Codec.Typeclass[FirstOrSecond] = Codec([ {</span>
+<span class="hljs-comment">//   "type" : "record",</span>
+<span class="hljs-comment">//   "name" : "First",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "fields" : [ {</span>
+<span class="hljs-comment">//     "name" : "value",</span>
+<span class="hljs-comment">//     "type" : "int"</span>
+<span class="hljs-comment">//   } ]</span>
+<span class="hljs-comment">// }, {</span>
+<span class="hljs-comment">//   "type" : "record",</span>
+<span class="hljs-comment">//   "name" : "Second",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "fields" : [ {</span>
+<span class="hljs-comment">//     "name" : "value",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   } ]</span>
+<span class="hljs-comment">// } ])</span>
+</code></pre>
+<p>Shapeless <code>Coproduct</code>s are also encoded as unions.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> shapeless.{:+:, <span class="hljs-type">CNil</span>}
+
+<span class="hljs-type">Codec</span>[<span class="hljs-type">Int</span> :+: <span class="hljs-type">String</span> :+: <span class="hljs-type">CNil</span>]
+<span class="hljs-comment">// res11: Codec[Int :+: String :+: CNil] = Codec([ "int", "string" ])</span>
+</code></pre>
+<p><code>Option</code>s are also encoded as unions.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Int</span>]]
+<span class="hljs-comment">// res12: Codec[Option[Int]] = Codec([ "null", "int" ])</span>
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/vulcan/docs/overview"><span class="arrow-prev">← </span><span>Overview</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#decimals">Decimals</a></li><li><a href="#enumerations">Enumerations</a></li><li><a href="#records">Records</a></li><li><a href="#unions">Unions</a></li></ul></nav></div><footer class="nav-footer" id="footer"><hr class="separator"/><section class="copyright">Copyright © 2019 OVO Energy Limited.<br/>Icon designed by <a href="https://www.flaticon.com/authors/kiranshastry" rel="noopener">Kiranshastry</a> from Flaticon.</section></footer></div></body></html>

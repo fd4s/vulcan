@@ -94,6 +94,10 @@
                         <a class="class" href="AvroError.html" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding."></a>
                         <a href="AvroError.html" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding.">AvroError</a>
                       </li><li class="current-entities indented1">
+                        <span class="separator"></span>
+                        <a class="class" href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas."></a>
+                        <a href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas.">AvroNamespace</a>
+                      </li><li class="current-entities indented1">
                         <a class="object" href="Codec$.html" title=""></a>
                         <a class="class" href="Codec.html" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema."></a>
                         <a href="Codec.html" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema.">Codec</a>
@@ -207,6 +211,31 @@ an Avro <code>Schema</code>, or while encoding or decoding.</p><div class="fullc
 an Avro <code>Schema</code>, or while encoding or decoding. A new
 instance can be created with <a href="AvroError$.html#apply(message:=&gt;String):vulcan.AvroError" class="extmbr" name="vulcan.AvroError#apply">AvroError#apply</a>. We
 can use <a href="AvroError.html#message:String" class="extmbr" name="vulcan.AvroError#message">AvroError#message</a> to fetch the message.
+</p></div></div>
+    </li><li name="vulcan.AvroNamespace" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="AvroNamespaceextendsAnnotationwithStaticAnnotation"></a><a id="AvroNamespace:AvroNamespace"></a>
+      <span class="permalink">
+      <a href="../vulcan/index.html#AvroNamespaceextendsAnnotationwithStaticAnnotation" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="Annotation which can be used to set the namespace in derived Avro Schemas." href="AvroNamespace.html"><span class="name">AvroNamespace</span></a><span class="result"> extends <span class="extype" name="scala.annotation.Annotation">Annotation</span> with <span class="extype" name="scala.annotation.StaticAnnotation">StaticAnnotation</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Annotation which can be used to set the namespace
+in derived Avro <code>Schema</code>s.</p><div class="fullcomment"><div class="comment cmt"><p>Annotation which can be used to set the namespace
+in derived Avro <code>Schema</code>s. The annotation can be
+used in the following situations.<br>
+<br>
+- Annotate a type for enum namespace when using
+  <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec#deriveEnum</a>.<br>
+- Annotate a <code>case class</code> for record namespace
+  when using <a href="Codec$.html#derive[A]:vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#derive">Codec#derive</a>.
 </p></div></div>
     </li><li name="vulcan.Codec" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="Codec[A]extendsAnyRef"></a><a id="Codec[A]:Codec[A]"></a>

@@ -94,6 +94,10 @@
                         <a class="class" href="AvroError.html" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding."></a>
                         <a href="AvroError.html" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding.">AvroError</a>
                       </li><li class="current-entities indented1">
+                        <span class="separator"></span>
+                        <a class="class" href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas."></a>
+                        <a href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas.">AvroNamespace</a>
+                      </li><li class="current-entities indented1">
                         <a class="object" href="Codec$.html" title=""></a>
                         <a class="class" href="" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema."></a>
                         <a href="" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema.">Codec</a>
@@ -130,7 +134,7 @@
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Describes encoding from a type <code>A</code> to Java Avro using <a href="#encode(a:A,schema:org.apache.avro.Schema):Either[vulcan.AvroError,Any]" class="extmbr" name="vulcan.Codec#encode">encode</a>,
 decoding from a Java Avro type to <code>A</code> using <a href="#decode(value:Any,schema:org.apache.avro.Schema):Either[vulcan.AvroError,A]" class="extmbr" name="vulcan.Codec#decode">decode</a>, and the
 Avro schema used in the process as <a href="#schema:Either[vulcan.AvroError,org.apache.avro.Schema]" class="extmbr" name="vulcan.Codec#schema">schema</a>.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.1.0/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.1.1/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -439,6 +443,23 @@ Avro schema used in the process as <a href="#schema:Either[vulcan.AvroError,org.
 decoding works by first decoding to <code>A</code> and then
 converting to <code>B</code>.
 </p></div></div>
+    </li><li name="vulcan.Codec#imapError" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="imapError[B](f:A=&gt;Either[vulcan.AvroError,B])(g:B=&gt;A):vulcan.Codec[B]"></a><a id="imapError[B]((A)⇒Either[AvroError,B])((B)⇒A):Codec[B]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec.html#imapError[B](f:A=&gt;Either[vulcan.AvroError,B])(g:B=&gt;A):vulcan.Codec[B]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">imapError</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="vulcan.Codec.A">A</span>) ⇒ <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="vulcan.Codec.imapError.B">B</span>]</span>)</span><span class="params">(<span name="g">g: (<span class="extype" name="vulcan.Codec.imapError.B">B</span>) ⇒ <span class="extype" name="vulcan.Codec.A">A</span></span>)</span><span class="result">: <a href="" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.imapError.B">B</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Like <a href="#imap[B](f:A=&gt;B)(g:B=&gt;A):vulcan.Codec[B]" class="extmbr" name="vulcan.Codec#imap">imap</a>, but where the mapping to <code>B</code> might
+be unsuccessful.</p>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
