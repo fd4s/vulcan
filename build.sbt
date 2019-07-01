@@ -167,7 +167,9 @@ lazy val mimaSettings = Seq(
   mimaBinaryIssueFilters ++= {
     import com.typesafe.tools.mima.core._
     // format: off
-    Seq()
+    Seq(
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("vulcan.AvroError.throwable")
+    )
     // format: on
   }
 )
