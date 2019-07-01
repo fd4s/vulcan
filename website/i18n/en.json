@@ -8,6 +8,9 @@
       "codecs": {
         "title": "Codecs"
       },
+      "modules": {
+        "title": "Modules"
+      },
       "overview": {
         "title": "Overview"
       }
