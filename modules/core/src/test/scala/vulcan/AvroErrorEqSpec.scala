@@ -5,7 +5,7 @@ import cats.tests.CatsSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 
-final class AvroErrorSpec extends CatsSuite {
+final class AvroErrorEqSpec extends CatsSuite {
   implicit val avroErrorArbitrary: Arbitrary[AvroError] =
     Arbitrary(arbitrary[String].map(AvroError(_)))
 

@@ -32,6 +32,9 @@ sealed abstract class AvroError {
 
   /** The error message. */
   def message: String
+
+  /** The error as a `Throwable`. */
+  def throwable: Throwable
 }
 
 final object AvroError {
@@ -40,6 +43,9 @@ final object AvroError {
   ) extends AvroError {
     override final def message: String =
       _message()
+
+    override final def throwable: Throwable =
+      AvroException(message)
 
     override final def toString: String =
       s"AvroError($message)"
