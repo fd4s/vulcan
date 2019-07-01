@@ -1,6 +1,6 @@
-const React = require('react');
+const React = require("react");
 
-const CompLibrary = require('../../core/CompLibrary.js');
+const CompLibrary = require("../../core/CompLibrary.js");
 
 const MarkdownBlock = CompLibrary.MarkdownBlock;
 const Container = CompLibrary.Container;
@@ -8,10 +8,10 @@ const GridBlock = CompLibrary.GridBlock;
 
 class HomeSplash extends React.Component {
   render() {
-    const {siteConfig, language = ''} = this.props;
-    const {baseUrl, docsUrl} = siteConfig;
-    const docsPart = `${docsUrl ? `${docsUrl}/` : ''}`;
-    const langPart = `${language ? `${language}/` : ''}`;
+    const { siteConfig, language = "" } = this.props;
+    const { baseUrl, docsUrl } = siteConfig;
+    const docsPart = `${docsUrl ? `${docsUrl}/` : ""}`;
+    const langPart = `${language ? `${language}/` : ""}`;
     const docUrl = doc => `${baseUrl}${docsPart}${langPart}${doc}`;
 
     const SplashContainer = props => (
@@ -65,15 +65,22 @@ class HomeSplash extends React.Component {
 
 class Index extends React.Component {
   render() {
-    const {config: siteConfig, language = ''} = this.props;
-    const {baseUrl, buildInfo} = siteConfig;
-    const {organization, moduleName, latestVersion, scalaPublishVersions} = buildInfo;
+    const { config: siteConfig, language = "" } = this.props;
+    const { baseUrl, buildInfo } = siteConfig;
+    const {
+      coreModuleName,
+      latestVersion,
+      organization,
+      refinedModuleName,
+      scalaPublishVersions
+    } = buildInfo;
 
     const Block = props => (
       <Container
-        padding={['bottom', 'top']}
+        padding={["bottom", "top"]}
         id={props.id}
-        background={props.background}>
+        background={props.background}
+      >
         <GridBlock
           align="center"
           contents={props.children}
@@ -82,30 +89,30 @@ class Index extends React.Component {
       </Container>
     );
 
-    const index =
-`[![Travis](https://img.shields.io/travis/ovotech/vulcan/master.svg)](https://travis-ci.org/ovotech/vulcan) [![Codecov](https://img.shields.io/codecov/c/github/ovotech/vulcan.svg)](https://codecov.io/gh/ovotech/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersion}-orange.svg)](https://index.scala-lang.org/ovotech/vulcan)
+    const index = `[![Travis](https://img.shields.io/travis/ovotech/vulcan/master.svg)](https://travis-ci.org/ovotech/vulcan) [![Codecov](https://img.shields.io/codecov/c/github/ovotech/vulcan.svg)](https://codecov.io/gh/ovotech/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersion}-orange.svg)](https://index.scala-lang.org/ovotech/vulcan)
 
-Functional Avro encodings for Scala using the official Apache Avro library.  
+Functional Avro encodings for Scala using the official Apache Avro library.<br>
 Project is under active development. Feedback and contributions welcome.
 
 ### Getting Started
-To get started with [sbt](https://scala-sbt.org), simply add the following line to your \`build.sbt\` file.
+To get started with [sbt](https://scala-sbt.org), simply add the following lines to your \`build.sbt\` file.
 
 \`\`\`scala
-libraryDependencies += "${organization}" %% "${moduleName}" % "${latestVersion}"
+libraryDependencies ++= Seq(
+  "${organization}" %% "${coreModuleName}",
+  "${organization}" %% "${refinedModuleName}"
+).map(_ % "${latestVersion}")
 \`\`\`
 
 Published for Scala ${scalaPublishVersions}. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).
-`.trim()
+`.trim();
 
     return (
       <div>
         <HomeSplash siteConfig={siteConfig} language={language} />
         <div className="mainContainer">
           <div className="index">
-            <MarkdownBlock>
-              {index}
-            </MarkdownBlock>
+            <MarkdownBlock>{index}</MarkdownBlock>
           </div>
         </div>
       </div>

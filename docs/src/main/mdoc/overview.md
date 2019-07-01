@@ -15,10 +15,13 @@ Documentation is kept up-to-date with new releases, currently documenting v@LATE
 
 ## Getting Started
 
-To get started with [sbt](https://scala-sbt.org), simply add the following line to your `build.sbt` file.
+To get started with [sbt](https://scala-sbt.org), simply add the following lines to your `build.sbt` file.
 
 ```scala
-libraryDependencies += "@ORGANIZATION@" %% "@MODULE_NAME@" % "@LATEST_VERSION@"
+libraryDependencies ++= Seq(
+  "@ORGANIZATION@" %% "@CORE_MODULE_NAME@",
+  "@ORGANIZATION@" %% "@REFINED_MODULE_NAME@"
+).map(_ % "@LATEST_VERSION@")
 ```
 
 Published for Scala @SCALA_PUBLISH_VERSIONS@. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).
@@ -36,12 +39,16 @@ For example, `@LATEST_MINOR_VERSION@.x` is backwards binary-compatible with `@LA
 
 ## Dependencies
 
-Has the following dependencies:
+The `vulcan` module has the following dependencies.
 
-- Apache Avro @AVRO_VERSION@ ([Documentation](https://avro.apache.org/docs/@AVRO_VERSION@), [GitHub](https://github.com/apache/avro)),
-- Magnolia @MAGNOLIA_VERSION@ ([Documentation](https://propensive.com/opensource/magnolia/), [GitHub](https://github.com/propensive/magnolia)),
-- Cats @CATS_VERSION@ ([Documentation](https://typelevel.org/cats), [GitHub](https://github.com/typelevel/cats)),
+- Apache Avro @AVRO_VERSION@ ([Documentation](https://avro.apache.org/docs/@AVRO_VERSION@), [GitHub](https://github.com/apache/avro)).
+- Magnolia @MAGNOLIA_VERSION@ ([Documentation](https://propensive.com/opensource/magnolia/), [GitHub](https://github.com/propensive/magnolia)).
+- Cats @CATS_VERSION@ ([Documentation](https://typelevel.org/cats), [GitHub](https://github.com/typelevel/cats)).
 - Shapeless @SHAPELESS_VERSION@ ([GitHub](https://github.com/milessabin/shapeless)).
+
+Additional modules have the following dependencies.
+
+- `@REFINED_MODULE_NAME@` depends on refined @REFINED_VERSION@ ([GitHub](https://github.com/fthomas/refined)).
 
 ## Inspiration
 

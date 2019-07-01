@@ -6,6 +6,8 @@ val catsVersion = "1.6.1"
 
 val magnoliaVersion = "0.10.0"
 
+val refinedVersion = "0.9.8"
+
 val shapelessVersion = "2.3.3"
 
 lazy val root = project
@@ -19,7 +21,7 @@ lazy val root = project
     console := (console in (core, Compile)).value,
     console in Test := (console in (core, Test)).value
   )
-  .aggregate(core)
+  .aggregate(core, refined)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -33,6 +35,21 @@ lazy val core = project
     testSettings
   )
 
+lazy val refined = project
+  .in(file("modules/refined"))
+  .settings(
+    libraryDependencies += "eu.timepit" %% "refined" % refinedVersion,
+    libraryDependencies += "eu.timepit" %% "refined-scalacheck" % refinedVersion % Test,
+    moduleName := "vulcan-refined",
+    name := moduleName.value,
+    dependencySettings,
+    publishSettings,
+    mimaSettings,
+    scalaSettings,
+    testSettings
+  )
+  .dependsOn(core)
+
 lazy val docs = project
   .in(file("docs"))
   .settings(
@@ -44,7 +61,7 @@ lazy val docs = project
     mdocSettings,
     buildInfoSettings
   )
-  .dependsOn(core)
+  .dependsOn(core, refined)
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
@@ -65,7 +82,7 @@ lazy val mdocSettings = Seq(
   mdoc := run.in(Compile).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
   crossScalaVersions := Seq(scalaVersion.value),
-  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core),
+  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, refined),
   target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
   cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
   docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(unidoc in Compile).value,
@@ -88,12 +105,14 @@ lazy val buildInfoSettings = Seq(
     scalacOptions,
     sourceDirectory,
     latestVersion in ThisBuild,
-    moduleName in core,
+    BuildInfoKey.map(moduleName in core) { case (k, v)    => "core" ++ k.capitalize -> v },
+    BuildInfoKey.map(moduleName in refined) { case (k, v) => "refined" ++ k.capitalize -> v },
     organization in root,
     crossScalaVersions in root,
     BuildInfoKey("avroVersion" -> avroVersion),
     BuildInfoKey("catsVersion" -> catsVersion),
     BuildInfoKey("magnoliaVersion" -> magnoliaVersion),
+    BuildInfoKey("refinedVersion" -> refinedVersion),
     BuildInfoKey("shapelessVersion" -> shapelessVersion)
   )
 )
@@ -161,11 +180,14 @@ lazy val publishSettings =
 
 lazy val mimaSettings = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value)
+    val released = !unreleasedModuleNames.value.contains(moduleName.value)
+    val publishing = publishArtifact.value
+
+    if (publishing && released)
       binaryCompatibleVersions.value
         .map(version => organization.value %% moduleName.value % version)
     else
-      Set.empty
+      Set()
   },
   mimaBinaryIssueFilters ++= {
     import com.typesafe.tools.mima.core._
@@ -239,7 +261,8 @@ updateSiteVariables in ThisBuild := {
   val variables =
     Map[String, String](
       "organization" -> (organization in root).value,
-      "moduleName" -> (moduleName in core).value,
+      "coreModuleName" -> (moduleName in core).value,
+      "refinedModuleName" -> (moduleName in refined).value,
       "latestVersion" -> (latestVersion in ThisBuild).value,
       "scalaMinorVersion" -> minorVersion((scalaVersion in root).value),
       "scalaPublishVersions" -> {

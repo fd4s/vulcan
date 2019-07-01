@@ -21,7 +21,8 @@ object Main {
       .withSiteVariables {
         Map(
           "ORGANIZATION" -> organization,
-          "MODULE_NAME" -> moduleName,
+          "CORE_MODULE_NAME" -> coreModuleName,
+          "REFINED_MODULE_NAME" -> refinedModuleName,
           "LATEST_VERSION" -> latestVersion,
           "LATEST_MINOR_VERSION" -> minorVersion(latestVersion),
           "DOCS_SCALA_MINOR_VERSION" -> scalaMinorVersion,
@@ -34,6 +35,7 @@ object Main {
           "AVRO_VERSION" -> avroVersion,
           "CATS_VERSION" -> catsVersion,
           "MAGNOLIA_VERSION" -> magnoliaVersion,
+          "REFINED_VERSION" -> refinedVersion,
           "SHAPELESS_VERSION" -> shapelessVersion
         )
       }
