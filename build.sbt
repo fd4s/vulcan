@@ -72,7 +72,10 @@ lazy val mdocSettings = Seq(
   // format: off
   scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
     "-doc-source-url", s"https://github.com/ovotech/vulcan/tree/v${(latestVersion in ThisBuild).value}€{FILE_PATH}.scala",
-    "-sourcepath", baseDirectory.in(LocalRootProject).value.getAbsolutePath
+    "-sourcepath", baseDirectory.in(LocalRootProject).value.getAbsolutePath,
+    "-doc-title", "Vulcan",
+    "-doc-version", s"v${(latestVersion in ThisBuild).value}",
+    "-groups"
   )
   // format: on
 )
