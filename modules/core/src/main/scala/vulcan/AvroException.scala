@@ -17,7 +17,8 @@
 package vulcan
 
 /**
-  * `Throwable` representation of an [[AvroError]].
+  * `Throwable` representation of an [[AvroError]],
+  * created with [[AvroError#throwable]].
   */
 sealed abstract class AvroException(message: String) extends RuntimeException(message)
 

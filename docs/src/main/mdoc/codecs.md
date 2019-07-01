@@ -3,7 +3,7 @@ id: codecs
 title: Codecs
 ---
 
-[`Codec`][codec] is the central concept in the library. [`Codec`][codec]s represent an Avro `schema`, together with an `encode` and `decode` function for converting between Scala types and types recognized by the Apache Avro Java library. The library defines default [`Codec`][codec]s for many standard library types. For example, we can check what the default `Option[Instant]` encoding is by asking for a [`Codec`][codec] instance.
+[`Codec`][codec] is the central concept in the library. [`Codec`][codec]s represent an Avro `schema`, together with an `encode` and `decode` function for converting between Scala types and types recognized by the Apache Avro library. There are default [`Codec`][codec]s defined for many standard library types. For example, we can check what the default `Option[Instant]` encoding is by asking for a [`Codec`][codec] instance.
 
 ```scala mdoc
 import java.time.Instant
@@ -18,7 +18,7 @@ In some cases, it's not possible to generate Avro schemas. This is why [`Codec`]
 Codec[Option[Option[Instant]]]
 ```
 
-Encoding and decoding with a [`Codec`][codec] might also be unsuccessful, so results are wrapped in `Either` with error type [`AvroError`][avroerror]. Encoding and decoding accepts a value and Avro `Schema`, and attempts encoding or decoding with respect to the schema. What happens if we encode `Int`s using a `Boolean` schema?
+Encoding and decoding with a [`Codec`][codec] might also be unsuccessful, so results are wrapped in `Either` with error type [`AvroError`][avroerror]. Encoding and decoding accepts a value and schema, and attempts encoding or decoding with respect to the schema. What happens if we try to encode `Int`s using a `Boolean` schema?
 
 ```scala mdoc
 import org.apache.avro.SchemaBuilder
@@ -28,7 +28,7 @@ Codec[Int].encode(10, SchemaBuilder.builder.booleanType)
 
 Since the Apache Avro library encodes and decodes using `Object`, [`Codec`][codec]s encode and decode between Scala types and `Any`. This means type safety is lost and tests should be used to ensure [`Codec`][codec]s work as intended. This becomes important when we define [`Codec`][codec]s from scratch. Note `Schemas`s are treated as effectively immutable, even though they're in fact mutable.
 
-[`Codec`][codec]s form [invariant functors][invariant], which means you can easily use an existing [`Codec`][codec] to encode and decode a different type, by mapping back-and-forth between the [`Codec`][codec]'s existing type and the new type. This becomes useful when dealing with newtypes, like `InstallationTime` in the following example.
+[`Codec`][codec]s form [invariant functors][invariant], which means you can easily use an existing [`Codec`][codec] to encode and decode a different type, by mapping back-and-forth between the [`Codec`][codec]'s existing type argument and the new type. This becomes useful when dealing with newtypes, like `InstallationTime` in the following example.
 
 ```scala mdoc
 final case class InstallationTime(value: Instant)

@@ -33,13 +33,12 @@ import scala.reflect.runtime.universe.WeakTypeTag
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 
 /**
-  * Describes encoding from a type `A` to Java Avro using [[encode]],
-  * decoding from a Java Avro type to `A` using [[decode]], and the
-  * Avro schema used in the process as [[schema]].
+  * Provides a schema, along with encoding and decoding functions
+  * for a given type.
   */
 sealed abstract class Codec[A] {
 
-  /** The schema or an error if the schema is unavailable. */
+  /** The schema or an error if the schema could not be generated. */
   def schema: Either[AvroError, Schema]
 
   /** Attempts to encode the specified value using the provided schema. */
@@ -49,10 +48,9 @@ sealed abstract class Codec[A] {
   def decode(value: Any, schema: Schema): Either[AvroError, A]
 
   /**
-    * Creates a new [[Codec]] which encodes values of type
-    * `B` by first converting them to `A`. Similarly, the
-    * decoding works by first decoding to `A` and then
-    * converting to `B`.
+    * Returns a new [[Codec]] which uses this [[Codec]]
+    * for encoding and decoding, mapping back-and-forth
+    * between types `A` and `B`.
     */
   final def imap[B](f: A => B)(g: B => A): Codec[B] =
     Codec.instance(
@@ -62,8 +60,12 @@ sealed abstract class Codec[A] {
     )
 
   /**
-    * Like [[imap]], but where the mapping to `B` might
-    * be unsuccessful.
+    * Returns a new [[Codec]] which uses this [[Codec]]
+    * for encoding and decoding, mapping back-and-forth
+    * between types `A` and `B`.
+    *
+    * Similar to [[Codec#imap]], except the mapping from
+    * `A` to `B` might be unsuccessful.
     */
   final def imapError[B](f: A => Either[AvroError, B])(g: B => A): Codec[B] =
     Codec.instance(
@@ -73,10 +75,60 @@ sealed abstract class Codec[A] {
     )
 }
 
+/**
+  * @groupname General General Codecs
+  * @groupprio General 0
+  * @groupdesc General Default codecs for standard library types.
+  *
+  * @groupname Collection Collection Codecs
+  * @groupprio Collection 1
+  * @groupdesc Collection Default codecs for standard library collection types.
+  *
+  * @groupname Cats Cats Codecs
+  * @groupprio Cats 2
+  * @groupdesc Cats Default codecs for Cats data types and type class instances for [[Codec]].
+  *
+  * @groupname Shapeless Shapeless Codecs
+  * @groupprio Shapeless 3
+  * @groupdesc Shapeless Default codecs for Shapeless types.
+  *
+  * @groupname JavaTime Java Time Codecs
+  * @groupprio JavaTime 4
+  * @groupdesc JavaTime Default codecs for `java.time` types.
+  *
+  * @groupname JavaUtil Java Util Codecs
+  * @groupprio JavaUtil 5
+  * @groupdesc JavaUtil Default codecs for `java.util` types.
+  *
+  * @groupname Create Create Codecs
+  * @groupprio Create 6
+  * @groupdesc Create Functions for creating new codecs.
+  *
+  * @groupname Derive Derive Codecs
+  * @groupprio Derive 7
+  * @groupdesc Derive Functions for deriving new codecs.
+  *
+  * @groupname Magnolia
+  * @groupprio Magnolia 8
+  * @groupdesc Magnolia To support automatic derivation using [[Codec#derive]].
+  *
+  * @groupname Utilities
+  * @groupprio Utilities 9
+  * @groupdesc Utilities Miscellaneous utility functions.
+  */
 final object Codec {
+
+  /**
+    * Returns the [[Codec]] for the specified type.
+    *
+    * @group Utilities
+    */
   final def apply[A](implicit codec: Codec[A]): Codec[A] =
     codec
 
+  /**
+    * @group General
+    */
   implicit final val boolean: Codec[Boolean] =
     Codec.instance(
       Right(SchemaBuilder.builder().booleanType()),
@@ -119,6 +171,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group General
+    */
   implicit final val bytes: Codec[Array[Byte]] =
     Codec.instance(
       Right(SchemaBuilder.builder().bytesType()),
@@ -172,6 +227,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Cats
+    */
   implicit final def chain[A](implicit codec: Codec[A]): Codec[Chain[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -219,6 +277,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Shapeless
+    */
   implicit final val cnil: Codec[CNil] =
     Codec.instance(
       Right(Schema.createUnion()),
@@ -226,6 +287,9 @@ final object Codec {
       (_, _) => Left(AvroError("Unable to decode to any type in Coproduct"))
     )
 
+  /**
+    * @group Magnolia
+    */
   final def combine[A](caseClass: CaseClass[Codec, A]): Codec[A] = {
     val namespace =
       caseClass.annotations
@@ -362,6 +426,9 @@ final object Codec {
     )
   }
 
+  /**
+    * @group Shapeless
+    */
   implicit final def coproduct[H, T <: Coproduct](
     implicit headCodec: Codec[H],
     tailCodec: Lazy[Codec[T]]
@@ -470,7 +537,9 @@ final object Codec {
     )
 
   /**
-    * Creates a new decimal [[Codec]] for type `BigDecimal`.
+    * Returns a new decimal [[Codec]] for type `BigDecimal`.
+    *
+    * @group Create
     */
   final def decimal(
     precision: Int,
@@ -563,17 +632,21 @@ final object Codec {
   }
 
   /**
-    * Derives a [[Codec]] instance for the specified type,
-    * as long as the type is either a `case class` or a
-    * `sealed trait`.
+    * Returns a [[Codec]] instance for the specified type,
+    * deriving details from the type, as long as the type
+    * is either a `case class` or `sealed trait`.
+    *
+    * @group Derive
     */
   final def derive[A]: Codec[A] =
     macro Magnolia.gen[A]
 
   /**
-    * Creates a new enum [[Codec]] for type `A`, deriving details
-    * such as the name, namespace, and [[AvroDoc]] documentation
+    * Returns an enum [[Codec]] for type `A`, deriving details
+    * like the name, namespace, and [[AvroDoc]] documentation
     * from the type `A` using type tags.
+    *
+    * @group Derive
     */
   final def deriveEnum[A](
     symbols: Seq[String],
@@ -613,6 +686,9 @@ final object Codec {
     )
   }
 
+  /**
+    * @group Magnolia
+    */
   final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec[A] = {
     val typeName = sealedTrait.typeName.full
     Codec.instance(
@@ -709,6 +785,9 @@ final object Codec {
     )
   }
 
+  /**
+    * @group General
+    */
   implicit final val double: Codec[Double] =
     Codec.instance(
       Right(SchemaBuilder.builder().doubleType()),
@@ -752,7 +831,9 @@ final object Codec {
     )
 
   /**
-    * Creates a new enum [[Codec]] for type `A`.
+    * Returns a new enum [[Codec]] for type `A`.
+    *
+    * @group Create
     */
   final def enum[A](
     name: String,
@@ -838,6 +919,9 @@ final object Codec {
     )
   }
 
+  /**
+    * @group General
+    */
   implicit final val float: Codec[Float] =
     Codec.instance(
       Right(SchemaBuilder.builder().floatType()),
@@ -880,8 +964,10 @@ final object Codec {
     )
 
   /**
-    * Creates a new [[Codec]] instance using the specified
+    * Returns a new [[Codec]] instance using the specified
     * `Schema`, and encode and decode functions.
+    *
+    * @group Create
     */
   final def instance[A](
     schema: Either[AvroError, Schema],
@@ -909,6 +995,9 @@ final object Codec {
     }
   }
 
+  /**
+    * @group JavaTime
+    */
   implicit final val instant: Codec[Instant] =
     Codec.instance(
       Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
@@ -957,6 +1046,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group General
+    */
   implicit final val int: Codec[Int] =
     Codec.instance(
       Right(SchemaBuilder.builder().intType()),
@@ -998,6 +1090,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Collection
+    */
   implicit final def list[A](implicit codec: Codec[A]): Codec[List[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -1042,6 +1137,10 @@ final object Codec {
         }
       }
     )
+
+  /**
+    * @group JavaTime
+    */
   implicit final val localDate: Codec[LocalDate] =
     Codec.instance(
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
@@ -1089,6 +1188,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group General
+    */
   implicit final val long: Codec[Long] =
     Codec.instance(
       Right(SchemaBuilder.builder().longType()),
@@ -1130,6 +1232,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Cats
+    */
   implicit final def nonEmptyChain[A](implicit codec: Codec[A]): Codec[NonEmptyChain[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -1180,6 +1285,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Cats
+    */
   implicit final def nonEmptyList[A](implicit codec: Codec[A]): Codec[NonEmptyList[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -1230,6 +1338,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Cats
+    */
   implicit final def nonEmptySet[A](
     implicit codec: Codec[A],
     ordering: Ordering[A]
@@ -1283,6 +1394,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Cats
+    */
   implicit final def nonEmptyVector[A](implicit codec: Codec[A]): Codec[NonEmptyVector[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -1331,6 +1445,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group General
+    */
   implicit final def option[A](implicit codec: Codec[A]): Codec[Option[A]] =
     Codec.instance(
       AvroError.catchNonFatal {
@@ -1404,7 +1521,9 @@ final object Codec {
     )
 
   /**
-    * Creates a new record [[Codec]] for type `A`.
+    * Returns a new record [[Codec]] for type `A`.
+    *
+    * @group Create
     */
   final def record[A](
     name: String,
@@ -1560,6 +1679,9 @@ final object Codec {
     )
   }
 
+  /**
+    * @group Collection
+    */
   implicit final def seq[A](implicit codec: Codec[A]): Codec[Seq[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -1605,6 +1727,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Collection
+    */
   implicit final def set[A](implicit codec: Codec[A]): Codec[Set[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -1650,6 +1775,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group General
+    */
   implicit final val string: Codec[String] =
     Codec.instance(
       Right(SchemaBuilder.builder().stringType()),
@@ -1691,6 +1819,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group General
+    */
   implicit final val unit: Codec[Unit] =
     Codec.instance(
       Right(SchemaBuilder.builder().nullType()),
@@ -1729,6 +1860,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group JavaUtil
+    */
   implicit final val uuid: Codec[UUID] =
     Codec.instance(
       Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
@@ -1779,6 +1913,9 @@ final object Codec {
       }
     )
 
+  /**
+    * @group Collection
+    */
   implicit final def vector[A](implicit codec: Codec[A]): Codec[Vector[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
@@ -1826,15 +1963,24 @@ final object Codec {
 
   private[vulcan] final type Typeclass[A] = Codec[A]
 
+  /**
+    * @group Cats
+    */
   implicit final val codecInvariant: Invariant[Codec] =
     new Invariant[Codec] {
       override final def imap[A, B](codec: Codec[A])(f: A => B)(g: B => A): Codec[B] =
         codec.imap(f)(g)
     }
 
+  /**
+    * @group Cats
+    */
   implicit final def codecShow[A]: Show[Codec[A]] =
     Show.fromToString
 
+  /**
+    * @group Create
+    */
   sealed abstract class Field[A, B] {
     def name: String
 
@@ -1887,6 +2033,9 @@ final object Codec {
       )
   }
 
+  /**
+    * @group Create
+    */
   sealed abstract class FieldBuilder[A] {
     def apply[B](
       name: String,
