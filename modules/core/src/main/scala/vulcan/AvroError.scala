@@ -165,6 +165,21 @@ final object AvroError {
       s"Got unexpected type $typeName while decoding $decodingTypeName, expected type $expectedType"
     }
 
+  private[vulcan] final def unexpectedChar(
+    length: Int
+  ): AvroError =
+    AvroError(s"Got unexpected String with length $length while decoding Char, expected length 1")
+
+  private[vulcan] final def unexpectedByte(value: Int): AvroError =
+    AvroError {
+      s"Got unexpected Byte value $value, expected value in range ${Byte.MinValue} to ${Byte.MaxValue}"
+    }
+
+  private[vulcan] final def unexpectedShort(value: Int): AvroError =
+    AvroError {
+      s"Got unexpected Short value $value, expected value in range ${Short.MinValue} to ${Short.MaxValue}"
+    }
+
   private[vulcan] final def encodeDecimalPrecisionExceeded(
     actualPrecision: Int,
     expectedPrecision: Int

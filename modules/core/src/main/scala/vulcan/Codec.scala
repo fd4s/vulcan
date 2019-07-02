@@ -174,6 +174,58 @@ final object Codec {
   /**
     * @group General
     */
+  implicit final val byte: Codec[Byte] =
+    Codec.instance(
+      Right(SchemaBuilder.builder().intType()),
+      (byte, schema) => {
+        schema.getType() match {
+          case Schema.Type.INT =>
+            Right(java.lang.Integer.valueOf(byte.toInt))
+
+          case schemaType =>
+            Left {
+              AvroError
+                .encodeUnexpectedSchemaType(
+                  "Byte",
+                  schemaType,
+                  NonEmptyList.of(Schema.Type.INT)
+                )
+            }
+        }
+      }, {
+        val min: Int = Byte.MinValue.toInt
+        val max: Int = Byte.MaxValue.toInt
+        (value, schema) => {
+          schema.getType() match {
+            case Schema.Type.INT =>
+              value match {
+                case integer: java.lang.Integer =>
+                  if (min <= integer && integer <= max)
+                    Right(integer.toByte)
+                  else Left(AvroError.unexpectedByte(integer))
+
+                case other =>
+                  Left(AvroError.decodeUnexpectedType(other, "Int", "Byte"))
+
+              }
+
+            case schemaType =>
+              Left {
+                AvroError
+                  .decodeUnexpectedSchemaType(
+                    "Byte",
+                    schemaType,
+                    NonEmptyList.of(Schema.Type.INT)
+                  )
+              }
+          }
+        }
+      }
+    )
+
+  /**
+    * @group General
+    */
   implicit final val bytes: Codec[Array[Byte]] =
     Codec.instance(
       Right(SchemaBuilder.builder().bytesType()),
@@ -271,6 +323,54 @@ final object Codec {
                   "Chain",
                   schemaType,
                   NonEmptyList.of(Schema.Type.ARRAY)
+                )
+            }
+        }
+      }
+    )
+
+  /**
+    * @group General
+    */
+  implicit final val char: Codec[Char] =
+    Codec.instance(
+      Right(SchemaBuilder.builder().stringType()),
+      (char, schema) => {
+        schema.getType() match {
+          case Schema.Type.STRING =>
+            Right(new Utf8(char.toString))
+
+          case schemaType =>
+            Left {
+              AvroError
+                .encodeUnexpectedSchemaType(
+                  "Char",
+                  schemaType,
+                  NonEmptyList.of(Schema.Type.STRING)
+                )
+            }
+        }
+      },
+      (value, schema) => {
+        schema.getType() match {
+          case Schema.Type.STRING =>
+            value match {
+              case utf8: Utf8 =>
+                val string = utf8.toString
+                if (string.length == 1) Right(string.charAt(0))
+                else Left(AvroError.unexpectedChar(string.length))
+
+              case other =>
+                Left(AvroError.decodeUnexpectedType(other, "Utf8", "Char"))
+            }
+
+          case schemaType =>
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  "Char",
+                  schemaType,
+                  NonEmptyList.of(Schema.Type.STRING)
                 )
             }
         }
@@ -1778,6 +1878,57 @@ final object Codec {
   /**
     * @group General
     */
+  implicit final val short: Codec[Short] =
+    Codec.instance(
+      Right(SchemaBuilder.builder().intType()),
+      (short, schema) => {
+        schema.getType() match {
+          case Schema.Type.INT =>
+            Right(java.lang.Integer.valueOf(short.toInt))
+
+          case schemaType =>
+            Left {
+              AvroError
+                .encodeUnexpectedSchemaType(
+                  "Short",
+                  schemaType,
+                  NonEmptyList.of(Schema.Type.INT)
+                )
+            }
+        }
+      }, {
+        val min: Int = Short.MinValue.toInt
+        val max: Int = Short.MaxValue.toInt
+        (value, schema) => {
+          schema.getType() match {
+            case Schema.Type.INT =>
+              value match {
+                case integer: java.lang.Integer =>
+                  if (min <= integer && integer <= max)
+                    Right(integer.toShort)
+                  else Left(AvroError.unexpectedShort(integer))
+
+                case other =>
+                  Left(AvroError.decodeUnexpectedType(other, "Int", "Short"))
+              }
+
+            case schemaType =>
+              Left {
+                AvroError
+                  .decodeUnexpectedSchemaType(
+                    "Short",
+                    schemaType,
+                    NonEmptyList.of(Schema.Type.INT)
+                  )
+              }
+          }
+        }
+      }
+    )
+
+  /**
+    * @group General
+    */
   implicit final val string: Codec[String] =
     Codec.instance(
       Right(SchemaBuilder.builder().stringType()),
@@ -1785,6 +1936,7 @@ final object Codec {
         schema.getType() match {
           case Schema.Type.STRING =>
             Right(new Utf8(string))
+
           case schemaType =>
             Left {
               AvroError

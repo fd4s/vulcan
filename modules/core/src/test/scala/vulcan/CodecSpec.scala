@@ -8,6 +8,7 @@ import java.util.UUID
 import org.apache.avro.{Conversions, Schema, SchemaBuilder, LogicalTypes}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.util.Utf8
+import org.scalacheck.{Gen, Shrink}
 import org.scalatest.Assertion
 import org.scalatest.EitherValues._
 import scala.collection.JavaConverters._
@@ -74,6 +75,79 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(value),
             Right(value)
           )
+        }
+      }
+    }
+
+    describe("byte") {
+      describe("schema") {
+        it("should be encoded as int") {
+          assertSchemaIs[Byte] {
+            """"int""""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should error if schema is not int") {
+          assertEncodeError[Byte](
+            1.toByte,
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while encoding Byte, expected schema type INT"
+          )
+        }
+
+        it("should encode as int") {
+          val value = 1.toByte
+          assertEncodeIs[Byte](
+            value,
+            Right(java.lang.Integer.valueOf(1))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not int") {
+          assertDecodeError[Byte](
+            unsafeEncode(1.toByte),
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Byte, expected schema type INT"
+          )
+        }
+
+        it("should error if value is not int") {
+          assertDecodeError[Byte](
+            unsafeEncode("value"),
+            unsafeSchema[Byte],
+            "Got unexpected type org.apache.avro.util.Utf8 while decoding Byte, expected type Int"
+          )
+        }
+
+        it("should error if int value is not byte") {
+          implicit def noShrink[A]: Shrink[A] = Shrink(_ => Stream.empty)
+
+          val gen =
+            Gen.oneOf(
+              Gen.chooseNum(Int.MinValue, Byte.MinValue.toInt - 1),
+              Gen.chooseNum(Byte.MaxValue.toInt + 1, Int.MaxValue)
+            )
+
+          forAll(gen) { nonByte =>
+            assertDecodeError[Byte](
+              unsafeEncode(nonByte),
+              unsafeSchema[Byte],
+              s"Got unexpected Byte value $nonByte, expected value in range -128 to 127"
+            )
+          }
+        }
+
+        it("should decode as byte") {
+          forAll { byte: Byte =>
+            assertDecodeIs[Byte](
+              unsafeEncode(byte),
+              Right(byte)
+            )
+          }
         }
       }
     }
@@ -248,6 +322,68 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[Chain[Int]](
             unsafeEncode(value),
             Right(value)
+          )
+        }
+      }
+    }
+
+    describe("char") {
+      describe("schema") {
+        it("should be encoded as string") {
+          assertSchemaIs[Char] {
+            """"string""""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should error if schema is not string") {
+          assertEncodeError[Char](
+            'a',
+            unsafeSchema[Int],
+            "Got unexpected schema type INT while encoding Char, expected schema type STRING"
+          )
+        }
+
+        it("should encode as utf8") {
+          val value = 'a'
+          assertEncodeIs[Char](
+            value,
+            Right(new Utf8("a"))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not string") {
+          assertDecodeError[Char](
+            unsafeEncode('a'),
+            unsafeSchema[Int],
+            "Got unexpected schema type INT while decoding Char, expected schema type STRING"
+          )
+        }
+
+        it("should error if value is not utf8") {
+          assertDecodeError[Char](
+            unsafeEncode(10),
+            unsafeSchema[String],
+            "Got unexpected type java.lang.Integer while decoding Char, expected type Utf8"
+          )
+        }
+
+        it("should error if utf8 value is empty") {
+          assertDecodeError[Char](
+            unsafeEncode(""),
+            unsafeSchema[String],
+            "Got unexpected String with length 0 while decoding Char, expected length 1"
+          )
+        }
+
+        it("should error if utf8 value has more than 1 char") {
+          assertDecodeError[Char](
+            unsafeEncode("ab"),
+            unsafeSchema[String],
+            "Got unexpected String with length 2 while decoding Char, expected length 1"
           )
         }
       }
@@ -2243,6 +2379,79 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(value),
             Right(value)
           )
+        }
+      }
+    }
+
+    describe("short") {
+      describe("schema") {
+        it("should be encoded as int") {
+          assertSchemaIs[Short] {
+            """"int""""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should error if schema is not int") {
+          assertEncodeError[Short](
+            1.toShort,
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while encoding Short, expected schema type INT"
+          )
+        }
+
+        it("should encode as int") {
+          val value = 1.toShort
+          assertEncodeIs[Short](
+            value,
+            Right(java.lang.Integer.valueOf(1))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not int") {
+          assertDecodeError[Short](
+            unsafeEncode(1.toShort),
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Short, expected schema type INT"
+          )
+        }
+
+        it("should error if value is not int") {
+          assertDecodeError[Short](
+            unsafeEncode("value"),
+            unsafeSchema[Short],
+            "Got unexpected type org.apache.avro.util.Utf8 while decoding Short, expected type Int"
+          )
+        }
+
+        it("should error if int value is not short") {
+          implicit def noShrink[A]: Shrink[A] = Shrink(_ => Stream.empty)
+
+          val gen =
+            Gen.oneOf(
+              Gen.chooseNum(Int.MinValue, Short.MinValue.toInt - 1),
+              Gen.chooseNum(Short.MaxValue.toInt + 1, Int.MaxValue)
+            )
+
+          forAll(gen) { nonShort =>
+            assertDecodeError[Short](
+              unsafeEncode(nonShort),
+              unsafeSchema[Short],
+              s"Got unexpected Short value $nonShort, expected value in range -32768 to 32767"
+            )
+          }
+        }
+
+        it("should decode as short") {
+          forAll { short: Short =>
+            assertDecodeIs[Short](
+              unsafeEncode(short),
+              Right(short)
+            )
+          }
         }
       }
     }
