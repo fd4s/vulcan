@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title></title>
-          <meta name="description" content="" />
-          <meta name="keywords" content="" />
+          <title>Vulcan v0.1.2 - vulcan.Codec</title>
+          <meta name="description" content="Vulcan v0.1.2 - vulcan.Codec" />
+          <meta name="keywords" content="Vulcan v0.1.2 vulcan.Codec" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title"><span id="doc-version"></span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.1.2</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -87,20 +87,24 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="_root_">root</a></dd></dl></div>
     </li><li class="current-entities indented1">
                         <span class="separator"></span>
-                        <a class="class" href="AvroDoc.html" title="Annotation which can be used to include documentation in derived Avro Schemas."></a>
-                        <a href="AvroDoc.html" title="Annotation which can be used to include documentation in derived Avro Schemas.">AvroDoc</a>
+                        <a class="class" href="AvroDoc.html" title="Annotation which can be used to include documentation in derived schemas."></a>
+                        <a href="AvroDoc.html" title="Annotation which can be used to include documentation in derived schemas.">AvroDoc</a>
                       </li><li class="current-entities indented1">
                         <a class="object" href="AvroError$.html" title=""></a>
-                        <a class="class" href="AvroError.html" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding."></a>
-                        <a href="AvroError.html" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding.">AvroError</a>
+                        <a class="class" href="AvroError.html" title="Error which occurred while generating a schema, or while encoding or decoding."></a>
+                        <a href="AvroError.html" title="Error which occurred while generating a schema, or while encoding or decoding.">AvroError</a>
                       </li><li class="current-entities indented1">
                         <span class="separator"></span>
-                        <a class="class" href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas."></a>
-                        <a href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas.">AvroNamespace</a>
+                        <a class="class" href="AvroException.html" title="Throwable representation of an AvroError, created with AvroError#throwable."></a>
+                        <a href="AvroException.html" title="Throwable representation of an AvroError, created with AvroError#throwable.">AvroException</a>
+                      </li><li class="current-entities indented1">
+                        <span class="separator"></span>
+                        <a class="class" href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived schemas."></a>
+                        <a href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived schemas.">AvroNamespace</a>
                       </li><li class="current-entities indented1">
                         <a class="object" href="" title=""></a>
-                        <a class="class" href="Codec.html" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema."></a>
-                        <a href="Codec.html" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema.">Codec</a>
+                        <a class="class" href="Codec.html" title="Provides a schema, along with encoding and decoding functions for a given type."></a>
+                        <a href="Codec.html" title="Provides a schema, along with encoding and decoding functions for a given type.">Codec</a>
                       </li>
               </ul>
             </div>
@@ -131,7 +135,7 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.1.1/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.1.2/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -152,7 +156,7 @@
           <div id="order">
             <span class="filtertype">Ordering</span>
             <ol>
-              
+              <li class="group out"><span>Grouped</span></li>
               <li class="alpha in"><span>Alphabetic</span></li>
               <li class="inherit out"><span>By Inheritance</span></li>
             </ol>
@@ -183,7 +187,7 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="vulcan.Codec.Field" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+              <ol><li name="vulcan.Codec.Field" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Create">
       <a id="Field[A,B]extendsAnyRef"></a><a id="Field[A,B]:Field[A,B]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#Field[A,B]extendsAnyRef" title="Permalink">
@@ -198,8 +202,8 @@
         <a title="" href="Codec$$Field.html"><span class="name">Field</span></a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
-      
-    </li><li name="vulcan.Codec.FieldBuilder" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec.FieldBuilder" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Create">
       <a id="FieldBuilder[A]extendsAnyRef"></a><a id="FieldBuilder[A]:FieldBuilder[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#FieldBuilder[A]extendsAnyRef" title="Permalink">
@@ -214,7 +218,7 @@
         <a title="" href="Codec$$FieldBuilder.html"><span class="name">FieldBuilder</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p>
     </li></ol>
             </div>
 
@@ -271,7 +275,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="vulcan.Codec#apply" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#apply" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Utilities">
       <a id="apply[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[A]"></a><a id="apply[A](Codec[A]):Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#apply[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[A]" title="Permalink">
@@ -286,7 +290,7 @@
         <span class="name">apply</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.apply.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.apply.A">A</span>]</span>
       </span>
       
-      
+      <p class="shortcomment cmt">Returns the <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for the specified type.</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -303,7 +307,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="vulcan.Codec#boolean" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#boolean" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="boolean:vulcan.Codec[Boolean]"></a><a id="boolean:Codec[Boolean]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#boolean:vulcan.Codec[Boolean]" title="Permalink">
@@ -318,8 +322,24 @@
         <span class="name">boolean</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Boolean">Boolean</span>]</span>
       </span>
       
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#byte" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
+      <a id="byte:vulcan.Codec[Byte]"></a><a id="byte:Codec[Byte]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec$.html#byte:vulcan.Codec[Byte]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit final </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">byte</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Byte">Byte</span>]</span>
+      </span>
       
-    </li><li name="vulcan.Codec#bytes" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#bytes" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="bytes:vulcan.Codec[Array[Byte]]"></a><a id="bytes:Codec[Array[Byte]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#bytes:vulcan.Codec[Array[Byte]]" title="Permalink">
@@ -334,8 +354,8 @@
         <span class="name">bytes</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Byte">Byte</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#chain" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#chain" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Cats">
       <a id="chain[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.Chain[A]]"></a><a id="chain[A](Codec[A]):Codec[Chain[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#chain[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.Chain[A]]" title="Permalink">
@@ -350,7 +370,23 @@
         <span class="name">chain</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.chain.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="cats.data.Chain">Chain</span>[<span class="extype" name="vulcan.Codec.chain.A">A</span>]]</span>
       </span>
       
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#char" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
+      <a id="char:vulcan.Codec[Char]"></a><a id="char:Codec[Char]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec$.html#char:vulcan.Codec[Char]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit final </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">char</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Char">Char</span>]</span>
+      </span>
       
+      <p class="shortcomment cmt"></p>
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
@@ -375,7 +411,7 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="vulcan.Codec#cnil" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#cnil" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Shapeless">
       <a id="cnil:vulcan.Codec[shapeless.CNil]"></a><a id="cnil:Codec[CNil]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#cnil:vulcan.Codec[shapeless.CNil]" title="Permalink">
@@ -390,8 +426,8 @@
         <span class="name">cnil</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="shapeless.CNil">CNil</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#codecInvariant" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#codecInvariant" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Cats">
       <a id="codecInvariant:cats.Invariant[vulcan.Codec]"></a><a id="codecInvariant:Invariant[Codec]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#codecInvariant:cats.Invariant[vulcan.Codec]" title="Permalink">
@@ -406,8 +442,8 @@
         <span class="name">codecInvariant</span><span class="result">: <span class="extype" name="cats.Invariant">Invariant</span>[<a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#codecShow" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#codecShow" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Cats">
       <a id="codecShow[A]:cats.Show[vulcan.Codec[A]]"></a><a id="codecShow[A]:Show[Codec[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#codecShow[A]:cats.Show[vulcan.Codec[A]]" title="Permalink">
@@ -422,8 +458,8 @@
         <span class="name">codecShow</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <span class="extype" name="cats.Show">Show</span>[<a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.codecShow.A">A</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#combine" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#combine" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Magnolia">
       <a id="combine[A](caseClass:magnolia.CaseClass[vulcan.Codec,A]):vulcan.Codec[A]"></a><a id="combine[A](CaseClass[Codec,A]):Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#combine[A](caseClass:magnolia.CaseClass[vulcan.Codec,A]):vulcan.Codec[A]" title="Permalink">
@@ -438,8 +474,8 @@
         <span class="name">combine</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="caseClass">caseClass: <span class="extype" name="magnolia.CaseClass">CaseClass</span>[<a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>, <span class="extype" name="vulcan.Codec.combine.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.combine.A">A</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#coproduct" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#coproduct" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Shapeless">
       <a id="coproduct[H,T&lt;:shapeless.Coproduct](implicitheadCodec:vulcan.Codec[H],implicittailCodec:shapeless.Lazy[vulcan.Codec[T]]):vulcan.Codec[H:+:T]"></a><a id="coproduct[H,T&lt;:Coproduct](Codec[H],Lazy[Codec[T]]):Codec[:+:[H,T]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#coproduct[H,T&lt;:shapeless.Coproduct](implicitheadCodec:vulcan.Codec[H],implicittailCodec:shapeless.Lazy[vulcan.Codec[T]]):vulcan.Codec[H:+:T]" title="Permalink">
@@ -454,8 +490,8 @@
         <span class="name">coproduct</span><span class="tparams">[<span name="H">H</span>, <span name="T">T &lt;: <span class="extype" name="shapeless.Coproduct">Coproduct</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="headCodec">headCodec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.coproduct.H">H</span>]</span>, <span name="tailCodec">tailCodec: <span class="extype" name="shapeless.Lazy">Lazy</span>[<a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.coproduct.T">T</span>]]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="vulcan.Codec.coproduct.H">H</span>, <span class="extype" name="vulcan.Codec.coproduct.T">T</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#decimal" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#decimal" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Create">
       <a id="decimal(precision:Int,scale:Int):vulcan.Codec[BigDecimal]"></a><a id="decimal(Int,Int):Codec[BigDecimal]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#decimal(precision:Int,scale:Int):vulcan.Codec[BigDecimal]" title="Permalink">
@@ -470,8 +506,8 @@
         <span class="name">decimal</span><span class="params">(<span name="precision">precision: <span class="extype" name="scala.Int">Int</span></span>, <span name="scale">scale: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.BigDecimal">BigDecimal</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Creates a new decimal <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>BigDecimal</code>.</p>
-    </li><li name="vulcan.Codec#derive" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Returns a new decimal <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>BigDecimal</code>.</p>
+    </li><li name="vulcan.Codec#derive" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Derive">
       <a id="derive[A]:vulcan.Codec[A]"></a><a id="derive[A]:Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#derive[A]:vulcan.Codec[A]" title="Permalink">
@@ -486,10 +522,10 @@
         <span class="name">derive</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.derive.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Derives a <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> instance for the specified type,
-as long as the type is either a <code>case class</code> or a
-<code>sealed trait</code>.</p>
-    </li><li name="vulcan.Codec#deriveEnum" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Returns a <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> instance for the specified type,
+deriving details from the type, as long as the type
+is either a <code>case class</code> or <code>sealed trait</code>.</p>
+    </li><li name="vulcan.Codec#deriveEnum" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Derive">
       <a id="deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]"></a><a id="deriveEnum[A](Seq[String],(A)⇒String,(String)⇒Either[AvroError,A])(scala.reflect.api.JavaUniverse.WeakTypeTag[A]):Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" title="Permalink">
@@ -504,10 +540,10 @@ as long as the type is either a <code>case class</code> or a
         <span class="name">deriveEnum</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="symbols">symbols: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="encode">encode: (<span class="extype" name="vulcan.Codec.deriveEnum.A">A</span>) ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="decode">decode: (<span class="extype" name="scala.Predef.String">String</span>) ⇒ <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="vulcan.Codec.deriveEnum.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tag">tag: <span class="extype" name="scala.reflect.api.TypeTags.WeakTypeTag">scala.reflect.api.JavaUniverse.WeakTypeTag</span>[<span class="extype" name="vulcan.Codec.deriveEnum.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.deriveEnum.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Creates a new enum <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>A</code>, deriving details
-such as the name, namespace, and <a href="AvroDoc.html" class="extype" name="vulcan.AvroDoc">AvroDoc</a> documentation
+      <p class="shortcomment cmt">Returns an enum <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>A</code>, deriving details
+like the name, namespace, and <a href="AvroDoc.html" class="extype" name="vulcan.AvroDoc">AvroDoc</a> documentation
 from the type <code>A</code> using type tags.</p>
-    </li><li name="vulcan.Codec#dispatch" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#dispatch" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Magnolia">
       <a id="dispatch[A](sealedTrait:magnolia.SealedTrait[vulcan.Codec,A]):vulcan.Codec[A]"></a><a id="dispatch[A](SealedTrait[Codec,A]):Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#dispatch[A](sealedTrait:magnolia.SealedTrait[vulcan.Codec,A]):vulcan.Codec[A]" title="Permalink">
@@ -522,8 +558,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">dispatch</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="sealedTrait">sealedTrait: <span class="extype" name="magnolia.SealedTrait">SealedTrait</span>[<a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>, <span class="extype" name="vulcan.Codec.dispatch.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.dispatch.A">A</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#double" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#double" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="double:vulcan.Codec[Double]"></a><a id="double:Codec[Double]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#double:vulcan.Codec[Double]" title="Permalink">
@@ -538,8 +574,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">double</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Double">Double</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#enum" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#enum" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Create">
       <a id="enum[A](name:String,symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A],namespace:Option[String],aliases:Seq[String],doc:Option[String],default:Option[A]):vulcan.Codec[A]"></a><a id="enum[A](String,Seq[String],(A)⇒String,(String)⇒Either[AvroError,A],Option[String],Seq[String],Option[String],Option[A]):Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#enum[A](name:String,symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A],namespace:Option[String],aliases:Seq[String],doc:Option[String],default:Option[A]):vulcan.Codec[A]" title="Permalink">
@@ -554,7 +590,7 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">enum</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="symbols">symbols: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="encode">encode: (<span class="extype" name="vulcan.Codec.enum.A">A</span>) ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="decode">decode: (<span class="extype" name="scala.Predef.String">String</span>) ⇒ <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="vulcan.Codec.enum.A">A</span>]</span>, <span name="namespace">namespace: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq.empty</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="vulcan.Codec.enum.A">A</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.enum.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Creates a new enum <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>A</code>.</p>
+      <p class="shortcomment cmt">Returns a new enum <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>A</code>.</p>
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -609,7 +645,7 @@ from the type <code>A</code> using type tags.</p>
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="vulcan.Codec#float" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#float" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="float:vulcan.Codec[Float]"></a><a id="float:Codec[Float]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#float:vulcan.Codec[Float]" title="Permalink">
@@ -624,7 +660,7 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">float</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Float">Float</span>]</span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p>
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
@@ -663,7 +699,7 @@ from the type <code>A</code> using type tags.</p>
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="vulcan.Codec#instance" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#instance" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Create">
       <a id="instance[A](schema:Either[vulcan.AvroError,org.apache.avro.Schema],encode:(A,org.apache.avro.Schema)=&gt;Either[vulcan.AvroError,Any],decode:(Any,org.apache.avro.Schema)=&gt;Either[vulcan.AvroError,A]):vulcan.Codec[A]"></a><a id="instance[A](Either[AvroError,Schema],(A,Schema)⇒Either[AvroError,Any],(Any,Schema)⇒Either[AvroError,A]):Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#instance[A](schema:Either[vulcan.AvroError,org.apache.avro.Schema],encode:(A,org.apache.avro.Schema)=&gt;Either[vulcan.AvroError,Any],decode:(Any,org.apache.avro.Schema)=&gt;Either[vulcan.AvroError,A]):vulcan.Codec[A]" title="Permalink">
@@ -678,9 +714,9 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">instance</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="schema">schema: <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="org.apache.avro.Schema">Schema</span>]</span>, <span name="encode">encode: (<span class="extype" name="vulcan.Codec.instance.A">A</span>, <span class="extype" name="org.apache.avro.Schema">Schema</span>) ⇒ <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="scala.Any">Any</span>]</span>, <span name="decode">decode: (<span class="extype" name="scala.Any">Any</span>, <span class="extype" name="org.apache.avro.Schema">Schema</span>) ⇒ <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="vulcan.Codec.instance.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.instance.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Creates a new <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> instance using the specified
+      <p class="shortcomment cmt">Returns a new <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> instance using the specified
 <code>Schema</code>, and encode and decode functions.</p>
-    </li><li name="vulcan.Codec#instant" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#instant" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="JavaTime">
       <a id="instant:vulcan.Codec[java.time.Instant]"></a><a id="instant:Codec[Instant]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#instant:vulcan.Codec[java.time.Instant]" title="Permalink">
@@ -695,8 +731,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">instant</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="java.time.Instant">Instant</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#int" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#int" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="int:vulcan.Codec[Int]"></a><a id="int:Codec[Int]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#int:vulcan.Codec[Int]" title="Permalink">
@@ -711,7 +747,7 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">int</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Int">Int</span>]</span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -728,7 +764,7 @@ from the type <code>A</code> using type tags.</p>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="vulcan.Codec#list" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#list" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Collection">
       <a id="list[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[List[A]]"></a><a id="list[A](Codec[A]):Codec[List[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#list[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[List[A]]" title="Permalink">
@@ -743,8 +779,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">list</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.list.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.List">List</span>[<span class="extype" name="vulcan.Codec.list.A">A</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#localDate" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#localDate" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="JavaTime">
       <a id="localDate:vulcan.Codec[java.time.LocalDate]"></a><a id="localDate:Codec[LocalDate]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#localDate:vulcan.Codec[java.time.LocalDate]" title="Permalink">
@@ -759,8 +795,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">localDate</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="java.time.LocalDate">LocalDate</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#long" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#long" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="long:vulcan.Codec[Long]"></a><a id="long:Codec[Long]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#long:vulcan.Codec[Long]" title="Permalink">
@@ -775,7 +811,7 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">long</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Long">Long</span>]</span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p>
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -792,7 +828,7 @@ from the type <code>A</code> using type tags.</p>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="vulcan.Codec#nonEmptyChain" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#nonEmptyChain" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Cats">
       <a id="nonEmptyChain[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.NonEmptyChain[A]]"></a><a id="nonEmptyChain[A](Codec[A]):Codec[NonEmptyChain[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#nonEmptyChain[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.NonEmptyChain[A]]" title="Permalink">
@@ -807,8 +843,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">nonEmptyChain</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.nonEmptyChain.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="cats.data.NonEmptyChain">NonEmptyChain</span>[<span class="extype" name="vulcan.Codec.nonEmptyChain.A">A</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#nonEmptyList" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#nonEmptyList" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Cats">
       <a id="nonEmptyList[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.NonEmptyList[A]]"></a><a id="nonEmptyList[A](Codec[A]):Codec[NonEmptyList[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#nonEmptyList[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.NonEmptyList[A]]" title="Permalink">
@@ -823,8 +859,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">nonEmptyList</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.nonEmptyList.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="cats.data.NonEmptyList">NonEmptyList</span>[<span class="extype" name="vulcan.Codec.nonEmptyList.A">A</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#nonEmptySet" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#nonEmptySet" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Cats">
       <a id="nonEmptySet[A](implicitcodec:vulcan.Codec[A],implicitordering:Ordering[A]):vulcan.Codec[cats.data.NonEmptySet[A]]"></a><a id="nonEmptySet[A](Codec[A],Ordering[A]):Codec[NonEmptySet[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#nonEmptySet[A](implicitcodec:vulcan.Codec[A],implicitordering:Ordering[A]):vulcan.Codec[cats.data.NonEmptySet[A]]" title="Permalink">
@@ -839,8 +875,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">nonEmptySet</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.nonEmptySet.A">A</span>]</span>, <span name="ordering">ordering: <span class="extype" name="scala.Ordering">Ordering</span>[<span class="extype" name="vulcan.Codec.nonEmptySet.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="cats.data.NonEmptySet">NonEmptySet</span>[<span class="extype" name="vulcan.Codec.nonEmptySet.A">A</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#nonEmptyVector" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#nonEmptyVector" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Cats">
       <a id="nonEmptyVector[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.NonEmptyVector[A]]"></a><a id="nonEmptyVector[A](Codec[A]):Codec[NonEmptyVector[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#nonEmptyVector[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[cats.data.NonEmptyVector[A]]" title="Permalink">
@@ -855,7 +891,7 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">nonEmptyVector</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.nonEmptyVector.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="cats.data.NonEmptyVector">NonEmptyVector</span>[<span class="extype" name="vulcan.Codec.nonEmptyVector.A">A</span>]]</span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p>
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
@@ -894,7 +930,7 @@ from the type <code>A</code> using type tags.</p>
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="vulcan.Codec#option" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#option" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="option[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Option[A]]"></a><a id="option[A](Codec[A]):Codec[Option[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#option[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Option[A]]" title="Permalink">
@@ -909,8 +945,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">option</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.option.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Option">Option</span>[<span class="extype" name="vulcan.Codec.option.A">A</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#record" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#record" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Create">
       <a id="record[A](name:String,namespace:Option[String],doc:Option[String],aliases:Seq[String],props:Seq[(String,String)])(f:vulcan.Codec.FieldBuilder[A]=&gt;cats.free.FreeApplicative[[β$0$]vulcan.Codec.Field[A,β$0$],A]):vulcan.Codec[A]"></a><a id="record[A](String,Option[String],Option[String],Seq[String],Seq[(String,String)])((FieldBuilder[A])⇒FreeApplicative[[β$0$]Field[A,β$0$],A]):Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#record[A](name:String,namespace:Option[String],doc:Option[String],aliases:Seq[String],props:Seq[(String,String)])(f:vulcan.Codec.FieldBuilder[A]=&gt;cats.free.FreeApplicative[[β$0$]vulcan.Codec.Field[A,β$0$],A]):vulcan.Codec[A]" title="Permalink">
@@ -925,8 +961,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">record</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="namespace">namespace: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq.empty</span></span>, <span name="props">props: <span class="extype" name="scala.Seq">Seq</span>[(<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>)] = <span class="symbol">Seq.empty</span></span>)</span><span class="params">(<span name="f">f: (<a href="Codec$$FieldBuilder.html" class="extype" name="vulcan.Codec.FieldBuilder">FieldBuilder</a>[<span class="extype" name="vulcan.Codec.record.A">A</span>]) ⇒ <span class="extype" name="cats.free.FreeApplicative">FreeApplicative</span>[[β$0$]<a href="Codec$$Field.html" class="extype" name="vulcan.Codec.Field">Field</a>[<span class="extype" name="vulcan.Codec.record.A">A</span>, <span class="extype" name="vulcan.Codec.&lt;refinement&gt;.Λ$.β$0$">β$0$</span>], <span class="extype" name="vulcan.Codec.record.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.record.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Creates a new record <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>A</code>.</p>
-    </li><li name="vulcan.Codec#seq" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Returns a new record <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>A</code>.</p>
+    </li><li name="vulcan.Codec#seq" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Collection">
       <a id="seq[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Seq[A]]"></a><a id="seq[A](Codec[A]):Codec[Seq[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#seq[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Seq[A]]" title="Permalink">
@@ -941,8 +977,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">seq</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.seq.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="vulcan.Codec.seq.A">A</span>]]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#set" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#set" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Collection">
       <a id="set[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Set[A]]"></a><a id="set[A](Codec[A]):Codec[Set[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#set[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Set[A]]" title="Permalink">
@@ -957,8 +993,24 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">set</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.set.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Predef.Set">Set</span>[<span class="extype" name="vulcan.Codec.set.A">A</span>]]</span>
       </span>
       
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#short" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
+      <a id="short:vulcan.Codec[Short]"></a><a id="short:Codec[Short]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec$.html#short:vulcan.Codec[Short]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit final </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">short</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Short">Short</span>]</span>
+      </span>
       
-    </li><li name="vulcan.Codec#string" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#string" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="string:vulcan.Codec[String]"></a><a id="string:Codec[String]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#string:vulcan.Codec[String]" title="Permalink">
@@ -973,7 +1025,7 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">string</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
@@ -1006,7 +1058,7 @@ from the type <code>A</code> using type tags.</p>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="vulcan.Codec#unit" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec#unit" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="unit:vulcan.Codec[Unit]"></a><a id="unit:Codec[Unit]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#unit:vulcan.Codec[Unit]" title="Permalink">
@@ -1021,8 +1073,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">unit</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Unit">Unit</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#uuid" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#uuid" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="JavaUtil">
       <a id="uuid:vulcan.Codec[java.util.UUID]"></a><a id="uuid:Codec[UUID]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#uuid:vulcan.Codec[java.util.UUID]" title="Permalink">
@@ -1037,8 +1089,8 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">uuid</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="java.util.UUID">UUID</span>]</span>
       </span>
       
-      
-    </li><li name="vulcan.Codec#vector" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec#vector" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Collection">
       <a id="vector[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Vector[A]]"></a><a id="vector[A](Codec[A]):Codec[Vector[A]]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#vector[A](implicitcodec:vulcan.Codec[A]):vulcan.Codec[Vector[A]]" title="Permalink">
@@ -1053,7 +1105,7 @@ from the type <code>A</code> using type tags.</p>
         <span class="name">vector</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.vector.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="scala.Vector">Vector</span>[<span class="extype" name="vulcan.Codec.vector.A">A</span>]]</span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
@@ -1141,7 +1193,37 @@ from the type <code>A</code> using type tags.</p>
         </div>
 
         <div id="groupedMembers">
-        <div class="group" name="Ungrouped">
+        <div class="group" name="General">
+              <h3>General Codecs</h3>
+              <div class="comment cmt"><p>Default codecs for standard library types.</p></div>
+            </div><div class="group" name="Collection">
+              <h3>Collection Codecs</h3>
+              <div class="comment cmt"><p>Default codecs for standard library collection types.</p></div>
+            </div><div class="group" name="Cats">
+              <h3>Cats Codecs</h3>
+              <div class="comment cmt"><p>Default codecs for Cats data types and type class instances for <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>.</p></div>
+            </div><div class="group" name="Shapeless">
+              <h3>Shapeless Codecs</h3>
+              <div class="comment cmt"><p>Default codecs for Shapeless types.</p></div>
+            </div><div class="group" name="JavaTime">
+              <h3>Java Time Codecs</h3>
+              <div class="comment cmt"><p>Default codecs for <code>java.time</code> types.</p></div>
+            </div><div class="group" name="JavaUtil">
+              <h3>Java Util Codecs</h3>
+              <div class="comment cmt"><p>Default codecs for <code>java.util</code> types.</p></div>
+            </div><div class="group" name="Create">
+              <h3>Create Codecs</h3>
+              <div class="comment cmt"><p>Functions for creating new codecs.</p></div>
+            </div><div class="group" name="Derive">
+              <h3>Derive Codecs</h3>
+              <div class="comment cmt"><p>Functions for deriving new codecs.</p></div>
+            </div><div class="group" name="Magnolia">
+              <h3>Magnolia</h3>
+              <div class="comment cmt"><p>To support automatic derivation using <a href="#derive[A]:vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#derive">Codec#derive</a>.</p></div>
+            </div><div class="group" name="Utilities">
+              <h3>Utilities</h3>
+              <div class="comment cmt"><p>Miscellaneous utility functions.</p></div>
+            </div><div class="group" name="Ungrouped">
               <h3>Ungrouped</h3>
               
             </div>

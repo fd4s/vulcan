@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title></title>
-          <meta name="description" content="" />
-          <meta name="keywords" content="" />
+          <title>Vulcan v0.1.2 - vulcan.AvroError</title>
+          <meta name="description" content="Vulcan v0.1.2 - vulcan.AvroError" />
+          <meta name="keywords" content="Vulcan v0.1.2 vulcan.AvroError" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title"><span id="doc-version"></span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.1.2</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -87,20 +87,24 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="_root_">root</a></dd></dl></div>
     </li><li class="current-entities indented1">
                         <span class="separator"></span>
-                        <a class="class" href="AvroDoc.html" title="Annotation which can be used to include documentation in derived Avro Schemas."></a>
-                        <a href="AvroDoc.html" title="Annotation which can be used to include documentation in derived Avro Schemas.">AvroDoc</a>
+                        <a class="class" href="AvroDoc.html" title="Annotation which can be used to include documentation in derived schemas."></a>
+                        <a href="AvroDoc.html" title="Annotation which can be used to include documentation in derived schemas.">AvroDoc</a>
                       </li><li class="current-entities indented1">
                         <a class="object" href="AvroError$.html" title=""></a>
-                        <a class="class" href="" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding."></a>
-                        <a href="" title="Error which occurred while using Codec to generate an Avro Schema, or while encoding or decoding.">AvroError</a>
+                        <a class="class" href="" title="Error which occurred while generating a schema, or while encoding or decoding."></a>
+                        <a href="" title="Error which occurred while generating a schema, or while encoding or decoding.">AvroError</a>
                       </li><li class="current-entities indented1">
                         <span class="separator"></span>
-                        <a class="class" href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas."></a>
-                        <a href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived Avro Schemas.">AvroNamespace</a>
+                        <a class="class" href="AvroException.html" title="Throwable representation of an AvroError, created with AvroError#throwable."></a>
+                        <a href="AvroException.html" title="Throwable representation of an AvroError, created with AvroError#throwable.">AvroException</a>
+                      </li><li class="current-entities indented1">
+                        <span class="separator"></span>
+                        <a class="class" href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived schemas."></a>
+                        <a href="AvroNamespace.html" title="Annotation which can be used to set the namespace in derived schemas.">AvroNamespace</a>
                       </li><li class="current-entities indented1">
                         <a class="object" href="Codec$.html" title=""></a>
-                        <a class="class" href="Codec.html" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema."></a>
-                        <a href="Codec.html" title="Describes encoding from a type A to Java Avro using encode, decoding from a Java Avro type to A using decode, and the Avro schema used in the process as schema.">Codec</a>
+                        <a class="class" href="Codec.html" title="Provides a schema, along with encoding and decoding functions for a given type."></a>
+                        <a href="Codec.html" title="Provides a schema, along with encoding and decoding functions for a given type.">Codec</a>
                       </li>
               </ul>
             </div>
@@ -131,11 +135,10 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Error which occurred while using <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> to generate
-an Avro <code>Schema</code>, or while encoding or decoding. A new
-instance can be created with <a href="AvroError$.html#apply(message:=&gt;String):vulcan.AvroError" class="extmbr" name="vulcan.AvroError#apply">AvroError#apply</a>. We
-can use <a href="#message:String" class="extmbr" name="vulcan.AvroError#message">AvroError#message</a> to fetch the message.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.1.1/modules/core/src/main/scala/vulcan/AvroError.scala" target="_blank">AvroError.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Error which occurred while generating a schema, or
+while encoding or decoding.</p><p>Use <a href="AvroError$.html#apply(message:=&gt;String):vulcan.AvroError" class="extmbr" name="vulcan.AvroError#apply">AvroError#apply</a> to create an instance, and
+<a href="#message:String" class="extmbr" name="vulcan.AvroError#message">AvroError#message</a> to retrieve the message.
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.1.2/modules/core/src/main/scala/vulcan/AvroError.scala" target="_blank">AvroError.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -204,7 +207,23 @@ can use <a href="#message:String" class="extmbr" name="vulcan.AvroError#message"
         <span class="name">message</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       
-      <p class="shortcomment cmt">The error message.</p>
+      
+    </li><li name="vulcan.AvroError#throwable" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="throwable:Throwable"></a>
+      <span class="permalink">
+      <a href="../vulcan/AvroError.html#throwable:Throwable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">throwable</span><span class="result">: <span class="extype" name="scala.Throwable">Throwable</span></span>
+      </span>
+      
+      
     </li></ol>
             </div>
 
