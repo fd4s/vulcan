@@ -22,6 +22,7 @@ object Main {
         Map(
           "ORGANIZATION" -> organization,
           "CORE_MODULE_NAME" -> coreModuleName,
+          "ENUMERATUM_MODULE_NAME" -> enumeratumModuleName,
           "REFINED_MODULE_NAME" -> refinedModuleName,
           "LATEST_VERSION" -> latestVersion,
           "LATEST_MINOR_VERSION" -> minorVersion(latestVersion),
@@ -34,6 +35,7 @@ object Main {
           "API_BASE_URL" -> s"/vulcan/api/vulcan",
           "AVRO_VERSION" -> avroVersion,
           "CATS_VERSION" -> catsVersion,
+          "ENUMERATUM_VERSION" -> enumeratumVersion,
           "MAGNOLIA_VERSION" -> magnoliaVersion,
           "REFINED_VERSION" -> refinedVersion,
           "SHAPELESS_VERSION" -> shapelessVersion

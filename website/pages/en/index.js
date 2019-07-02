@@ -69,6 +69,7 @@ class Index extends React.Component {
     const { baseUrl, buildInfo } = siteConfig;
     const {
       coreModuleName,
+      enumeratumModuleName,
       latestVersion,
       organization,
       refinedModuleName,
@@ -100,6 +101,7 @@ To get started with [sbt](https://scala-sbt.org), simply add the following lines
 \`\`\`scala
 libraryDependencies ++= Seq(
   "${organization}" %% "${coreModuleName}",
+  "${organization}" %% "${enumeratumModuleName}",
   "${organization}" %% "${refinedModuleName}"
 ).map(_ % "${latestVersion}")
 \`\`\`
