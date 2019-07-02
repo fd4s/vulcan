@@ -39,6 +39,8 @@ final class RoundtripSpec extends BaseSpec {
 
   describe("Boolean") { it("roundtrip") { roundtrip[Boolean] } }
 
+  describe("Byte") { it("roundtrip") { roundtrip[Byte] } }
+
   describe("Array[Byte]") {
     it("roundtrip") {
       implicit val arrayByteEq: Eq[Array[Byte]] =
@@ -60,6 +62,8 @@ final class RoundtripSpec extends BaseSpec {
       roundtrip[Chain[Int]]
     }
   }
+
+  describe("Char") { it("roundtrip") { roundtrip[Char] } }
 
   describe("Coproduct") {
     it("roundtrip") {
@@ -227,6 +231,8 @@ final class RoundtripSpec extends BaseSpec {
   }
 
   describe("Set") { it("roundtrip") { roundtrip[Set[Int]] } }
+
+  describe("Short") { it("roundtrip") { roundtrip[Short] } }
 
   describe("String") { it("roundtrip") { roundtrip[String] } }
 
