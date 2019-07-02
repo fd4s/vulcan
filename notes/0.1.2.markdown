@@ -16,3 +16,5 @@
 [#9]: https://github.com/ovotech/vulcan/pull/9
 [#10]: https://github.com/ovotech/vulcan/pull/10
 [#11]: https://github.com/ovotech/vulcan/pull/11
+
+Released on 2019-07-02.
