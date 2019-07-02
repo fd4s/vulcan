@@ -20,6 +20,7 @@ To get started with [sbt](https://scala-sbt.org), simply add the following lines
 ```scala
 libraryDependencies ++= Seq(
   "@ORGANIZATION@" %% "@CORE_MODULE_NAME@",
+  "@ORGANIZATION@" %% "@ENUMERATUM_MODULE_NAME@",
   "@ORGANIZATION@" %% "@REFINED_MODULE_NAME@"
 ).map(_ % "@LATEST_VERSION@")
 ```
@@ -48,6 +49,7 @@ The `vulcan` module has the following dependencies.
 
 Additional modules have the following dependencies.
 
+- `@ENUMERATUM_MODULE_NAME@` depends on enumeratum @ENUMERATUM_VERSION@ ([GitHub](https://github.com/lloydmeta/enumeratum)).
 - `@REFINED_MODULE_NAME@` depends on refined @REFINED_VERSION@ ([GitHub](https://github.com/fthomas/refined)).
 
 ## Inspiration

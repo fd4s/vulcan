@@ -4,6 +4,8 @@ val avroVersion = "1.9.0"
 
 val catsVersion = "1.6.1"
 
+val enumeratumVersion = "1.5.13"
+
 val magnoliaVersion = "0.10.0"
 
 val refinedVersion = "0.9.8"
@@ -21,7 +23,7 @@ lazy val root = project
     console := (console in (core, Compile)).value,
     console in Test := (console in (core, Test)).value
   )
-  .aggregate(core, refined)
+  .aggregate(core, enumeratum, refined)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -34,6 +36,20 @@ lazy val core = project
     scalaSettings,
     testSettings
   )
+
+lazy val enumeratum = project
+  .in(file("modules/enumeratum"))
+  .settings(
+    libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion,
+    moduleName := "vulcan-enumeratum",
+    name := moduleName.value,
+    dependencySettings,
+    publishSettings,
+    mimaSettings,
+    scalaSettings,
+    testSettings
+  )
+  .dependsOn(core)
 
 lazy val refined = project
   .in(file("modules/refined"))
@@ -61,7 +77,7 @@ lazy val docs = project
     mdocSettings,
     buildInfoSettings
   )
-  .dependsOn(core, refined)
+  .dependsOn(core, enumeratum, refined)
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
@@ -82,7 +98,7 @@ lazy val mdocSettings = Seq(
   mdoc := run.in(Compile).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
   crossScalaVersions := Seq(scalaVersion.value),
-  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, refined),
+  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, enumeratum, refined),
   target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
   cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
   docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(unidoc in Compile).value,
@@ -105,12 +121,14 @@ lazy val buildInfoSettings = Seq(
     scalacOptions,
     sourceDirectory,
     latestVersion in ThisBuild,
-    BuildInfoKey.map(moduleName in core) { case (k, v)    => "core" ++ k.capitalize -> v },
-    BuildInfoKey.map(moduleName in refined) { case (k, v) => "refined" ++ k.capitalize -> v },
+    BuildInfoKey.map(moduleName in core) { case (k, v)       => "core" ++ k.capitalize -> v },
+    BuildInfoKey.map(moduleName in enumeratum) { case (k, v) => "enumeratum" ++ k.capitalize -> v },
+    BuildInfoKey.map(moduleName in refined) { case (k, v)    => "refined" ++ k.capitalize -> v },
     organization in root,
     crossScalaVersions in root,
     BuildInfoKey("avroVersion" -> avroVersion),
     BuildInfoKey("catsVersion" -> catsVersion),
+    BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
     BuildInfoKey("magnoliaVersion" -> magnoliaVersion),
     BuildInfoKey("refinedVersion" -> refinedVersion),
     BuildInfoKey("shapelessVersion" -> shapelessVersion)
@@ -262,6 +280,7 @@ updateSiteVariables in ThisBuild := {
     Map[String, String](
       "organization" -> (organization in root).value,
       "coreModuleName" -> (moduleName in core).value,
+      "enumeratumModuleName" -> (moduleName in enumeratum).value,
       "refinedModuleName" -> (moduleName in refined).value,
       "latestVersion" -> (latestVersion in ThisBuild).value,
       "scalaMinorVersion" -> minorVersion((scalaVersion in root).value),

@@ -95,7 +95,7 @@ Codec.deriveEnum[Fruit](
 )
 ```
 
-Annotations like `@AvroDoc` can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like [Enumeratum][enumeratum] for enumerations, in which case we can use `Codec.deriveEnum` to easily derive [`Codec`][codec]s.
+Annotations like `@AvroDoc` can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like [Enumeratum](modules.md#enumeratum) for enumerations, in which case we can easily use `Codec.deriveEnum` to derive [`Codec`][codec]s.
 
 If we need more precise control of how enumerations are encoded, we can use `Codec.enum`.
 
@@ -187,5 +187,4 @@ Codec[Option[Int]]
 
 [avroerror]: @API_BASE_URL@/AvroError.html
 [codec]: @API_BASE_URL@/Codec.html
-[enumeratum]: https://github.com/lloydmeta/enumeratum
 [invariant]: https://typelevel.org/cats/typeclasses/invariant.html
