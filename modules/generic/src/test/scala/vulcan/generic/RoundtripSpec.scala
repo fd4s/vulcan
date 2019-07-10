@@ -60,10 +60,10 @@ final class RoundtripSpec extends AnyFunSpec with ScalaCheckPropertyChecks with 
     val avroSchema = codec.schema
     assert(avroSchema.isRight)
 
-    val encoded = codec.encode(a, avroSchema.right.get)
+    val encoded = codec.encode(a, avroSchema.value)
     assert(encoded.isRight)
 
-    val decoded = codec.decode(encoded.right.get, avroSchema.right.get)
+    val decoded = codec.decode(encoded.value, avroSchema.value)
     assert(decoded === Right(a))
   }
 

@@ -6,7 +6,7 @@ val catsVersion = "2.0.0-M4"
 
 val enumeratumVersion = "1.5.13"
 
-val magnoliaVersion = "0.10.0"
+val magnoliaVersion = "0.11.0"
 
 val refinedVersion = "0.9.8"
 
@@ -67,9 +67,7 @@ lazy val generic = project
     ),
     publishSettings,
     mimaSettings,
-    scalaSettings ++ Seq(
-      crossScalaVersions := Seq(scala212)
-    ),
+    scalaSettings,
     testSettings
   )
   .dependsOn(core)
