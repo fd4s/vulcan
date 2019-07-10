@@ -1,7 +1,7 @@
-latestVersion in ThisBuild := "0.1.2"
+latestVersion in ThisBuild := "0.2.0-M1"
 
-unreleasedModuleNames in ThisBuild := Set(
-  "vulcan-generic"
+unreleasedModuleNames in ThisBuild := Set()
+
+binaryCompatibleVersions in ThisBuild := Set(
+  "0.2.0-M1"
 )
-
-binaryCompatibleVersions in ThisBuild := Set()
