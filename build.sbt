@@ -216,7 +216,7 @@ lazy val publishSettings =
         "scm:git@github.com:ovotech/vulcan.git"
       )
     ),
-    releaseCrossBuild := true,
+    releaseCrossBuild := false, // See https://github.com/sbt/sbt-release/issues/214
     releaseUseGlobalVersion := true,
     releaseTagName := s"v${(version in ThisBuild).value}",
     releaseTagComment := s"Release version ${(version in ThisBuild).value}",
@@ -225,14 +225,14 @@ lazy val publishSettings =
       checkSnapshotDependencies,
       inquireVersions,
       runClean,
-      runTest,
+      releaseStepCommandAndRemaining("+test"),
       setReleaseVersion,
       setLatestVersion,
       releaseStepTask(updateSiteVariables in ThisBuild),
       releaseStepTask(addDateToReleaseNotes in ThisBuild),
       commitReleaseVersion,
       tagRelease,
-      publishArtifacts,
+      releaseStepCommandAndRemaining("+publish"),
       releaseStepCommand("sonatypeRelease"),
       setNextVersion,
       commitNextVersion,
