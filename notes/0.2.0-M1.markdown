@@ -5,3 +5,5 @@
 - Move generic derivation to `vulcan-generic` module. ([#13][#13])
 
 [#13]: https://github.com/ovotech/vulcan/pull/13
+
+Released on 2019-07-10.
