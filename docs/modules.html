@@ -131,6 +131,66 @@
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Day</span>]
 <span class="hljs-comment">// res2: Codec[Day] = Codec("int")</span>
 </code></pre>
+<h2><a class="anchor" aria-hidden="true" id="generic"></a><a href="#generic" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Generic</h2>
+<p>The <code>vulcan-generic</code> module provides generic derivation of <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s. To derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for <code>case class</code>es or <code>sealed trait</code>s, we can use <code>Codec.derive</code>. Annotations like <code>@AvroDoc</code> and <code>@AvroNamespace</code> can be used to customize the documentation and namespace during derivation.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.generic._
+
+<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"Person with a first name, last name, and optional age"</span>)
+<span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span>(<span class="hljs-params">firstName: <span class="hljs-type">String</span>, lastName: <span class="hljs-type">String</span>, age: <span class="hljs-type">Option</span>[<span class="hljs-type">Int</span>]</span>)</span>
+
+<span class="hljs-type">Codec</span>.derive[<span class="hljs-type">Person</span>]
+<span class="hljs-comment">// res3: Codec[Person] = Codec({</span>
+<span class="hljs-comment">//   "type" : "record",</span>
+<span class="hljs-comment">//   "name" : "Person",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "Person with a first name, last name, and optional age",</span>
+<span class="hljs-comment">//   "fields" : [ {</span>
+<span class="hljs-comment">//     "name" : "firstName",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   }, {</span>
+<span class="hljs-comment">//     "name" : "lastName",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   }, {</span>
+<span class="hljs-comment">//     "name" : "age",</span>
+<span class="hljs-comment">//     "type" : [ "null", "int" ]</span>
+<span class="hljs-comment">//   } ]</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<p>While <code>case class</code>es correspond to Avro records, <code>sealed trait</code>s correspond to unions.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">trait</span> <span class="hljs-title">FirstOrSecond</span></span>
+
+<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">First</span>(<span class="hljs-params">value: <span class="hljs-type">Int</span></span>) <span class="hljs-keyword">extends</span> <span class="hljs-title">FirstOrSecond</span></span>
+
+<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Second</span>(<span class="hljs-params">value: <span class="hljs-type">String</span></span>) <span class="hljs-keyword">extends</span> <span class="hljs-title">FirstOrSecond</span></span>
+
+<span class="hljs-type">Codec</span>.derive[<span class="hljs-type">FirstOrSecond</span>]
+<span class="hljs-comment">// res4: Codec[FirstOrSecond] = Codec([ {</span>
+<span class="hljs-comment">//   "type" : "record",</span>
+<span class="hljs-comment">//   "name" : "First",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "fields" : [ {</span>
+<span class="hljs-comment">//     "name" : "value",</span>
+<span class="hljs-comment">//     "type" : "int"</span>
+<span class="hljs-comment">//   } ]</span>
+<span class="hljs-comment">// }, {</span>
+<span class="hljs-comment">//   "type" : "record",</span>
+<span class="hljs-comment">//   "name" : "Second",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "fields" : [ {</span>
+<span class="hljs-comment">//     "name" : "value",</span>
+<span class="hljs-comment">//     "type" : "string"</span>
+<span class="hljs-comment">//   } ]</span>
+<span class="hljs-comment">// } ])</span>
+</code></pre>
+<p>Shapeless <code>Coproduct</code>s are also supported and correspond to Avro unions.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> shapeless.{:+:, <span class="hljs-type">CNil</span>}
+
+<span class="hljs-type">Codec</span>[<span class="hljs-type">Int</span> :+: <span class="hljs-type">String</span> :+: <span class="hljs-type">CNil</span>]
+<span class="hljs-comment">// res5: Codec[Int :+: String :+: CNil] = Codec([ "int", "string" ])</span>
+</code></pre>
 <h2><a class="anchor" aria-hidden="true" id="refined"></a><a href="#refined" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Refined</h2>
 <p>The <code>vulcan-refined</code> module provides <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for refinement types. Refinement types are encoded using their base type (e.g. <code>Int</code> for <code>PosInt</code>). When decoding, <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s check to ensure values conform to the predicate of the refinement type (e.g. <code>Positive</code> for <code>PosInt</code>), and raise an error for values which do not conform.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> eu.timepit.refined.auto._
@@ -139,14 +199,14 @@
 <span class="hljs-keyword">import</span> vulcan.refined._
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">PosInt</span>]
-<span class="hljs-comment">// res3: Codec[PosInt] = Codec("int")</span>
+<span class="hljs-comment">// res6: Codec[PosInt] = Codec("int")</span>
 
 encode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">1</span>)
-<span class="hljs-comment">// res4: Either[vulcan.AvroError, Any] = Right(1)</span>
+<span class="hljs-comment">// res7: Either[vulcan.AvroError, Any] = Right(1)</span>
 
 decode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">0</span>)
-<span class="hljs-comment">// res5: Either[vulcan.AvroError, PosInt] = Left(</span>
+<span class="hljs-comment">// res8: Either[vulcan.AvroError, PosInt] = Left(</span>
 <span class="hljs-comment">//   AvroError(Predicate failed: (0 &gt; 0).)</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/vulcan/docs/codecs"><span class="arrow-prev">← </span><span>Codecs</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#enumeratum">Enumeratum</a></li><li><a href="#refined">Refined</a></li></ul></nav></div><footer class="nav-footer" id="footer"><hr class="separator"/><section class="copyright">Copyright © 2019 OVO Energy Limited.<br/>Icon designed by <a href="https://www.flaticon.com/authors/kiranshastry" rel="noopener">Kiranshastry</a> from Flaticon.</section></footer></div></body></html>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/vulcan/docs/codecs"><span class="arrow-prev">← </span><span>Codecs</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#enumeratum">Enumeratum</a></li><li><a href="#generic">Generic</a></li><li><a href="#refined">Refined</a></li></ul></nav></div><footer class="nav-footer" id="footer"><hr class="separator"/><section class="copyright">Copyright © 2019 OVO Energy Limited.<br/>Icon designed by <a href="https://www.flaticon.com/authors/kiranshastry" rel="noopener">Kiranshastry</a> from Flaticon.</section></footer></div></body></html>

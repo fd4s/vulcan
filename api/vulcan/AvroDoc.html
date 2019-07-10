@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Vulcan v0.1.2 - vulcan.AvroDoc</title>
-          <meta name="description" content="Vulcan v0.1.2 - vulcan.AvroDoc" />
-          <meta name="keywords" content="Vulcan v0.1.2 vulcan.AvroDoc" />
+          <title>Vulcan v0.2.0-M1 - vulcan.AvroDoc</title>
+          <meta name="description" content="Vulcan v0.2.0 - M1 - vulcan.AvroDoc" />
+          <meta name="keywords" content="Vulcan v0.2.0 M1 vulcan.AvroDoc" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Vulcan<span id="doc-version">v0.1.2</span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-M1</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -85,6 +85,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="vulcan.generic" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="generic"></a><a id="generic:generic"></a>
+      <span class="permalink">
+      <a href="../vulcan/index.html#generic" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="generic/index.html"><span class="name">generic</span></a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="vulcan">vulcan</a></dd></dl></div>
     </li><li class="current-entities indented1">
                         <span class="separator"></span>
                         <a class="class" href="" title="Annotation which can be used to include documentation in derived schemas."></a>
@@ -138,10 +154,11 @@ in derived schemas.</p><p>The annotation can be used in the following situations
 - Annotate a type for enum documentation when using
   <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec#deriveEnum</a>.<br>
 - Annotate a <code>case class</code> for record documentation
-  when using <a href="Codec$.html#derive[A]:vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#derive">Codec#derive</a>.<br>
+  when using <code>Codec#derive</code> from the generic module.<br>
 - Annotate a <code>case class</code> parameter for record field
-  documentation when using <a href="Codec$.html#derive[A]:vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#derive">Codec#derive</a>.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.1.2/modules/core/src/main/scala/vulcan/AvroDoc.scala" target="_blank">AvroDoc.scala</a></dd></dl><div class="toggleContainer block">
+  documentation when using <code>Codec#derive</code> from the
+  generic module.
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-M1/modules/core/src/main/scala/vulcan/AvroDoc.scala" target="_blank">AvroDoc.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
