@@ -3,17 +3,16 @@ package enumeratum
 import enumeratum.EnumEntry.Lowercase
 import enumeratum.VulcanEnumSpec.Suit
 import org.scalacheck.Gen
-import org.scalatest.EitherValues._
-import org.scalatest.FunSpec
-import org.scalatest.prop.PropertyChecks
-import vulcan.{AvroDoc, AvroNamespace, Codec, encode, decode}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import vulcan._
 
-final class VulcanEnumSpec extends FunSpec with PropertyChecks {
+final class VulcanEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("VulcanEnum") {
     describe("schema") {
       it("should use an enum schema") {
         assert {
-          Codec[Suit].schema.right.value.toString ===
+          Codec[Suit].schema.value.toString ===
             """{"type":"enum","name":"Suit","namespace":"com.example","doc":"The different card suits","symbols":["clubs","diamonds","hearts","spades"]}"""
         }
       }
@@ -22,15 +21,15 @@ final class VulcanEnumSpec extends FunSpec with PropertyChecks {
     it("should roundtrip enum values") {
       val gen = Gen.oneOf[Suit](Suit.Diamonds, Suit.Hearts, Suit.Spades)
       forAll(gen) { suit =>
-        val roundtrip = encode(suit).right.flatMap(decode[Suit])
-        assert(roundtrip.right.value === suit)
+        val roundtrip = encode(suit).flatMap(decode[Suit])
+        assert(roundtrip.value === suit)
       }
     }
 
     it("should error if withNameOption does not handle schema symbol") {
-      val roundtrip = encode[Suit](Suit.Clubs).right.flatMap(decode[Suit])
+      val roundtrip = encode[Suit](Suit.Clubs).flatMap(decode[Suit])
       assert {
-        roundtrip.left.value.message ===
+        roundtrip.swap.value.message ===
           "clubs is not a member of Suit (clubs, diamonds, hearts, spades)"
       }
     }

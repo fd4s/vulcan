@@ -70,11 +70,16 @@ class Index extends React.Component {
     const {
       coreModuleName,
       enumeratumModuleName,
+      genericModuleName,
       latestVersion,
       organization,
       refinedModuleName,
       scalaPublishVersions
     } = buildInfo;
+
+    const latestVersionBadge = latestVersion
+      .replace("-", "--")
+      .replace("_", "__");
 
     const Block = props => (
       <Container
@@ -90,7 +95,7 @@ class Index extends React.Component {
       </Container>
     );
 
-    const index = `[![Travis](https://img.shields.io/travis/ovotech/vulcan/master.svg)](https://travis-ci.org/ovotech/vulcan) [![Codecov](https://img.shields.io/codecov/c/github/ovotech/vulcan.svg)](https://codecov.io/gh/ovotech/vulcan) [![Gitter](https://img.shields.io/gitter/room/ovotech/vulcan.svg?colorB=36bc97)](https://gitter.im/ovotech/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersion}-orange.svg)](https://index.scala-lang.org/ovotech/vulcan)
+    const index = `[![Travis](https://img.shields.io/travis/ovotech/vulcan/master.svg)](https://travis-ci.org/ovotech/vulcan) [![Codecov](https://img.shields.io/codecov/c/github/ovotech/vulcan.svg)](https://codecov.io/gh/ovotech/vulcan) [![Gitter](https://img.shields.io/gitter/room/ovotech/vulcan.svg?colorB=36bc97)](https://gitter.im/ovotech/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/ovotech/vulcan)
 
 Functional Avro encodings for Scala using the official Apache Avro library.<br>
 Project is under active development. Feedback and contributions welcome.
@@ -102,6 +107,7 @@ To get started with [sbt](https://scala-sbt.org), simply add the following lines
 libraryDependencies ++= Seq(
   "${organization}" %% "${coreModuleName}",
   "${organization}" %% "${enumeratumModuleName}",
+  "${organization}" %% "${genericModuleName}",
   "${organization}" %% "${refinedModuleName}"
 ).map(_ % "${latestVersion}")
 \`\`\`

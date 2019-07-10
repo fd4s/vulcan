@@ -4,6 +4,7 @@ import cats.Eq
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import vulcan.{AvroNamespace, Codec}
+import vulcan.generic._
 
 @AvroNamespace("com.example")
 final case class CaseClassAvroNamespace(value: Option[String])

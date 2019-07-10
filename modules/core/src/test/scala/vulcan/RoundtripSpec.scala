@@ -13,7 +13,6 @@ import org.scalatest.Assertion
 import scala.collection.immutable.SortedSet
 import vulcan.examples._
 import java.util.UUID
-import shapeless.{:+:, CNil, Coproduct}
 
 final class RoundtripSpec extends BaseSpec {
   describe("BigDecimal") {
@@ -64,36 +63,6 @@ final class RoundtripSpec extends BaseSpec {
   }
 
   describe("Char") { it("roundtrip") { roundtrip[Char] } }
-
-  describe("Coproduct") {
-    it("roundtrip") {
-      type Types = CaseClassField :+: Int :+: CaseClassAvroDoc :+: CNil
-
-      implicit val arbitraryTypes: Arbitrary[Types] =
-        Arbitrary {
-          Gen.oneOf(
-            arbitrary[Int].map(n => Coproduct[Types](CaseClassField(n))),
-            arbitrary[Int].map(n => Coproduct[Types](n)),
-            arbitrary[Option[String]].map(os => Coproduct[Types](CaseClassAvroDoc(os)))
-          )
-        }
-
-      implicit val eqTypes: Eq[Types] =
-        Eq.fromUniversalEquals
-
-      roundtrip[Types]
-    }
-  }
-
-  describe("derived.caseClass") {
-    it("CaseClassField") { roundtrip[CaseClassField] }
-    it("CaseClassAvroNamespace") { roundtrip[CaseClassAvroNamespace] }
-  }
-
-  describe("derived.sealedTrait") {
-    it("SealedTraitCaseClassAvroNamespace") { roundtrip[SealedTraitCaseClassAvroNamespace] }
-    it("SealedTraitCaseClassCustom") { roundtrip[SealedTraitCaseClassCustom] }
-  }
 
   describe("derived.enum") {
     it("SealedTraitEnumDerived") { roundtrip[SealedTraitEnumDerived] }
@@ -201,6 +170,8 @@ final class RoundtripSpec extends BaseSpec {
 
   describe("Option") { it("roundtrip") { roundtrip[Option[Int]] } }
 
+  describe("Record") { it("roundtrip") { roundtrip[CaseClassField] } }
+
   describe("Seq") {
     it("roundtrip") {
       implicit def seqArbitrary[A](
@@ -216,17 +187,6 @@ final class RoundtripSpec extends BaseSpec {
         }
 
       roundtrip[Seq[Int]]
-    }
-  }
-
-  describe("Record") {
-    it("roundtrip") {
-      implicit val caseClassFieldCodec: Codec[CaseClassField] =
-        Codec.record("CaseClassField") { field =>
-          field("value", _.value).map(CaseClassField(_))
-        }
-
-      roundtrip[CaseClassField]
     }
   }
 
@@ -267,10 +227,10 @@ final class RoundtripSpec extends BaseSpec {
     val avroSchema = codec.schema
     assert(avroSchema.isRight)
 
-    val encoded = codec.encode(a, avroSchema.right.get)
+    val encoded = codec.encode(a, avroSchema.value)
     assert(encoded.isRight)
 
-    val decoded = codec.decode(encoded.right.get, avroSchema.right.get)
+    val decoded = codec.decode(encoded.value, avroSchema.value)
     assert(decoded === Right(a))
   }
 
@@ -281,7 +241,7 @@ final class RoundtripSpec extends BaseSpec {
     val binary = toBinary(a)
     assert(binary.isRight)
 
-    val decoded = fromBinary(binary.right.get)
+    val decoded = fromBinary(binary.value)
     assert(decoded === Right(a))
   }
 

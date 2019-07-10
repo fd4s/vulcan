@@ -4,14 +4,13 @@ import cats.Eq
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import vulcan.Codec
+import vulcan.generic._
 
 final case class CaseClassField(value: Int)
 
 object CaseClassField {
   implicit val codec: Codec[CaseClassField] =
-    Codec.record("CaseClassField") { field =>
-      field("value", _.value).map(CaseClassField(_))
-    }
+    Codec.derive
 
   implicit val caseClassFieldArbitrary: Arbitrary[CaseClassField] =
     Arbitrary(arbitrary[Int].map(CaseClassField(_)))
