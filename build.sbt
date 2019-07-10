@@ -19,6 +19,7 @@ val scala213 = "2.13.0"
 lazy val root = project
   .in(file("."))
   .settings(
+    mimaSettings,
     noPublishSettings,
     scalaVersion := scala212,
     console := (console in (core, Compile)).value,
@@ -241,6 +242,7 @@ lazy val publishSettings =
   )
 
 lazy val mimaSettings = Seq(
+  mimaFailOnNoPrevious := false,
   mimaPreviousArtifacts := {
     val released = !unreleasedModuleNames.value.contains(moduleName.value)
     val publishing = publishArtifact.value
