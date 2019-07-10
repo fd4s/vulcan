@@ -124,22 +124,12 @@ Codec.enum[Fruit](
 
 Avro records closely correspond to `case class`es.
 
-`@GENERIC_MODULE_NAME@` provides `Codec.derive` which can derive [`Codec`][codec]s for `case class`es.
-
-```scala mdoc
-import vulcan.generic._
-
-@AvroNamespace("com.example")
-@AvroDoc("Person with a first name, last name, and optional age")
-final case class Person(firstName: String, lastName: String, age: Option[Int])
-
-Codec.derive[Person]
-```
-
-Annotations like `@AvroDoc` can be used to customize the derivation. If we need more precise control over how records are encoded, e.g. in order to specify default field values, we can instead use `Codec.record` and explicitly specify the encoding.
+We can use `Codec.record` to specify a record encoding.
 
 ```scala mdoc
 import cats.implicits._
+
+final case class Person(firstName: String, lastName: String, age: Option[Int])
 
 Codec.record[Person](
   name = "Person",
@@ -155,37 +145,35 @@ Codec.record[Person](
 }
 ```
 
+For generic derivation support, refer to the [generic module](modules.md#generic).
+
 ## Unions
 
 Avro unions closely correspond to `sealed trait`s.
 
-`@GENERIC_MODULE_NAME@` provides `Codec.derive` which can derive [`Codec`][codec]s for `sealed trait`s.
+We can use `Codec.union` to specify a union encoding.
 
 ```scala mdoc
 sealed trait FirstOrSecond
 
-@AvroNamespace("com.example")
 final case class First(value: Int) extends FirstOrSecond
+object First {
+  implicit val codec: Codec[First] =
+    Codec[Int].imap(apply)(_.value)
+}
 
-@AvroNamespace("com.example")
 final case class Second(value: String) extends FirstOrSecond
+object Second {
+  implicit val codec: Codec[Second] =
+    Codec[String].imap(apply)(_.value)
+}
 
-Codec.derive[FirstOrSecond]
+Codec.union[FirstOrSecond] { alt =>
+  alt[First] |+| alt[Second]
+}
 ```
 
-Shapeless `Coproduct`s are also encoded as unions.
-
-```scala mdoc
-import shapeless.{:+:, CNil}
-
-Codec[Int :+: String :+: CNil]
-```
-
-`Option`s are also encoded as unions.
-
-```scala mdoc
-Codec[Option[Int]]
-```
+For generic derivation support, refer to the [generic module](modules.md#generic).
 
 [avroerror]: @API_BASE_URL@/AvroError.html
 [codec]: @API_BASE_URL@/Codec.html

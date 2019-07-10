@@ -205,6 +205,8 @@ final class RoundtripSpec extends BaseSpec {
     }
   }
 
+  describe("Union") { it("roundtrip") { roundtrip[SealedTraitCaseClass] } }
+
   describe("Unit") { it("roundtrip") { roundtrip[Unit] } }
 
   describe("Vector") { it("roundtrip") { roundtrip[Vector[Int]] } }

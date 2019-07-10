@@ -96,11 +96,11 @@ final object AvroError {
   ): AvroError =
     AvroError(s"Missing schema $subtypeName in union for type $decodingTypeName")
 
-  private[vulcan] final def decodeMissingUnionSubtype(
-    subtypeName: String,
+  private[vulcan] final def decodeMissingUnionAlternative(
+    alternativeName: String,
     decodingTypeName: String
   ): AvroError =
-    AvroError(s"Missing subtype $subtypeName in union for type $decodingTypeName")
+    AvroError(s"Missing alternative $alternativeName in union for type $decodingTypeName")
 
   private[vulcan] final def decodeNameMismatch(
     fullName: String,
@@ -165,6 +165,15 @@ final object AvroError {
       s"Got unexpected type $typeName while decoding $decodingTypeName, expected type $expectedType"
     }
 
+  private[vulcan] final def decodeExhaustedAlternatives(
+    value: Any,
+    decodingTypeName: String
+  ): AvroError =
+    AvroError {
+      val typeName = if (value != null) value.getClass().getTypeName() else "null"
+      s"Exhausted alternatives for type $typeName while decoding $decodingTypeName"
+    }
+
   private[vulcan] final def unexpectedChar(
     length: Int
   ): AvroError =
@@ -209,6 +218,15 @@ final object AvroError {
   ): AvroError =
     AvroError {
       s"Missing schema $subtypeName in union for type $encodingTypeName"
+    }
+
+  private[vulcan] final def encodeExhaustedAlternatives(
+    value: Any,
+    encodingTypeName: String
+  ): AvroError =
+    AvroError {
+      val typeName = if (value != null) value.getClass().getTypeName() else "null"
+      s"Exhausted alternatives for type $typeName while encoding $encodingTypeName"
     }
 
   private[vulcan] final def encodeNameMismatch(
