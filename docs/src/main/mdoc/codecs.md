@@ -124,9 +124,11 @@ Codec.enum[Fruit](
 
 Avro records closely correspond to `case class`es.
 
-`Codec.derive` can be used to automatically derive [`Codec`][codec]s for `case class`es.
+`@GENERIC_MODULE_NAME@` provides `Codec.derive` which can derive [`Codec`][codec]s for `case class`es.
 
 ```scala mdoc
+import vulcan.generic._
+
 @AvroNamespace("com.example")
 @AvroDoc("Person with a first name, last name, and optional age")
 final case class Person(firstName: String, lastName: String, age: Option[Int])
@@ -157,7 +159,7 @@ Codec.record[Person](
 
 Avro unions closely correspond to `sealed trait`s.
 
-`Codec.derive` can be used to automatically derive [`Codec`][codec]s for `sealed trait`s.
+`@GENERIC_MODULE_NAME@` provides `Codec.derive` which can derive [`Codec`][codec]s for `sealed trait`s.
 
 ```scala mdoc
 sealed trait FirstOrSecond

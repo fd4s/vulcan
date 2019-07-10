@@ -26,7 +26,7 @@ package object vulcan {
     * }}}
     */
   final def encode[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Any] =
-    codec.schema.right.flatMap(codec.encode(a, _))
+    codec.schema.flatMap(codec.encode(a, _))
 
   /**
     * Decodes the specified value using the [[Codec]]
@@ -38,5 +38,5 @@ package object vulcan {
     * }}}
     */
   final def decode[A](value: Any)(implicit codec: Codec[A]): Either[AvroError, A] =
-    codec.schema.right.flatMap(codec.decode(value, _))
+    codec.schema.flatMap(codec.decode(value, _))
 }

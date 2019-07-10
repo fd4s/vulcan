@@ -9,7 +9,7 @@ import org.apache.avro.Schema
 import org.scalacheck.{Arbitrary, Gen}
 import scala.util.Try
 
-final class CodecInvariantSpec extends CatsSuite {
+final class CodecInvariantSpec extends CatsSuite with EitherValues {
   val schemaGen: Gen[Either[AvroError, Schema]] =
     Gen.oneOf(
       Left(AvroError("error")),
@@ -71,8 +71,8 @@ final class CodecInvariantSpec extends CatsSuite {
 
           assert(e1.isRight == e2.isRight)
           if (e1.isRight && e2.isRight) {
-            val d1 = c1.schema.flatMap(c1.decode(e1.right.get, _))
-            val d2 = c2.schema.flatMap(c2.decode(e2.right.get, _))
+            val d1 = c1.schema.flatMap(c1.decode(e1.value, _))
+            val d2 = c2.schema.flatMap(c2.decode(e2.value, _))
             assert(d1 === d2)
           }
         }

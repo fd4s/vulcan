@@ -2,7 +2,7 @@ import ReleaseTransformations._
 
 val avroVersion = "1.9.0"
 
-val catsVersion = "1.6.1"
+val catsVersion = "2.0.0-M4"
 
 val enumeratumVersion = "1.5.13"
 
@@ -12,18 +12,19 @@ val refinedVersion = "0.9.8"
 
 val shapelessVersion = "2.3.3"
 
+val scala212 = "2.12.8"
+
+val scala213 = "2.13.0"
+
 lazy val root = project
   .in(file("."))
   .settings(
-    dependencySettings,
     noPublishSettings,
-    mimaSettings,
-    scalaSettings,
-    testSettings,
+    scalaVersion := scala212,
     console := (console in (core, Compile)).value,
     console in Test := (console in (core, Test)).value
   )
-  .aggregate(core, enumeratum, refined)
+  .aggregate(core, enumeratum, generic, refined)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -40,10 +41,11 @@ lazy val core = project
 lazy val enumeratum = project
   .in(file("modules/enumeratum"))
   .settings(
-    libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion,
     moduleName := "vulcan-enumeratum",
     name := moduleName.value,
-    dependencySettings,
+    dependencySettings ++ Seq(
+      libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
+    ),
     publishSettings,
     mimaSettings,
     scalaSettings,
@@ -51,14 +53,37 @@ lazy val enumeratum = project
   )
   .dependsOn(core)
 
+lazy val generic = project
+  .in(file("modules/generic"))
+  .settings(
+    moduleName := "vulcan-generic",
+    name := moduleName.value,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "com.propensive" %% "magnolia" % magnoliaVersion,
+        "com.chuusai" %% "shapeless" % shapelessVersion
+      )
+    ),
+    publishSettings,
+    mimaSettings,
+    scalaSettings ++ Seq(
+      crossScalaVersions := Seq(scala212)
+    ),
+    testSettings
+  )
+  .dependsOn(core)
+
 lazy val refined = project
   .in(file("modules/refined"))
   .settings(
-    libraryDependencies += "eu.timepit" %% "refined" % refinedVersion,
-    libraryDependencies += "eu.timepit" %% "refined-scalacheck" % refinedVersion % Test,
     moduleName := "vulcan-refined",
     name := moduleName.value,
-    dependencySettings,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "eu.timepit" %% "refined" % refinedVersion,
+        "eu.timepit" %% "refined-scalacheck" % refinedVersion % Test
+      )
+    ),
     publishSettings,
     mimaSettings,
     scalaSettings,
@@ -77,15 +102,13 @@ lazy val docs = project
     mdocSettings,
     buildInfoSettings
   )
-  .dependsOn(core, enumeratum, refined)
+  .dependsOn(core, enumeratum, generic, refined)
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= Seq(
-    "com.propensive" %% "magnolia" % magnoliaVersion,
-    "com.chuusai" %% "shapeless" % shapelessVersion,
-    "org.typelevel" %% "cats-free" % catsVersion,
-    "org.apache.avro" % "avro" % avroVersion
+    "org.apache.avro" % "avro" % avroVersion,
+    "org.typelevel" %% "cats-free" % catsVersion
   ),
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-testkit" % catsVersion,
@@ -97,8 +120,8 @@ lazy val dependencySettings = Seq(
 lazy val mdocSettings = Seq(
   mdoc := run.in(Compile).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
-  crossScalaVersions := Seq(scalaVersion.value),
-  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, enumeratum, refined),
+  crossScalaVersions := Seq(scala212),
+  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, enumeratum, generic, refined),
   target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
   cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
   docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(unidoc in Compile).value,
@@ -121,11 +144,32 @@ lazy val buildInfoSettings = Seq(
     scalacOptions,
     sourceDirectory,
     latestVersion in ThisBuild,
-    BuildInfoKey.map(moduleName in core) { case (k, v)       => "core" ++ k.capitalize -> v },
-    BuildInfoKey.map(moduleName in enumeratum) { case (k, v) => "enumeratum" ++ k.capitalize -> v },
-    BuildInfoKey.map(moduleName in refined) { case (k, v)    => "refined" ++ k.capitalize -> v },
+    BuildInfoKey.map(moduleName in core) {
+      case (k, v) => "core" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(crossScalaVersions in core) {
+      case (k, v) => "core" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(moduleName in enumeratum) {
+      case (k, v) => "enumeratum" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(crossScalaVersions in enumeratum) {
+      case (k, v) => "enumeratum" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(moduleName in generic) {
+      case (k, v) => "generic" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(crossScalaVersions in generic) {
+      case (k, v) => "generic" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(moduleName in refined) {
+      case (k, v) => "refined" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(crossScalaVersions in refined) {
+      case (k, v) => "refined" ++ k.capitalize -> v
+    },
     organization in root,
-    crossScalaVersions in root,
+    crossScalaVersions in core,
     BuildInfoKey("avroVersion" -> avroVersion),
     BuildInfoKey("catsVersion" -> catsVersion),
     BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
@@ -211,7 +255,7 @@ lazy val mimaSettings = Seq(
     import com.typesafe.tools.mima.core._
     // format: off
     Seq(
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("vulcan.AvroError.throwable")
+      ProblemFilters.exclude[Problem]("vulcan.internal.*")
     )
     // format: on
   }
@@ -224,8 +268,8 @@ lazy val noPublishSettings =
   )
 
 lazy val scalaSettings = Seq(
-  scalaVersion := "2.12.8",
-  crossScalaVersions := Seq("2.11.12", scalaVersion.value),
+  scalaVersion := scala212,
+  crossScalaVersions := Seq(scala212, scala213),
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",
@@ -245,7 +289,12 @@ lazy val scalaSettings = Seq(
     "-Ywarn-unused",
     "-Ypartial-unification",
     "-language:experimental.macros"
-  ),
+  ).filter {
+    case ("-Yno-adapted-args" | "-Ypartial-unification" | "-Xfuture")
+        if scalaVersion.value.startsWith("2.13") =>
+      false
+    case _ => true
+  },
   scalacOptions in (Compile, console) --= Seq("-Xlint", "-Ywarn-unused"),
   scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value
 )
@@ -261,9 +310,6 @@ def minorVersion(version: String): String = {
     CrossVersion.partialVersion(version).get
   s"$major.$minor"
 }
-
-val validateDocs = taskKey[Unit]("Validate documentation")
-validateDocs in ThisBuild := (run in (docs, Compile)).toTask(" ").value
 
 val releaseNotesFile = taskKey[File]("Release notes for current version")
 releaseNotesFile in ThisBuild := {
@@ -281,11 +327,12 @@ updateSiteVariables in ThisBuild := {
       "organization" -> (organization in root).value,
       "coreModuleName" -> (moduleName in core).value,
       "enumeratumModuleName" -> (moduleName in enumeratum).value,
+      "genericModuleName" -> (moduleName in generic).value,
       "refinedModuleName" -> (moduleName in refined).value,
       "latestVersion" -> (latestVersion in ThisBuild).value,
-      "scalaMinorVersion" -> minorVersion((scalaVersion in root).value),
+      "scalaMinorVersion" -> minorVersion((scalaVersion in core).value),
       "scalaPublishVersions" -> {
-        val minorVersions = (crossScalaVersions in root).value.map(minorVersion)
+        val minorVersions = (crossScalaVersions in core).value.map(minorVersion)
         if (minorVersions.size <= 2) minorVersions.mkString(" and ")
         else minorVersions.init.mkString(", ") ++ " and " ++ minorVersions.last
       }
@@ -356,14 +403,15 @@ def addCommandsAlias(name: String, values: List[String]) =
 addCommandsAlias(
   "validate",
   List(
-    "clean",
-    "coverage",
-    "test",
-    "coverageReport",
-    "mimaReportBinaryIssues",
+    "+clean",
+    "+coverage",
+    "+test",
+    "+coverageReport",
+    "+mimaReportBinaryIssues",
     "scalafmtCheck",
     "scalafmtSbtCheck",
     "headerCheck",
-    "doc"
+    "+doc",
+    "docs/run"
   )
 )

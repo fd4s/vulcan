@@ -1,6 +1,7 @@
 package vulcan.examples
 
 import vulcan.Codec
+import vulcan.generic._
 
 sealed trait SealedTraitCaseClass
 

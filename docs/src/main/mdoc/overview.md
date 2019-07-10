@@ -21,13 +21,14 @@ To get started with [sbt](https://scala-sbt.org), simply add the following lines
 libraryDependencies ++= Seq(
   "@ORGANIZATION@" %% "@CORE_MODULE_NAME@",
   "@ORGANIZATION@" %% "@ENUMERATUM_MODULE_NAME@",
+  "@ORGANIZATION@" %% "@GENERIC_MODULE_NAME@",
   "@ORGANIZATION@" %% "@REFINED_MODULE_NAME@"
 ).map(_ % "@LATEST_VERSION@")
 ```
 
 Published for Scala @SCALA_PUBLISH_VERSIONS@. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).
 
-Remember to enable partial unification by adding the following line to `build.sbt`.
+For Scala 2.12, enable partial unification by adding the following line to `build.sbt`.
 
 ```scala
 scalacOptions += "-Ypartial-unification"
@@ -38,19 +39,18 @@ scalacOptions += "-Ypartial-unification"
 Backwards binary-compatibility for the library is guaranteed between patch versions.<br>
 For example, `@LATEST_MINOR_VERSION@.x` is backwards binary-compatible with `@LATEST_MINOR_VERSION@.y` for any `x > y`.
 
+Please note binary-compatibility is not guaranteed between milestone releases.
+
 ## Dependencies
 
-The `vulcan` module has the following dependencies.
+Refer to the table below for dependencies and version support across modules.
 
-- Apache Avro @AVRO_VERSION@ ([Documentation](https://avro.apache.org/docs/@AVRO_VERSION@), [GitHub](https://github.com/apache/avro)).
-- Magnolia @MAGNOLIA_VERSION@ ([Documentation](https://propensive.com/opensource/magnolia/), [GitHub](https://github.com/propensive/magnolia)).
-- Cats @CATS_VERSION@ ([Documentation](https://typelevel.org/cats), [GitHub](https://github.com/typelevel/cats)).
-- Shapeless @SHAPELESS_VERSION@ ([GitHub](https://github.com/milessabin/shapeless)).
-
-Additional modules have the following dependencies.
-
-- `@ENUMERATUM_MODULE_NAME@` depends on enumeratum @ENUMERATUM_VERSION@ ([GitHub](https://github.com/lloydmeta/enumeratum)).
-- `@REFINED_MODULE_NAME@` depends on refined @REFINED_VERSION@ ([GitHub](https://github.com/fthomas/refined)).
+| Module                     | Dependencies                                                                                                                                    | Scala                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `@CORE_MODULE_NAME@`       | [Apache Avro @AVRO_VERSION@](https://github.com/apache/avro), [Cats @CATS_VERSION@](https://github.com/typelevel/cats)                          | Scala @CORE_CROSS_SCALA_VERSIONS@       |
+| `@ENUMERATUM_MODULE_NAME@` | [Enumeratum @ENUMERATUM_VERSION@](https://github.com/lloydmeta/enumeratum)                                                                      | Scala @ENUMERATUM_CROSS_SCALA_VERSIONS@ |
+| `@GENERIC_MODULE_NAME@`    | [Magnolia @MAGNOLIA_VERSION@](https://github.com/propensive/magnolia), [Shapeless @SHAPELESS_VERSION@](https://github.com/milessabin/shapeless) | Scala @GENERIC_CROSS_SCALA_VERSIONS@    |
+| `@REFINED_MODULE_NAME@`    | [Refined @REFINED_VERSION@](https://github.com/fthomas/refined)                                                                                 | Scala @REFINED_CROSS_SCALA_VERSIONS@    |
 
 ## Inspiration
 

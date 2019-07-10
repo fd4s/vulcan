@@ -13,6 +13,12 @@ object Main {
     s"$major.$minor"
   }
 
+  def minorVersionsString(versions: Seq[String]): String = {
+    val minorVersions = versions.map(minorVersion)
+    if (minorVersions.size <= 2) minorVersions.mkString(" and ")
+    else minorVersions.init.mkString(", ") ++ " and " ++ minorVersions.last
+  }
+
   def main(args: Array[String]): Unit = {
     val scalaMinorVersion = minorVersion(scalaVersion)
 
@@ -22,16 +28,17 @@ object Main {
         Map(
           "ORGANIZATION" -> organization,
           "CORE_MODULE_NAME" -> coreModuleName,
+          "CORE_CROSS_SCALA_VERSIONS" -> minorVersionsString(coreCrossScalaVersions),
           "ENUMERATUM_MODULE_NAME" -> enumeratumModuleName,
+          "ENUMERATUM_CROSS_SCALA_VERSIONS" -> minorVersionsString(enumeratumCrossScalaVersions),
+          "GENERIC_MODULE_NAME" -> genericModuleName,
+          "GENERIC_CROSS_SCALA_VERSIONS" -> minorVersionsString(genericCrossScalaVersions),
           "REFINED_MODULE_NAME" -> refinedModuleName,
+          "REFINED_CROSS_SCALA_VERSIONS" -> minorVersionsString(refinedCrossScalaVersions),
           "LATEST_VERSION" -> latestVersion,
           "LATEST_MINOR_VERSION" -> minorVersion(latestVersion),
           "DOCS_SCALA_MINOR_VERSION" -> scalaMinorVersion,
-          "SCALA_PUBLISH_VERSIONS" -> {
-            val minorVersions = crossScalaVersions.map(minorVersion)
-            if (minorVersions.size <= 2) minorVersions.mkString(" and ")
-            else minorVersions.init.mkString(", ") ++ " and " ++ minorVersions.last
-          },
+          "SCALA_PUBLISH_VERSIONS" -> minorVersionsString(crossScalaVersions),
           "API_BASE_URL" -> s"/vulcan/api/vulcan",
           "AVRO_VERSION" -> avroVersion,
           "CATS_VERSION" -> catsVersion,

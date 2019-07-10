@@ -1,10 +1,11 @@
 package vulcan.examples
 
-import vulcan.Codec
+import cats.Eq
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import cats.Eq
+import vulcan.Codec
+import vulcan.generic._
 
 sealed trait SealedTraitCaseClassCustom
 

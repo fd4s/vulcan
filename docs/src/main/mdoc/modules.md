@@ -76,6 +76,42 @@ object Day extends IntEnum[Day] with IntVulcanEnum[Day] {
 Codec[Day]
 ```
 
+## Generic
+
+The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s. To derive [`Codec`][codec]s for `case class`es or `sealed trait`s, we can use `Codec.derive`. Annotations like `@AvroDoc` and `@AvroNamespace` can be used to customize the documentation and namespace during derivation.
+
+```scala mdoc
+import vulcan.generic._
+
+@AvroNamespace("com.example")
+@AvroDoc("Person with a first name, last name, and optional age")
+final case class Person(firstName: String, lastName: String, age: Option[Int])
+
+Codec.derive[Person]
+```
+
+While `case class`es correspond to Avro records, `sealed trait`s correspond to unions.
+
+```scala mdoc
+sealed trait FirstOrSecond
+
+@AvroNamespace("com.example")
+final case class First(value: Int) extends FirstOrSecond
+
+@AvroNamespace("com.example")
+final case class Second(value: String) extends FirstOrSecond
+
+Codec.derive[FirstOrSecond]
+```
+
+Shapeless `Coproduct`s are also supported and correspond to Avro unions.
+
+```scala mdoc
+import shapeless.{:+:, CNil}
+
+Codec[Int :+: String :+: CNil]
+```
+
 ## Refined
 
 The `@REFINED_MODULE_NAME@` module provides [`Codec`][codec]s for refinement types. Refinement types are encoded using their base type (e.g. `Int` for `PosInt`). When decoding, [`Codec`][codec]s check to ensure values conform to the predicate of the refinement type (e.g. `Positive` for `PosInt`), and raise an error for values which do not conform.
