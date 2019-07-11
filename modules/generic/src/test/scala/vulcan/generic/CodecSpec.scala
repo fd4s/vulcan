@@ -427,11 +427,11 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             )
           }
 
-          it("should error if value is not generic container") {
+          it("should error if value is not an alternative") {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode(123),
               unsafeSchema[SealedTraitCaseClass],
-              "Got unexpected type java.lang.Integer while decoding vulcan.examples.SealedTraitCaseClass, expected type GenericContainer"
+              "Exhausted alternatives for type java.lang.Integer while decoding vulcan.examples.SealedTraitCaseClass"
             )
           }
 
@@ -447,7 +447,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
               unsafeSchema[SealedTraitCaseObject],
-              "Missing subtype vulcan.examples.CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
+              "Missing alternative vulcan.examples.CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
             )
           }
 

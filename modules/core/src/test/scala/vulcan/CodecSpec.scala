@@ -2030,6 +2030,113 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("union") {
+      describe("schema") {
+        it("should encode as union") {
+          assertSchemaIs[SealedTraitCaseClass] {
+            """[{"type":"record","name":"FirstInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"int"}]},{"type":"record","name":"SecondInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"string"}]},"int"]"""
+          }
+        }
+
+        it("should capture errors on nested unions") {
+          assertSchemaError[SealedTraitCaseClassNestedUnion] {
+            """org.apache.avro.AvroRuntimeException: Nested union: [["null","int"]]"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should error if schema is not union") {
+          assertEncodeError[SealedTraitCaseClass](
+            FirstInSealedTraitCaseClass(0),
+            unsafeSchema[Int],
+            "Got unexpected schema type INT while encoding vulcan.examples.SealedTraitCaseClass, expected schema type UNION"
+          )
+        }
+
+        it("should error if alternative name is not in union") {
+          assertEncodeError[SealedTraitCaseClass](
+            FirstInSealedTraitCaseClass(0),
+            unsafeSchema[Option[Int]],
+            "Missing schema com.example.FirstInSealedTraitCaseClass in union for type vulcan.examples.SealedTraitCaseClass"
+          )
+        }
+
+        it("should error if subtype is not an alternative") {
+          assertEncodeError[SealedTraitCaseClassIncomplete](
+            SecondInSealedTraitCaseClassIncomplete(0d),
+            unsafeSchema[SealedTraitCaseClassIncomplete],
+            "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
+          )
+        }
+
+        it("should error if subtype is not an alternative and value null") {
+          assertEncodeError[SealedTraitCaseClassIncomplete](
+            null,
+            unsafeSchema[SealedTraitCaseClassIncomplete],
+            "Exhausted alternatives for type null while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
+          )
+        }
+
+        it("should encode with encoder for alternative") {
+          val value = FirstInSealedTraitCaseClass(0)
+          assertEncodeIs[SealedTraitCaseClass](
+            value,
+            Right(unsafeEncode[SealedTraitCaseClass](value))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not union") {
+          assertDecodeError[SealedTraitCaseClass](
+            unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding vulcan.examples.SealedTraitCaseClass, expected schema type UNION"
+          )
+        }
+
+        it("should error if value is not an alternative") {
+          assertDecodeError[SealedTraitCaseClass](
+            unsafeEncode(123d),
+            unsafeSchema[SealedTraitCaseClass],
+            "Exhausted alternatives for type java.lang.Double while decoding vulcan.examples.SealedTraitCaseClass"
+          )
+        }
+
+        it("should error if value is null and not an alternative") {
+          assertDecodeError[SealedTraitCaseClass](
+            null,
+            unsafeSchema[SealedTraitCaseClass],
+            "Exhausted alternatives for type null while decoding vulcan.examples.SealedTraitCaseClass"
+          )
+        }
+
+        it("should error if no schema in union with container name") {
+          assertDecodeError[SealedTraitCaseClassSingle](
+            unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
+            unsafeSchema[SealedTraitCaseClass],
+            "Missing schema vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union for type vulcan.examples.SealedTraitCaseClassSingle"
+          )
+        }
+
+        it("should error if no alternative with container name") {
+          assertDecodeError[SealedTraitCaseClass](
+            unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
+            unsafeSchema[SealedTraitCaseClassSingle],
+            "Missing alternative vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union for type vulcan.examples.SealedTraitCaseClass"
+          )
+        }
+
+        it("should decode using schema and decoder for alternative") {
+          assertDecodeIs[SealedTraitCaseClass](
+            unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
+            Right(FirstInSealedTraitCaseClass(0))
+          )
+        }
+      }
+    }
+
     describe("unit") {
       describe("schema") {
         it("should be encoded as null") {

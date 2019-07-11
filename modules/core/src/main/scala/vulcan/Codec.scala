@@ -1594,6 +1594,111 @@ final object Codec {
     )
 
   /**
+    * Returns a new union [[Codec]] for type `A`.
+    *
+    * @group Create
+    */
+  final def union[A](f: AltBuilder[A] => Chain[Alt[A]])(
+    implicit tag: WeakTypeTag[A]
+  ): Codec[A] = {
+    val typeName = tag.tpe.typeSymbol.fullName
+    val alts = f(AltBuilder.instance)
+    Codec.instance(
+      AvroError.catchNonFatal {
+        alts.toList
+          .traverse(_.codec.schema)
+          .map(schemas => Schema.createUnion(schemas.asJava))
+      },
+      (a, schema) => {
+        schema.getType() match {
+          case Schema.Type.UNION =>
+            alts
+              .foldMapK { alt =>
+                alt.prism.getOption(a).map { b =>
+                  alt.codec.schema.flatMap { altSchema =>
+                    val altName =
+                      altSchema.getFullName
+
+                    val altUnionSchema =
+                      schema.getTypes.asScala
+                        .find(_.getFullName == altName)
+                        .toRight(AvroError.encodeMissingUnionSchema(altName, typeName))
+
+                    altUnionSchema.flatMap(alt.codec.encode(b, _))
+                  }
+                }
+              }
+              .getOrElse {
+                Left(AvroError.encodeExhaustedAlternatives(a, typeName))
+              }
+
+          case schemaType =>
+            Left {
+              AvroError
+                .encodeUnexpectedSchemaType(
+                  typeName,
+                  schemaType,
+                  NonEmptyList.of(Schema.Type.UNION)
+                )
+            }
+        }
+      },
+      (value, schema) => {
+        schema.getType() match {
+          case Schema.Type.UNION =>
+            value match {
+              case container: GenericContainer =>
+                val altName =
+                  container.getSchema.getFullName
+
+                val altUnionSchema =
+                  schema.getTypes.asScala
+                    .find(_.getFullName == altName)
+                    .toRight(AvroError.decodeMissingUnionSchema(altName, typeName))
+
+                def altMatching =
+                  alts
+                    .find(_.codec.schema.exists(_.getFullName == altName))
+                    .toRight(AvroError.decodeMissingUnionAlternative(altName, typeName))
+
+                altUnionSchema.flatMap { altSchema =>
+                  altMatching.flatMap { alt =>
+                    alt.codec
+                      .decode(container, altSchema)
+                      .map(alt.prism.reverseGet)
+                  }
+                }
+
+              case other =>
+                val schemaTypes = schema.getTypes.asScala.toList
+
+                alts.toList
+                  .zip(schemaTypes)
+                  .collectFirstSome {
+                    case (alt, schema) =>
+                      val decoded = alt.codec.decode(other, schema)
+                      if (decoded.isRight) Some(decoded.map(alt.prism.reverseGet)) else None
+                  }
+                  .getOrElse {
+                    Left(AvroError.decodeExhaustedAlternatives(other, typeName))
+                  }
+            }
+
+          case schemaType =>
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  typeName,
+                  schemaType,
+                  NonEmptyList.of(Schema.Type.UNION)
+                )
+            }
+        }
+      }
+    )
+  }
+
+  /**
     * @group General
     */
   implicit final val unit: Codec[Unit] =
@@ -1749,6 +1854,61 @@ final object Codec {
     */
   implicit final def codecShow[A]: Show[Codec[A]] =
     Show.fromToString
+
+  /**
+    * @group Create
+    */
+  sealed abstract class Alt[A] {
+    type B
+
+    def codec: Codec[B]
+
+    def prism: Prism[A, B]
+  }
+
+  private[vulcan] final object Alt {
+    private[this] final class AltImpl[A, B0](
+      override final val codec: Codec[B0],
+      override final val prism: Prism[A, B0]
+    ) extends Alt[A] {
+      override final type B = B0
+    }
+
+    final def apply[A, B](
+      codec: Codec[B],
+      prism: Prism[A, B]
+    ): Alt[A] =
+      new AltImpl(codec, prism)
+  }
+
+  /**
+    * @group Create
+    */
+  sealed abstract class AltBuilder[A] {
+    def apply[B](
+      implicit codec: Codec[B],
+      prism: Prism[A, B]
+    ): Chain[Alt[A]]
+  }
+
+  private[vulcan] final object AltBuilder {
+    private[this] final class AltBuilderImpl[A] extends AltBuilder[A] {
+      override final def apply[B](
+        implicit codec: Codec[B],
+        prism: Prism[A, B]
+      ): Chain[Alt[A]] =
+        Chain.one(Alt(codec, prism))
+
+      override final def toString: String =
+        "AltBuilder"
+    }
+
+    private[this] final val Instance: AltBuilder[Any] =
+      new AltBuilderImpl[Any]
+
+    final def instance[A]: AltBuilder[A] =
+      Instance.asInstanceOf[AltBuilder[A]]
+  }
 
   /**
     * @group Create

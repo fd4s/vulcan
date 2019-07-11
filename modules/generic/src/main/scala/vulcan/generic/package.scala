@@ -301,22 +301,16 @@ package object generic {
             case Schema.Type.UNION =>
               sealedTrait.dispatch(a) {
                 subtype =>
-                  subtype.typeclass.schema.flatMap {
-                    subtypeSchema =>
-                      val subtypeName =
-                        subtypeSchema.getFullName()
+                  subtype.typeclass.schema.flatMap { subtypeSchema =>
+                    val subtypeName =
+                      subtypeSchema.getFullName
 
-                      val subschema =
-                        schema.getTypes.asScala
-                          .collectFirst {
-                            case schema if schema.getFullName() == subtypeName =>
-                              Right(schema)
-                          }
-                          .getOrElse(
-                            Left(AvroError.encodeMissingUnionSchema(subtypeName, typeName))
-                          )
+                    val subtypeUnionSchema =
+                      schema.getTypes.asScala
+                        .find(_.getFullName == subtypeName)
+                        .toRight(AvroError.encodeMissingUnionSchema(subtypeName, typeName))
 
-                      subschema.flatMap(subtype.typeclass.encode(subtype.cast(a), _))
+                    subtypeUnionSchema.flatMap(subtype.typeclass.encode(subtype.cast(a), _))
                   }
               }
 
@@ -336,28 +330,27 @@ package object generic {
             case Schema.Type.UNION =>
               value match {
                 case container: GenericContainer =>
-                  val name = container.getSchema().getFullName()
+                  val subtypeName =
+                    container.getSchema.getFullName
 
-                  val subschema =
-                    schema
-                      .getTypes()
-                      .asScala
-                      .find(_.getFullName() == name)
-                      .toRight(AvroError.decodeMissingUnionSchema(name, typeName))
+                  val subtypeUnionSchema =
+                    schema.getTypes.asScala
+                      .find(_.getFullName == subtypeName)
+                      .toRight(AvroError.decodeMissingUnionSchema(subtypeName, typeName))
 
-                  def subtype =
+                  def subtypeMatching =
                     sealedTrait.subtypes
-                      .find(_.typeclass.schema.exists(_.getFullName() == name))
-                      .toRight(AvroError.decodeMissingUnionSubtype(name, typeName))
+                      .find(_.typeclass.schema.exists(_.getFullName == subtypeName))
+                      .toRight(AvroError.decodeMissingUnionAlternative(subtypeName, typeName))
 
-                  subschema.flatMap { subschema =>
-                    subtype.flatMap { subtype =>
-                      subtype.typeclass.decode(container, subschema)
+                  subtypeUnionSchema.flatMap { subtypeSchema =>
+                    subtypeMatching.flatMap { subtype =>
+                      subtype.typeclass.decode(container, subtypeSchema)
                     }
                   }
 
                 case other =>
-                  val schemaTypes = schema.getTypes().asScala.toList
+                  val schemaTypes = schema.getTypes.asScala.toList
                   val subtypes = sealedTrait.subtypes.toList
 
                   subtypes
@@ -368,7 +361,7 @@ package object generic {
                         if (decoded.isRight) Some(decoded) else None
                     }
                     .getOrElse {
-                      Left(AvroError.decodeUnexpectedType(other, "GenericContainer", typeName))
+                      Left(AvroError.decodeExhaustedAlternatives(other, typeName))
                     }
               }
 
