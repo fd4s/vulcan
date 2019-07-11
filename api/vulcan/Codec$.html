@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Vulcan v0.2.0-M2 - vulcan.Codec</title>
-          <meta name="description" content="Vulcan v0.2.0 - M2 - vulcan.Codec" />
-          <meta name="keywords" content="Vulcan v0.2.0 M2 vulcan.Codec" />
+          <title>Vulcan v0.2.0-M3 - vulcan.Codec</title>
+          <meta name="description" content="Vulcan v0.2.0 - M3 - vulcan.Codec" />
+          <meta name="keywords" content="Vulcan v0.2.0 M3 vulcan.Codec" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-M2</span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-M3</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -121,6 +121,10 @@
                         <a class="object" href="" title=""></a>
                         <a class="class" href="Codec.html" title="Provides a schema, along with encoding and decoding functions for a given type."></a>
                         <a href="Codec.html" title="Provides a schema, along with encoding and decoding functions for a given type.">Codec</a>
+                      </li><li class="current-entities indented1">
+                        <a class="object" href="Prism$.html" title=""></a>
+                        <a class="class" href="Prism.html" title="Optic used for selecting a part of a coproduct type."></a>
+                        <a href="Prism.html" title="Optic used for selecting a part of a coproduct type.">Prism</a>
                       </li>
               </ul>
             </div>
@@ -151,7 +155,7 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-M2/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-M3/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -203,7 +207,39 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="vulcan.Codec.Field" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Create">
+              <ol><li name="vulcan.Codec.Alt" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Create">
+      <a id="Alt[A]extendsAnyRef"></a><a id="Alt[A]:Alt[A]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec$.html#Alt[A]extendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Codec$$Alt.html"><span class="name">Alt</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec.AltBuilder" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Create">
+      <a id="AltBuilder[A]extendsAnyRef"></a><a id="AltBuilder[A]:AltBuilder[A]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec$.html#AltBuilder[A]extendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Codec$$AltBuilder.html"><span class="name">AltBuilder</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <p class="shortcomment cmt"></p>
+    </li><li name="vulcan.Codec.Field" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Create">
       <a id="Field[A,B]extendsAnyRef"></a><a id="Field[A,B]:Field[A,B]"></a>
       <span class="permalink">
       <a href="../vulcan/Codec$.html#Field[A,B]extendsAnyRef" title="Permalink">
@@ -992,6 +1028,22 @@ from the type <code>A</code> using type tags.</p>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="vulcan.Codec#union" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Create">
+      <a id="union[A](f:vulcan.Codec.AltBuilder[A]=&gt;cats.data.Chain[vulcan.Codec.Alt[A]])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]"></a><a id="union[A]((AltBuilder[A])⇒Chain[Alt[A]])(scala.reflect.api.JavaUniverse.WeakTypeTag[A]):Codec[A]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec$.html#union[A](f:vulcan.Codec.AltBuilder[A]=&gt;cats.data.Chain[vulcan.Codec.Alt[A]])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">union</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="f">f: (<a href="Codec$$AltBuilder.html" class="extype" name="vulcan.Codec.AltBuilder">AltBuilder</a>[<span class="extype" name="vulcan.Codec.union.A">A</span>]) ⇒ <span class="extype" name="cats.data.Chain">Chain</span>[<a href="Codec$$Alt.html" class="extype" name="vulcan.Codec.Alt">Alt</a>[<span class="extype" name="vulcan.Codec.union.A">A</span>]]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tag">tag: <span class="extype" name="scala.reflect.api.TypeTags.WeakTypeTag">scala.reflect.api.JavaUniverse.WeakTypeTag</span>[<span class="extype" name="vulcan.Codec.union.A">A</span>]</span>)</span><span class="result">: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Codec.union.A">A</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Returns a new union <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a> for type <code>A</code>.</p>
     </li><li name="vulcan.Codec#unit" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="General">
       <a id="unit:vulcan.Codec[Unit]"></a><a id="unit:Codec[Unit]"></a>
       <span class="permalink">
