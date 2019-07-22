@@ -32,13 +32,13 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
     it("should roundtrip enumeration values") {
       val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = encode(customEnum).flatMap(decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = encode[CustomEnum](CustomEnum.Third).flatMap(decode[CustomEnum])
+      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
           """3 is not a member of CustomEnum (1, 2, 3)"""
@@ -71,13 +71,13 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
     it("should roundtrip enumeration values") {
       val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = encode(customEnum).flatMap(decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = encode[CustomEnum](CustomEnum.Third).flatMap(decode[CustomEnum])
+      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
           """3 is not a member of CustomEnum (1, 2, 3)"""
@@ -110,13 +110,13 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
     it("should roundtrip enumeration values") {
       val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = encode(customEnum).flatMap(decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = encode[CustomEnum](CustomEnum.Third).flatMap(decode[CustomEnum])
+      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
           """3 is not a member of CustomEnum (1, 2, 3)"""
@@ -149,13 +149,13 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
     it("should roundtrip enumeration values") {
       val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = encode(customEnum).flatMap(decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = encode[CustomEnum](CustomEnum.Third).flatMap(decode[CustomEnum])
+      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
           """3 is not a member of CustomEnum (1, 2, 3)"""
@@ -188,13 +188,13 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
     it("should roundtrip enumeration values") {
       val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = encode(customEnum).flatMap(decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = encode[CustomEnum](CustomEnum.Third).flatMap(decode[CustomEnum])
+      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
           """3 is not a member of CustomEnum (1, 2, 3)"""
@@ -230,13 +230,13 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
     it("should roundtrip enumeration values") {
       val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = encode(customEnum).flatMap(decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = encode[CustomEnum](CustomEnum.Third).flatMap(decode[CustomEnum])
+      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
           """third is not a member of CustomEnum (first, second, third)"""

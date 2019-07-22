@@ -535,6 +535,14 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("decode") {
+      it("should decode using codec for type") {
+        forAll { n: Int =>
+          assert(Codec.decode[Int](n).value == n)
+        }
+      }
+    }
+
     describe("deriveEnum") {
       describe("schema") {
         it("should derive name, namespace, doc") {
@@ -601,6 +609,14 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(value),
             Right(value)
           )
+        }
+      }
+    }
+
+    describe("encode") {
+      it("should encode using codec for type") {
+        forAll { n: Int =>
+          assert(Codec.encode(n).value == n)
         }
       }
     }
