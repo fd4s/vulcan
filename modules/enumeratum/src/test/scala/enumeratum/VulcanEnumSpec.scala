@@ -21,13 +21,13 @@ final class VulcanEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with
     it("should roundtrip enum values") {
       val gen = Gen.oneOf[Suit](Suit.Diamonds, Suit.Hearts, Suit.Spades)
       forAll(gen) { suit =>
-        val roundtrip = encode(suit).flatMap(decode[Suit])
+        val roundtrip = Codec.encode(suit).flatMap(Codec.decode[Suit])
         assert(roundtrip.value === suit)
       }
     }
 
     it("should error if withNameOption does not handle schema symbol") {
-      val roundtrip = encode[Suit](Suit.Clubs).flatMap(decode[Suit])
+      val roundtrip = Codec.encode[Suit](Suit.Clubs).flatMap(Codec.decode[Suit])
       assert {
         roundtrip.swap.value.message ===
           "clubs is not a member of Suit (clubs, diamonds, hearts, spades)"

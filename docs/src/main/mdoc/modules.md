@@ -119,14 +119,13 @@ The `@REFINED_MODULE_NAME@` module provides [`Codec`][codec]s for refinement typ
 ```scala mdoc
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosInt
-import vulcan.{decode, encode}
 import vulcan.refined._
 
 Codec[PosInt]
 
-encode[PosInt](1)
+Codec.encode[PosInt](1)
 
-decode[PosInt](0)
+Codec.decode[PosInt](0)
 ```
 
 [codec]: @API_BASE_URL@/Codec.html

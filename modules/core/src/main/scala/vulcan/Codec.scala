@@ -463,6 +463,15 @@ final object Codec {
   }
 
   /**
+    * Returns the result of decoding the specified value
+    * to the specified type.
+    *
+    * @group Utilities
+    */
+  final def decode[A](value: Any)(implicit codec: Codec[A]): Either[AvroError, A] =
+    codec.schema.flatMap(codec.decode(value, _))
+
+  /**
     * Returns an enum [[Codec]] for type `A`, deriving details
     * like the name, namespace, and [[AvroDoc]] documentation
     * from the type `A` using type tags.
@@ -551,6 +560,14 @@ final object Codec {
         }
       }
     )
+
+  /**
+    * Returns the result of encoding the specified value.
+    *
+    * @group Utilities
+    */
+  final def encode[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Any] =
+    codec.schema.flatMap(codec.encode(a, _))
 
   /**
     * Returns a new enum [[Codec]] for type `A`.
