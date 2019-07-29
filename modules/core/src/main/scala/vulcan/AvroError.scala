@@ -36,21 +36,20 @@ sealed abstract class AvroError {
 }
 
 final object AvroError {
-  private[this] final class AvroErrorImpl(
-    _message: () => String
-  ) extends AvroError {
-    override final def message: String =
-      _message()
+  final def apply(message: => String): AvroError = {
+    val _message = () => message
 
-    override final def throwable: Throwable =
-      AvroException(message)
+    new AvroError {
+      override final def message: String =
+        _message()
 
-    override final def toString: String =
-      s"AvroError($message)"
+      override final def throwable: Throwable =
+        AvroException(message)
+
+      override final def toString: String =
+        s"AvroError($message)"
+    }
   }
-
-  final def apply(message: => String): AvroError =
-    new AvroErrorImpl(() => message)
 
   implicit final val avroErrorShow: Show[AvroError] =
     Show.fromToString
