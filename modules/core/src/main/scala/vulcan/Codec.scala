@@ -713,8 +713,9 @@ final object Codec {
     encode: (A, Schema) => Either[AvroError, Any],
     decode: (Any, Schema) => Either[AvroError, A]
   ): Codec[A] = {
-    val (_schema, _encode, _decode) =
-      (schema, encode, decode)
+    val _schema = schema
+    val _encode = encode
+    val _decode = decode
 
     new Codec[A] {
       override final val schema: Either[AvroError, Schema] =
