@@ -64,8 +64,8 @@ final object Prism {
     * `getOption` and `reverseGet` functions.
     */
   final def instance[S, A](getOption: S => Option[A])(reverseGet: A => S): Prism[S, A] = {
-    val (_getOption, _reverseGet) =
-      (getOption, reverseGet)
+    val _getOption = getOption
+    val _reverseGet = reverseGet
 
     new Prism[S, A] {
       override final val getOption: S => Option[A] =

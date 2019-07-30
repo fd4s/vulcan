@@ -713,8 +713,9 @@ final object Codec {
     encode: (A, Schema) => Either[AvroError, Any],
     decode: (Any, Schema) => Either[AvroError, A]
   ): Codec[A] = {
-    val (_schema, _encode, _decode) =
-      (schema, encode, decode)
+    val _schema = schema
+    val _encode = encode
+    val _decode = decode
 
     new Codec[A] {
       override final val schema: Either[AvroError, Schema] =
@@ -1884,18 +1885,20 @@ final object Codec {
   }
 
   private[vulcan] final object Alt {
-    private[this] final class AltImpl[A, B0](
-      override final val codec: Codec[B0],
-      override final val prism: Prism[A, B0]
-    ) extends Alt[A] {
-      override final type B = B0
-    }
-
     final def apply[A, B](
       codec: Codec[B],
       prism: Prism[A, B]
-    ): Alt[A] =
-      new AltImpl(codec, prism)
+    ): Alt[A] = {
+      type B0 = B
+      val _codec = codec
+      val _prism = prism
+
+      new Alt[A] {
+        override final type B = B0
+        override final val codec: Codec[B] = _codec
+        override final val prism: Prism[A, B] = _prism
+      }
+    }
   }
 
   /**
@@ -1909,19 +1912,17 @@ final object Codec {
   }
 
   private[vulcan] final object AltBuilder {
-    private[this] final class AltBuilderImpl[A] extends AltBuilder[A] {
-      override final def apply[B](
-        implicit codec: Codec[B],
-        prism: Prism[A, B]
-      ): Chain[Alt[A]] =
-        Chain.one(Alt(codec, prism))
-
-      override final def toString: String =
-        "AltBuilder"
-    }
-
     private[this] final val Instance: AltBuilder[Any] =
-      new AltBuilderImpl[Any]
+      new AltBuilder[Any] {
+        override final def apply[B](
+          implicit codec: Codec[B],
+          prism: Prism[Any, B]
+        ): Chain[Alt[Any]] =
+          Chain.one(Alt(codec, prism))
+
+        override final def toString: String =
+          "AltBuilder"
+      }
 
     final def instance[A]: AltBuilder[A] =
       Instance.asInstanceOf[AltBuilder[A]]
@@ -1949,17 +1950,6 @@ final object Codec {
   }
 
   private[vulcan] final object Field {
-    private[this] final class FieldImpl[A, B](
-      override final val name: String,
-      override final val access: A => B,
-      override final val codec: Codec[B],
-      override final val doc: Option[String],
-      override final val default: Option[B],
-      override final val order: Option[Schema.Field.Order],
-      override final val aliases: Seq[String],
-      override final val props: Seq[(String, String)]
-    ) extends Field[A, B]
-
     final def apply[A, B](
       name: String,
       access: A => B,
@@ -1969,17 +1959,27 @@ final object Codec {
       order: Option[Schema.Field.Order],
       aliases: Seq[String],
       props: Seq[(String, String)]
-    ): Field[A, B] =
-      new FieldImpl(
-        name = name,
-        access = access,
-        codec = codec,
-        doc = doc,
-        default = default,
-        order = order,
-        aliases = aliases,
-        props = props
-      )
+    ): Field[A, B] = {
+      val _name = name
+      val _access = access
+      val _codec = codec
+      val _doc = doc
+      val _default = default
+      val _order = order
+      val _aliases = aliases
+      val _props = props
+
+      new Field[A, B] {
+        override final val name: String = _name
+        override final val access: A => B = _access
+        override final val codec: Codec[B] = _codec
+        override final val doc: Option[String] = _doc
+        override final val default: Option[B] = _default
+        override final val order: Option[Schema.Field.Order] = _order
+        override final val aliases: Seq[String] = _aliases
+        override final val props: Seq[(String, String)] = _props
+      }
+    }
   }
 
   /**
@@ -1998,35 +1998,33 @@ final object Codec {
   }
 
   private[vulcan] final object FieldBuilder {
-    private[this] final class FieldBuilderImpl[A] extends FieldBuilder[A] {
-      override final def apply[B](
-        name: String,
-        access: A => B,
-        doc: Option[String],
-        default: Option[B],
-        order: Option[Schema.Field.Order],
-        aliases: Seq[String],
-        props: Seq[(String, String)]
-      )(implicit codec: Codec[B]): FreeApplicative[Field[A, ?], B] =
-        FreeApplicative.lift {
-          Field(
-            name = name,
-            access = access,
-            codec = codec,
-            doc = doc,
-            default = default,
-            order = order,
-            aliases = aliases,
-            props = props
-          )
-        }
-
-      override final def toString: String =
-        "FieldBuilder"
-    }
-
     private[this] final val Instance: FieldBuilder[Any] =
-      new FieldBuilderImpl[Any]
+      new FieldBuilder[Any] {
+        override final def apply[B](
+          name: String,
+          access: Any => B,
+          doc: Option[String],
+          default: Option[B],
+          order: Option[Schema.Field.Order],
+          aliases: Seq[String],
+          props: Seq[(String, String)]
+        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, ?], B] =
+          FreeApplicative.lift {
+            Field(
+              name = name,
+              access = access,
+              codec = codec,
+              doc = doc,
+              default = default,
+              order = order,
+              aliases = aliases,
+              props = props
+            )
+          }
+
+        override final def toString: String =
+          "FieldBuilder"
+      }
 
     final def instance[A]: FieldBuilder[A] =
       Instance.asInstanceOf[FieldBuilder[A]]
