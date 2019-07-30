@@ -41,6 +41,12 @@ For example, `@LATEST_MINOR_VERSION@.x` is backwards binary-compatible with `@LA
 
 Please note binary-compatibility is not guaranteed between milestone releases.
 
+## External Modules
+
+Following is an incomplete list of third-party integrations.
+
+- [fs2-kafka-vulcan](https://ovotech.github.io/fs2-kafka)
+
 ## Dependencies
 
 Refer to the table below for dependencies and version support across modules.
