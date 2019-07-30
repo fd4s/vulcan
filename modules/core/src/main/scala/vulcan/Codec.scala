@@ -1912,19 +1912,17 @@ final object Codec {
   }
 
   private[vulcan] final object AltBuilder {
-    private[this] final class AltBuilderImpl[A] extends AltBuilder[A] {
-      override final def apply[B](
-        implicit codec: Codec[B],
-        prism: Prism[A, B]
-      ): Chain[Alt[A]] =
-        Chain.one(Alt(codec, prism))
-
-      override final def toString: String =
-        "AltBuilder"
-    }
-
     private[this] final val Instance: AltBuilder[Any] =
-      new AltBuilderImpl[Any]
+      new AltBuilder[Any] {
+        override final def apply[B](
+          implicit codec: Codec[B],
+          prism: Prism[Any, B]
+        ): Chain[Alt[Any]] =
+          Chain.one(Alt(codec, prism))
+
+        override final def toString: String =
+          "AltBuilder"
+      }
 
     final def instance[A]: AltBuilder[A] =
       Instance.asInstanceOf[AltBuilder[A]]
