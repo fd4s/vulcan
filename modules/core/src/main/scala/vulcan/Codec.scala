@@ -1885,18 +1885,20 @@ final object Codec {
   }
 
   private[vulcan] final object Alt {
-    private[this] final class AltImpl[A, B0](
-      override final val codec: Codec[B0],
-      override final val prism: Prism[A, B0]
-    ) extends Alt[A] {
-      override final type B = B0
-    }
-
     final def apply[A, B](
       codec: Codec[B],
       prism: Prism[A, B]
-    ): Alt[A] =
-      new AltImpl(codec, prism)
+    ): Alt[A] = {
+      type B0 = B
+      val _codec = codec
+      val _prism = prism
+
+      new Alt[A] {
+        override final type B = B0
+        override final val codec: Codec[B] = _codec
+        override final val prism: Prism[A, B] = _prism
+      }
+    }
   }
 
   /**
