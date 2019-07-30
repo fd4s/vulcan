@@ -1950,17 +1950,6 @@ final object Codec {
   }
 
   private[vulcan] final object Field {
-    private[this] final class FieldImpl[A, B](
-      override final val name: String,
-      override final val access: A => B,
-      override final val codec: Codec[B],
-      override final val doc: Option[String],
-      override final val default: Option[B],
-      override final val order: Option[Schema.Field.Order],
-      override final val aliases: Seq[String],
-      override final val props: Seq[(String, String)]
-    ) extends Field[A, B]
-
     final def apply[A, B](
       name: String,
       access: A => B,
@@ -1970,17 +1959,27 @@ final object Codec {
       order: Option[Schema.Field.Order],
       aliases: Seq[String],
       props: Seq[(String, String)]
-    ): Field[A, B] =
-      new FieldImpl(
-        name = name,
-        access = access,
-        codec = codec,
-        doc = doc,
-        default = default,
-        order = order,
-        aliases = aliases,
-        props = props
-      )
+    ): Field[A, B] = {
+      val _name = name
+      val _access = access
+      val _codec = codec
+      val _doc = doc
+      val _default = default
+      val _order = order
+      val _aliases = aliases
+      val _props = props
+
+      new Field[A, B] {
+        override final val name: String = _name
+        override final val access: A => B = _access
+        override final val codec: Codec[B] = _codec
+        override final val doc: Option[String] = _doc
+        override final val default: Option[B] = _default
+        override final val order: Option[Schema.Field.Order] = _order
+        override final val aliases: Seq[String] = _aliases
+        override final val props: Seq[(String, String)] = _props
+      }
+    }
   }
 
   /**
