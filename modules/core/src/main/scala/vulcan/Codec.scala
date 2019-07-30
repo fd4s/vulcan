@@ -1998,35 +1998,33 @@ final object Codec {
   }
 
   private[vulcan] final object FieldBuilder {
-    private[this] final class FieldBuilderImpl[A] extends FieldBuilder[A] {
-      override final def apply[B](
-        name: String,
-        access: A => B,
-        doc: Option[String],
-        default: Option[B],
-        order: Option[Schema.Field.Order],
-        aliases: Seq[String],
-        props: Seq[(String, String)]
-      )(implicit codec: Codec[B]): FreeApplicative[Field[A, ?], B] =
-        FreeApplicative.lift {
-          Field(
-            name = name,
-            access = access,
-            codec = codec,
-            doc = doc,
-            default = default,
-            order = order,
-            aliases = aliases,
-            props = props
-          )
-        }
-
-      override final def toString: String =
-        "FieldBuilder"
-    }
-
     private[this] final val Instance: FieldBuilder[Any] =
-      new FieldBuilderImpl[Any]
+      new FieldBuilder[Any] {
+        override final def apply[B](
+          name: String,
+          access: Any => B,
+          doc: Option[String],
+          default: Option[B],
+          order: Option[Schema.Field.Order],
+          aliases: Seq[String],
+          props: Seq[(String, String)]
+        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, ?], B] =
+          FreeApplicative.lift {
+            Field(
+              name = name,
+              access = access,
+              codec = codec,
+              doc = doc,
+              default = default,
+              order = order,
+              aliases = aliases,
+              props = props
+            )
+          }
+
+        override final def toString: String =
+          "FieldBuilder"
+      }
 
     final def instance[A]: FieldBuilder[A] =
       Instance.asInstanceOf[FieldBuilder[A]]
