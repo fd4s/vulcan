@@ -16,7 +16,6 @@
 
 package vulcan
 
-import cats.data.NonEmptyList
 import cats.implicits._
 import magnolia._
 import org.apache.avro.generic._
@@ -71,7 +70,7 @@ package object generic {
                 .encodeUnexpectedSchemaType(
                   "Coproduct",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.UNION)
+                  Schema.Type.UNION
                 )
             }
         }
@@ -132,7 +131,7 @@ package object generic {
                 .decodeUnexpectedSchemaType(
                   "Coproduct",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.UNION)
+                  Schema.Type.UNION
                 )
             }
         }
@@ -224,7 +223,7 @@ package object generic {
                     .encodeUnexpectedSchemaType(
                       typeName,
                       schemaType,
-                      NonEmptyList.of(Schema.Type.RECORD)
+                      Schema.Type.RECORD
                     )
                 }
             }
@@ -271,7 +270,7 @@ package object generic {
                     .decodeUnexpectedSchemaType(
                       typeName,
                       schemaType,
-                      NonEmptyList.of(Schema.Type.RECORD)
+                      Schema.Type.RECORD
                     )
                 }
             }
@@ -320,7 +319,7 @@ package object generic {
                   .encodeUnexpectedSchemaType(
                     typeName,
                     schemaType,
-                    NonEmptyList.of(Schema.Type.UNION)
+                    Schema.Type.UNION
                   )
               }
           }
@@ -371,7 +370,7 @@ package object generic {
                   .decodeUnexpectedSchemaType(
                     typeName,
                     schemaType,
-                    NonEmptyList.of(Schema.Type.UNION)
+                    Schema.Type.UNION
                   )
               }
           }

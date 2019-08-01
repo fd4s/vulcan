@@ -1,6 +1,5 @@
 package vulcan
 
-import cats.data.NonEmptyList
 import cats.Eq
 import cats.laws.discipline.InvariantTests
 import cats.tests.CatsSuite
@@ -40,7 +39,7 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
                     .encodeUnexpectedSchemaType(
                       "String",
                       schema.getType(),
-                      NonEmptyList.of(Schema.Type.STRING)
+                      Schema.Type.STRING
                     )
                 }
             },
@@ -53,7 +52,7 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
                     .decodeUnexpectedSchemaType(
                       "String",
                       schema.getType(),
-                      NonEmptyList.of(Schema.Type.STRING)
+                      Schema.Type.STRING
                     )
                 }
             }

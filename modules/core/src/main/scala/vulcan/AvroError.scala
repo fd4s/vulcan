@@ -17,7 +17,6 @@
 package vulcan
 
 import cats.{Eq, Show}
-import cats.data.NonEmptyList
 import cats.instances.string._
 import org.apache.avro.{Schema, LogicalType}
 import scala.util.control.NonFatal
@@ -78,8 +77,12 @@ final object AvroError {
   private[vulcan] final def decodeEmptyCollection(decodingTypeName: String): AvroError =
     AvroError(s"Got unexpected empty collection while decoding $decodingTypeName")
 
-  private[vulcan] final def decodeExceedsFixedSize(length: Int, fixedSize: Int): AvroError =
-    AvroError(s"Byte array with length $length exceeds fixed type with size $fixedSize")
+  private[vulcan] final def decodeNotEqualFixedSize(
+    length: Int,
+    fixedSize: Int,
+    decodingTypeName: String
+  ): AvroError =
+    AvroError(s"Got $length bytes while decoding $decodingTypeName, expected fixed size $fixedSize")
 
   private[vulcan] final def decodeMissingRecordField(
     fieldName: String,
@@ -146,12 +149,10 @@ final object AvroError {
   private[vulcan] final def decodeUnexpectedSchemaType(
     decodingTypeName: String,
     actualSchemaType: Schema.Type,
-    expectedSchemaTypes: NonEmptyList[Schema.Type]
+    expectedSchemaType: Schema.Type
   ): AvroError =
     AvroError {
-      val schemaTypes = expectedSchemaTypes.toList.mkString(" or ")
-      val types = if (expectedSchemaTypes.size > 1) "types" else "type"
-      s"Got unexpected schema type $actualSchemaType while decoding $decodingTypeName, expected schema $types $schemaTypes"
+      s"Got unexpected schema type $actualSchemaType while decoding $decodingTypeName, expected schema type $expectedSchemaType"
     }
 
   private[vulcan] final def decodeUnexpectedType(
@@ -202,8 +203,14 @@ final object AvroError {
   ): AvroError =
     AvroError(s"Unable to encode decimal with scale $actualScale as scale $expectedScale")
 
-  private[vulcan] final def encodeExceedsFixedSize(length: Int, fixedSize: Int): AvroError =
-    AvroError(s"Byte array with length $length exceeds fixed type with size $fixedSize")
+  private[vulcan] final def encodeExceedsFixedSize(
+    length: Int,
+    fixedSize: Int,
+    encodingTypeName: String
+  ): AvroError =
+    AvroError(
+      s"Got $length bytes while encoding $encodingTypeName, expected maximum fixed size $fixedSize"
+    )
 
   private[vulcan] final def encodeMissingRecordField(
     fieldName: String,
@@ -265,12 +272,10 @@ final object AvroError {
   private[vulcan] final def encodeUnexpectedSchemaType(
     encodingTypeName: String,
     actualSchemaType: Schema.Type,
-    expectedSchemaTypes: NonEmptyList[Schema.Type]
+    expectedSchemaType: Schema.Type
   ): AvroError =
     AvroError {
-      val schemaTypes = expectedSchemaTypes.toList.mkString(" or ")
-      val types = if (expectedSchemaTypes.size > 1) "types" else "type"
-      s"Got unexpected schema type $actualSchemaType while encoding $encodingTypeName, expected schema $types $schemaTypes"
+      s"Got unexpected schema type $actualSchemaType while encoding $encodingTypeName, expected schema type $expectedSchemaType"
     }
 
   private[vulcan] final def fromThrowable(throwable: Throwable): AvroError =
