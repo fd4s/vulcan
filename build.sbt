@@ -274,9 +274,8 @@ lazy val scalaSettings = Seq(
     "-encoding",
     "UTF-8",
     "-feature",
-    "-language:existentials",
+    "-language:experimental.macros",
     "-language:higherKinds",
-    "-language:implicitConversions",
     "-unchecked",
     "-Xfatal-warnings",
     "-Xlint",
@@ -284,12 +283,10 @@ lazy val scalaSettings = Seq(
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
-    "-Xfuture",
     "-Ywarn-unused",
-    "-Ypartial-unification",
-    "-language:experimental.macros"
+    "-Ypartial-unification"
   ).filter {
-    case ("-Yno-adapted-args" | "-Ypartial-unification" | "-Xfuture")
+    case ("-Yno-adapted-args" | "-Ypartial-unification")
         if scalaVersion.value.startsWith("2.13") =>
       false
     case _ => true
