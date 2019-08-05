@@ -286,8 +286,7 @@ lazy val scalaSettings = Seq(
     "-Ywarn-unused",
     "-Ypartial-unification"
   ).filter {
-    case ("-Yno-adapted-args" | "-Ypartial-unification")
-        if scalaVersion.value.startsWith("2.13") =>
+    case ("-Yno-adapted-args" | "-Ypartial-unification") if scalaVersion.value.startsWith("2.13") =>
       false
     case _ => true
   },
