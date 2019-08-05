@@ -29,6 +29,7 @@ import org.apache.avro.util.Utf8
 import scala.collection.immutable.SortedSet
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
+import vulcan.internal.tags._
 
 /**
   * Provides a schema, along with encoding and decoding functions
@@ -133,7 +134,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Boolean",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.BOOLEAN)
+                  Schema.Type.BOOLEAN
                 )
             }
         }
@@ -154,7 +155,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Boolean",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.BOOLEAN)
+                  Schema.Type.BOOLEAN
                 )
             }
         }
@@ -178,7 +179,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Byte",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.INT)
+                  Schema.Type.INT
                 )
             }
         }
@@ -205,7 +206,7 @@ final object Codec {
                   .decodeUnexpectedSchemaType(
                     "Byte",
                     schemaType,
-                    NonEmptyList.of(Schema.Type.INT)
+                    Schema.Type.INT
                   )
               }
           }
@@ -224,21 +225,14 @@ final object Codec {
           case Schema.Type.BYTES =>
             Right(ByteBuffer.wrap(bytes))
 
-          case Schema.Type.FIXED =>
-            val length = bytes.length
-            val fixedSize = schema.getFixedSize()
-            if (length <= fixedSize) {
-              Right {
-                val buffer = ByteBuffer.allocate(fixedSize).put(bytes)
-                GenericData.get().createFixed(null, buffer.array(), schema)
-              }
-            } else {
-              Left(AvroError.encodeExceedsFixedSize(length, fixedSize))
-            }
-
           case schemaType =>
-            val expectedTypes = NonEmptyList.of(Schema.Type.BYTES, Schema.Type.FIXED)
-            Left(AvroError.encodeUnexpectedSchemaType("Array[Byte]", schemaType, expectedTypes))
+            Left {
+              AvroError.encodeUnexpectedSchemaType(
+                "Array[Byte]",
+                schemaType,
+                Schema.Type.BYTES
+              )
+            }
         }
       },
       (value, schema) => {
@@ -251,20 +245,14 @@ final object Codec {
                 Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "Array[Byte]"))
             }
 
-          case Schema.Type.FIXED =>
-            value match {
-              case fixed: GenericFixed =>
-                val bytes = fixed.bytes()
-                if (bytes.length <= schema.getFixedSize()) Right(bytes)
-                else Left(AvroError.decodeExceedsFixedSize(bytes.length, schema.getFixedSize()))
-
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "GenericFixed", "Array[Byte]"))
-            }
-
           case schemaType =>
-            val expectedTypes = NonEmptyList.of(Schema.Type.BYTES, Schema.Type.FIXED)
-            Left(AvroError.decodeUnexpectedSchemaType("Array[Byte]", schemaType, expectedTypes))
+            Left {
+              AvroError.decodeUnexpectedSchemaType(
+                "Array[Byte]",
+                schemaType,
+                Schema.Type.BYTES
+              )
+            }
         }
       }
     )
@@ -287,7 +275,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Chain",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -312,7 +300,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Chain",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -336,7 +324,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Char",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.STRING)
+                  Schema.Type.STRING
                 )
             }
         }
@@ -360,7 +348,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Char",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.STRING)
+                  Schema.Type.STRING
                 )
             }
         }
@@ -415,7 +403,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "BigDecimal",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.BYTES)
+                  Schema.Type.BYTES
                 )
             }
         }
@@ -454,7 +442,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "BigDecimal",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.BYTES)
+                  Schema.Type.BYTES
                 )
             }
         }
@@ -482,39 +470,39 @@ final object Codec {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec[A] = {
-    val name =
-      tag.tpe.typeSymbol.name.decodedName.toString
-
-    val namespace =
-      tag.tpe.typeSymbol.annotations
-        .collectFirst {
-          case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroNamespace" =>
-            val namespace = annotation.tree.children.last.toString
-            namespace.substring(1, namespace.length - 1)
-        }
-        .getOrElse {
-          tag.tpe.typeSymbol.fullName.dropRight(name.length + 1)
-        }
-
-    val doc =
-      tag.tpe.typeSymbol.annotations.collectFirst {
-        case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroDoc" =>
-          val doc = annotation.tree.children.last.toString
-          doc.substring(1, doc.length - 1)
-      }
-
+  )(implicit tag: WeakTypeTag[A]): Codec[A] =
     Codec.enum(
-      name = name,
+      name = nameFrom(tag),
       symbols = symbols,
       encode = encode,
       decode = decode,
-      namespace = Some(namespace),
+      namespace = Some(namespaceFrom(tag)),
       aliases = Nil,
-      doc = doc,
+      doc = docFrom(tag),
       default = None
     )
-  }
+
+  /**
+    * Returns a fixed [[Codec]] for type `A`, deriving details
+    * like the name, namespace, and [[AvroDoc]] documentation
+    * from the type `A` using type tags.
+    *
+    * @group Derive
+    */
+  final def deriveFixed[A](
+    size: Int,
+    encode: A => Array[Byte],
+    decode: Array[Byte] => Either[AvroError, A]
+  )(implicit tag: WeakTypeTag[A]): Codec[A] =
+    Codec.fixed(
+      name = nameFrom(tag),
+      size = size,
+      encode = encode,
+      decode = decode,
+      namespace = Some(namespaceFrom(tag)),
+      doc = docFrom(tag),
+      aliases = Nil
+    )
 
   /**
     * @group General
@@ -533,7 +521,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Double",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.DOUBLE)
+                  Schema.Type.DOUBLE
                 )
             }
         }
@@ -554,7 +542,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Double",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.DOUBLE)
+                  Schema.Type.DOUBLE
                 )
             }
         }
@@ -619,7 +607,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ENUM)
+                  Schema.Type.ENUM
                 )
             }
         }
@@ -650,12 +638,111 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ENUM)
+                  Schema.Type.ENUM
                 )
             }
         }
       }
     )
+  }
+
+  /**
+    * Returns a new fixed [[Codec]].
+    *
+    * When encoding, bytes are zero-padded to the specified size.
+    * Zero-padding is applied at the end, and will remain in the
+    * input to `decode`. Encoding checks to ensure the size is
+    * not exceeded, while decoding ensures the exact size.
+    *
+    * @group Create
+    */
+  final def fixed[A](
+    name: String,
+    size: Int,
+    encode: A => Array[Byte],
+    decode: Array[Byte] => Either[AvroError, A],
+    namespace: Option[String] = None,
+    aliases: Seq[String] = Seq.empty,
+    doc: Option[String] = None
+  ): Codec[A] = {
+    val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
+    Codec
+      .instance(
+        AvroError.catchNonFatal {
+          Right {
+            SchemaBuilder
+              .builder()
+              .fixed(name)
+              .namespace(namespace.orNull)
+              .aliases(aliases: _*)
+              .doc(doc.orNull)
+              .size(size)
+          }
+        },
+        (a, schema) => {
+          schema.getType() match {
+            case Schema.Type.FIXED =>
+              if (schema.getFullName() == typeName) {
+                val bytes = encode(a)
+                val length = bytes.length
+                val fixedSize = schema.getFixedSize()
+                if (length <= fixedSize) {
+                  Right {
+                    val buffer = ByteBuffer.allocate(fixedSize).put(bytes)
+                    GenericData.get().createFixed(null, buffer.array(), schema)
+                  }
+                } else {
+                  Left(AvroError.encodeExceedsFixedSize(length, fixedSize, typeName))
+                }
+              } else Left(AvroError.encodeNameMismatch(schema.getFullName(), typeName))
+
+            case schemaType =>
+              Left {
+                AvroError
+                  .encodeUnexpectedSchemaType(
+                    typeName,
+                    schemaType,
+                    Schema.Type.FIXED
+                  )
+              }
+          }
+        },
+        (value, schema) => {
+          schema.getType() match {
+            case Schema.Type.FIXED =>
+              if (schema.getFullName() == typeName) {
+                value match {
+                  case fixed: GenericFixed =>
+                    val bytes = fixed.bytes()
+                    if (bytes.length == schema.getFixedSize()) {
+                      decode(bytes)
+                    } else {
+                      Left {
+                        AvroError.decodeNotEqualFixedSize(
+                          bytes.length,
+                          schema.getFixedSize(),
+                          typeName
+                        )
+                      }
+                    }
+
+                  case other =>
+                    Left(AvroError.decodeUnexpectedType(other, "GenericFixed", typeName))
+                }
+              } else Left(AvroError.decodeNameMismatch(schema.getFullName(), typeName))
+
+            case schemaType =>
+              Left {
+                AvroError
+                  .decodeUnexpectedSchemaType(
+                    typeName,
+                    schemaType,
+                    Schema.Type.FIXED
+                  )
+              }
+          }
+        }
+      )
   }
 
   /**
@@ -674,7 +761,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Float",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.FLOAT)
+                  Schema.Type.FLOAT
                 )
             }
         }
@@ -695,7 +782,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Float",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.FLOAT)
+                  Schema.Type.FLOAT
                 )
             }
         }
@@ -755,7 +842,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Instant",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.LONG)
+                  Schema.Type.LONG
                 )
             }
         }
@@ -779,7 +866,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Instant",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.LONG)
+                  Schema.Type.LONG
                 )
             }
         }
@@ -802,7 +889,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Int",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.INT)
+                  Schema.Type.INT
                 )
             }
         }
@@ -823,7 +910,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Int",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.INT)
+                  Schema.Type.INT
                 )
             }
         }
@@ -848,7 +935,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "List",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -871,7 +958,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "List",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -898,7 +985,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "LocalDate",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.INT)
+                  Schema.Type.INT
                 )
             }
         }
@@ -921,7 +1008,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "LocalDate",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.INT)
+                  Schema.Type.INT
                 )
             }
         }
@@ -944,7 +1031,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Long",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.LONG)
+                  Schema.Type.LONG
                 )
             }
         }
@@ -965,7 +1052,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Long",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.LONG)
+                  Schema.Type.LONG
                 )
             }
         }
@@ -990,7 +1077,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "NonEmptyChain",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1018,7 +1105,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "NonEmptyChain",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1043,7 +1130,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "NonEmptyList",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1071,7 +1158,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "NonEmptyList",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1099,7 +1186,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "NonEmptySet",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1127,7 +1214,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "NonEmptySet",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1151,7 +1238,7 @@ final object Codec {
               AvroError.encodeUnexpectedSchemaType(
                 "NonEmptyVector",
                 schemaType,
-                NonEmptyList.of(Schema.Type.ARRAY)
+                Schema.Type.ARRAY
               )
             }
         }
@@ -1178,7 +1265,7 @@ final object Codec {
               AvroError.decodeUnexpectedSchemaType(
                 "NonEmptyVector",
                 schemaType,
-                NonEmptyList.of(Schema.Type.ARRAY)
+                Schema.Type.ARRAY
               )
             }
         }
@@ -1223,7 +1310,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Option",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.UNION)
+                  Schema.Type.UNION
                 )
             }
         }
@@ -1253,7 +1340,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Option",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.UNION)
+                  Schema.Type.UNION
                 )
             }
         }
@@ -1371,7 +1458,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  NonEmptyList.of(Schema.Type.RECORD)
+                  Schema.Type.RECORD
                 )
             }
         }
@@ -1411,7 +1498,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  NonEmptyList.of(Schema.Type.RECORD)
+                  Schema.Type.RECORD
                 )
             }
         }
@@ -1437,7 +1524,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Seq",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1460,7 +1547,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Seq",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1485,7 +1572,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Set",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1508,7 +1595,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Set",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1532,7 +1619,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Short",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.INT)
+                  Schema.Type.INT
                 )
             }
         }
@@ -1558,7 +1645,7 @@ final object Codec {
                   .decodeUnexpectedSchemaType(
                     "Short",
                     schemaType,
-                    NonEmptyList.of(Schema.Type.INT)
+                    Schema.Type.INT
                   )
               }
           }
@@ -1583,7 +1670,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "String",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.STRING)
+                  Schema.Type.STRING
                 )
             }
         }
@@ -1604,7 +1691,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "String",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.STRING)
+                  Schema.Type.STRING
                 )
             }
         }
@@ -1619,7 +1706,7 @@ final object Codec {
   final def union[A](f: AltBuilder[A] => Chain[Alt[A]])(
     implicit tag: WeakTypeTag[A]
   ): Codec[A] = {
-    val typeName = tag.tpe.typeSymbol.fullName
+    val typeName = fullNameFrom(tag)
     val alts = f(AltBuilder.instance)
     Codec.instance(
       AvroError.catchNonFatal {
@@ -1656,7 +1743,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  NonEmptyList.of(Schema.Type.UNION)
+                  Schema.Type.UNION
                 )
             }
         }
@@ -1708,7 +1795,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  NonEmptyList.of(Schema.Type.UNION)
+                  Schema.Type.UNION
                 )
             }
         }
@@ -1733,7 +1820,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Unit",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.NULL)
+                  Schema.Type.NULL
                 )
             }
         }
@@ -1750,7 +1837,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Unit",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.NULL)
+                  Schema.Type.NULL
                 )
             }
         }
@@ -1777,7 +1864,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "UUID",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.STRING)
+                  Schema.Type.STRING
                 )
             }
         }
@@ -1803,7 +1890,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "UUID",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.STRING)
+                  Schema.Type.STRING
                 )
             }
         }
@@ -1828,7 +1915,7 @@ final object Codec {
                 .encodeUnexpectedSchemaType(
                   "Vector",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1851,7 +1938,7 @@ final object Codec {
                 .decodeUnexpectedSchemaType(
                   "Vector",
                   schemaType,
-                  NonEmptyList.of(Schema.Type.ARRAY)
+                  Schema.Type.ARRAY
                 )
             }
         }

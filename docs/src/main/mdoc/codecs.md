@@ -120,6 +120,45 @@ Codec.enum[Fruit](
 )
 ```
 
+## Fixed
+
+Avro fixed types correspond to `Array[Byte]`s with a fixed size.
+
+`Codec.deriveFixed` can be used to partly derive [`Codec`][codec]s for fixed types.
+
+```scala mdoc
+@AvroNamespace("com.example")
+@AvroDoc("Amount of pence as a single byte")
+sealed abstract case class Pence(value: Byte)
+
+object Pence {
+  def apply(value: Byte): Either[AvroError, Pence] =
+    if(0 <= value && value < 100) Right(new Pence(value) {})
+    else Left(AvroError(s"Expected pence value, got $value"))
+}
+
+Codec.deriveFixed[Pence](
+  size = 1,
+  encode = pence => Array[Byte](pence.value),
+  decode = bytes => Pence(bytes.head)
+)
+```
+
+Annotations like `@AvroDoc` can be used to customize the derivation.
+
+If we need more precise control of how fixed types are encoded, we can use `Codec.fixed`.
+
+```scala mdoc
+Codec.fixed[Pence](
+  name = "Pence",
+  namespace = Some("com.example"),
+  size = 1,
+  encode = pence => Array[Byte](pence.value),
+  decode = bytes => Pence(bytes.head),
+  doc = Some("Amount of pence as a single byte")
+)
+```
+
 ## Records
 
 Avro records closely correspond to `case class`es.

@@ -158,11 +158,11 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error on non-fixed, non-bytes schema") {
+        it("should error on non-bytes schema") {
           assertEncodeError[Array[Byte]](
             Array(1),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Array[Byte], expected schema types BYTES or FIXED"
+            "Got unexpected schema type STRING while encoding Array[Byte], expected schema type BYTES"
           )
         }
 
@@ -172,46 +172,14 @@ final class CodecSpec extends BaseSpec {
             Right(ByteBuffer.wrap(Array(1)))
           )
         }
-
-        describe("fixed") {
-          it("should error if bytes exceed schema size") {
-            assertEncodeError[Array[Byte]](
-              Array(1, 2, 3),
-              SchemaBuilder.fixed("fixed").size(1),
-              "Byte array with length 3 exceeds fixed type with size 1"
-            )
-          }
-
-          it("should encode as fixed") {
-            val schema = SchemaBuilder.fixed("fixed").size(2)
-
-            implicit val codec: Codec[Array[Byte]] =
-              Codec.instance(
-                Right(schema),
-                Codec.bytes.encode,
-                Codec.bytes.decode
-              )
-
-            assertEncodeIs[Array[Byte]](
-              Array(1),
-              Right {
-                GenericData
-                  .get()
-                  .createFixed(null, {
-                    ByteBuffer.allocate(2).put(Array[Byte](1)).array()
-                  }, schema)
-              }
-            )
-          }
-        }
       }
 
       describe("decode") {
-        it("should error on non-fixed, non-bytes schema") {
+        it("should error on non-bytes schema") {
           assertDecodeError[Array[Byte]](
             unsafeEncode[Array[Byte]](Array(1)),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Array[Byte], expected schema types BYTES or FIXED"
+            "Got unexpected schema type STRING while decoding Array[Byte], expected schema type BYTES"
           )
         }
 
@@ -228,44 +196,6 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode[Array[Byte]](Array(1)),
             Right(Array[Byte](1))
           )
-        }
-
-        describe("fixed") {
-          it("should error if bytes exceed schema size") {
-            assertDecodeError[Array[Byte]](
-              unsafeEncode[Array[Byte]](Array(1, 2, 3))(
-                Codec.instance(
-                  Right(SchemaBuilder.fixed("fixed").size(3)),
-                  Codec[Array[Byte]].encode,
-                  Codec[Array[Byte]].decode
-                )
-              ),
-              SchemaBuilder.fixed("fixed").size(1),
-              "Byte array with length 3 exceeds fixed type with size 1"
-            )
-          }
-
-          it("should error if value is not GenericFixed") {
-            assertDecodeError[Array[Byte]](
-              10,
-              SchemaBuilder.fixed("fixed").size(1),
-              "Got unexpected type java.lang.Integer while decoding Array[Byte], expected type GenericFixed"
-            )
-          }
-
-          it("should decode as fixed") {
-            implicit val codec: Codec[Array[Byte]] =
-              Codec.instance(
-                Right(SchemaBuilder.fixed("fixed").size(2)),
-                Codec.bytes.encode,
-                Codec.bytes.decode
-              )
-
-            assertDecodeIs[Array[Byte]](
-              unsafeEncode[Array[Byte]](Array(1)),
-              Right(Array[Byte](1, 0))
-            )
-          }
         }
       }
     }
@@ -559,6 +489,22 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("deriveFixed") {
+      describe("schema") {
+        it("should derive name, namespace, doc") {
+          assertSchemaIs[FixedAvroDoc] {
+            """{"type":"fixed","name":"FixedAvroDoc","namespace":"vulcan.examples","doc":"Some documentation","size":1}"""
+          }
+        }
+
+        it("should use namespace annotation") {
+          assertSchemaIs[FixedNamespace] {
+            """{"type":"fixed","name":"FixedNamespace","namespace":"vulcan.examples.overridden","doc":"Some documentation","size":1}"""
+          }
+        }
+      }
+    }
+
     describe("double") {
       describe("schema") {
         it("should be encoded as double") {
@@ -721,6 +667,113 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[SealedTraitEnum](
             unsafeEncode[SealedTraitEnum](FirstInSealedTraitEnum),
             Right(FirstInSealedTraitEnum)
+          )
+        }
+      }
+    }
+
+    describe("fixed") {
+      describe("schema") {
+        it("should have the expected schema") {
+          assertSchemaIs[FixedBoolean] {
+            """{"type":"fixed","name":"FixedBoolean","namespace":"vulcan.examples","doc":"A boolean represented as a byte","size":1,"aliases":["SomeOtherBoolean"]}"""
+          }
+        }
+
+        it("should fail for negative size") {
+          assert {
+            Codec
+              .fixed[Array[Byte]](
+                name = "Name",
+                size = -1,
+                encode = bytes => bytes,
+                decode = bytes => Right(bytes)
+              )
+              .schema
+              .swap
+              .value
+              .message ==
+              "java.lang.IllegalArgumentException: Invalid fixed size: -1"
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should error if schema is not fixed") {
+          assertEncodeError[FixedBoolean](
+            TrueFixedBoolean,
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while encoding vulcan.examples.FixedBoolean, expected schema type FIXED"
+          )
+        }
+
+        it("should error if schema full name does not match") {
+          assertEncodeError[FixedBoolean](
+            TrueFixedBoolean,
+            SchemaBuilder.builder().fixed("TheName").size(1),
+            "Unable to encode vulcan.examples.FixedBoolean using schema with name TheName since names do not match"
+          )
+        }
+
+        it("should error if length exceeds schema size") {
+          assertEncodeError[FixedBoolean](
+            TrueFixedBoolean,
+            unsafeSchema[FixedBoolean],
+            "Got 2 bytes while encoding vulcan.examples.FixedBoolean, expected maximum fixed size 1"
+          )
+        }
+
+        it("should encode as fixed") {
+          assertEncodeIs[FixedBoolean](
+            FalseFixedBoolean,
+            Right(GenericData.get().createFixed(null, Array(0.toByte), unsafeSchema[FixedBoolean]))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not fixed") {
+          assertDecodeError[FixedBoolean](
+            unsafeEncode[FixedBoolean](FalseFixedBoolean),
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding vulcan.examples.FixedBoolean, expected schema type FIXED"
+          )
+        }
+
+        it("should error if schema full name does not match") {
+          assertDecodeError[FixedBoolean](
+            unsafeEncode[FixedBoolean](FalseFixedBoolean),
+            SchemaBuilder.builder().fixed("TheName").size(1),
+            "Unable to decode vulcan.examples.FixedBoolean using schema with name TheName since names do not match"
+          )
+        }
+
+        it("should error if value is not GenericFixed") {
+          assertDecodeError[FixedBoolean](
+            123,
+            unsafeSchema[FixedBoolean],
+            "Got unexpected type java.lang.Integer while decoding vulcan.examples.FixedBoolean, expected type GenericFixed"
+          )
+        }
+
+        it("should error if length does not match schema size") {
+          assertDecodeError[FixedBoolean](
+            GenericData
+              .get()
+              .createFixed(
+                null,
+                Array(0.toByte, 1.toByte),
+                SchemaBuilder.builder().fixed("FixedBoolean").namespace("vulcan.examples").size(2)
+              ),
+            unsafeSchema[FixedBoolean],
+            "Got 2 bytes while decoding vulcan.examples.FixedBoolean, expected fixed size 1"
+          )
+        }
+
+        it("should decode as fixed") {
+          assertDecodeIs[FixedBoolean](
+            unsafeEncode[FixedBoolean](FalseFixedBoolean),
+            Right(FalseFixedBoolean)
           )
         }
       }

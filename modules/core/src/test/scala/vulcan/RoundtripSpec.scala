@@ -68,9 +68,13 @@ final class RoundtripSpec extends BaseSpec {
     it("SealedTraitEnumDerived") { roundtrip[SealedTraitEnumDerived] }
   }
 
+  describe("deriveFixed") { it("roundtrip") { roundtrip[FixedNamespace] } }
+
   describe("Double") { it("roundtrip") { roundtrip[Double] } }
 
   describe("Enum") { it("roundtrip") { roundtrip[SealedTraitEnum] } }
+
+  describe("Fixed") { it("roundtrip") { roundtrip[FixedBoolean] } }
 
   describe("Float") { it("roundtrip") { roundtrip[Float] } }
 
