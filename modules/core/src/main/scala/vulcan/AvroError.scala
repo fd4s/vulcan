@@ -135,6 +135,12 @@ final object AvroError {
         s"Got unexpected logical type ${actualLogicalType.getName()} while decoding $decodingTypeName"
     }
 
+  private[vulcan] final def decodeUnexpectedMapKey(key: Any): AvroError =
+    AvroError {
+      val typeName = if (key != null) key.getClass().getTypeName() else "null"
+      s"Got unexpected map key with type $typeName while decoding Map, expected Utf8"
+    }
+
   private[vulcan] final def decodeUnexpectedOptionSchema(schema: Schema): AvroError =
     AvroError(s"Unexpected union schema $schema for Option")
 
