@@ -2,7 +2,7 @@ import ReleaseTransformations._
 
 val avroVersion = "1.9.0"
 
-val catsVersion = "2.0.0-M4"
+val catsVersion = "2.0.0-RC1"
 
 val enumeratumVersion = "1.5.13"
 
@@ -107,9 +107,12 @@ lazy val docs = project
 lazy val dependencySettings = Seq(
   libraryDependencies ++= Seq(
     "org.apache.avro" % "avro" % avroVersion,
-    "org.typelevel" %% "cats-free" % catsVersion
+    "org.typelevel" %% "cats-free" % catsVersion,
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value
   ),
   libraryDependencies ++= Seq(
+    "org.scalatestplus" %% "scalatestplus-scalacheck" % "1.0.0-SNAP8",
+    "org.typelevel" %% "discipline-scalatest" % "1.0.0-M1",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.26"
   ).map(_ % Test),
@@ -276,6 +279,7 @@ lazy val scalaSettings = Seq(
     "-feature",
     "-language:experimental.macros",
     "-language:higherKinds",
+    "-language:implicitConversions",
     "-unchecked",
     "-Xfatal-warnings",
     "-Xlint",
