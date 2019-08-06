@@ -647,7 +647,7 @@ final object Codec {
   }
 
   /**
-    * Returns a new fixed [[Codec]].
+    * Returns a new fixed [[Codec]] for type `A`.
     *
     * When encoding, bytes are zero-padded to the specified size.
     * Zero-padding is applied at the end, and will remain in the

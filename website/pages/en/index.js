@@ -69,11 +69,8 @@ class Index extends React.Component {
     const { baseUrl, buildInfo } = siteConfig;
     const {
       coreModuleName,
-      enumeratumModuleName,
-      genericModuleName,
       latestVersion,
       organization,
-      refinedModuleName,
       scalaPublishVersions
     } = buildInfo;
 
@@ -101,15 +98,10 @@ Functional Avro encodings for Scala using the official Apache Avro library.<br>
 Project is under active development. Feedback and contributions welcome.
 
 ### Getting Started
-To get started with [sbt](https://scala-sbt.org), simply add the following lines to your \`build.sbt\` file.
+To get started with [sbt](https://scala-sbt.org), simply add the following line to your \`build.sbt\` file.
 
 \`\`\`scala
-libraryDependencies ++= Seq(
-  "${organization}" %% "${coreModuleName}",
-  "${organization}" %% "${enumeratumModuleName}",
-  "${organization}" %% "${genericModuleName}",
-  "${organization}" %% "${refinedModuleName}"
-).map(_ % "${latestVersion}")
+libraryDependencies += "${organization}" %% "${coreModuleName}" % "${latestVersion}"
 \`\`\`
 
 Published for Scala ${scalaPublishVersions}. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).

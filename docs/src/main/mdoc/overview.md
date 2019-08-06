@@ -15,15 +15,10 @@ Documentation is kept up-to-date with new releases, currently documenting v@LATE
 
 ## Getting Started
 
-To get started with [sbt](https://scala-sbt.org), simply add the following lines to your `build.sbt` file.
+To get started with [sbt](https://scala-sbt.org), simply add the following line to your `build.sbt` file.
 
 ```scala
-libraryDependencies ++= Seq(
-  "@ORGANIZATION@" %% "@CORE_MODULE_NAME@",
-  "@ORGANIZATION@" %% "@ENUMERATUM_MODULE_NAME@",
-  "@ORGANIZATION@" %% "@GENERIC_MODULE_NAME@",
-  "@ORGANIZATION@" %% "@REFINED_MODULE_NAME@"
-).map(_ % "@LATEST_VERSION@")
+libraryDependencies += "@ORGANIZATION@" %% "@CORE_MODULE_NAME@" % "@LATEST_VERSION@"
 ```
 
 Published for Scala @SCALA_PUBLISH_VERSIONS@. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).
@@ -34,18 +29,52 @@ For Scala 2.12, enable partial unification by adding the following line to `buil
 scalacOptions += "-Ypartial-unification"
 ```
 
+### Modules
+
+Following are additional provided modules.
+
+#### Enumeratum
+
+For [enumeratum](https://github.com/lloydmeta/enumeratum) support, add the following line to your `build.sbt` file.
+
+```scala
+libraryDependencies += "@ORGANIZATION@" %% "@ENUMERATUM_MODULE_NAME@" % "@LATEST_VERSION@"
+```
+
+For information on how to use the module, refer to the [documentation](modules.md#enumeratum).
+
+#### Generic
+
+For generic derivation support, add the following line to your `build.sbt` file.
+
+```scala
+libraryDependencies += "@ORGANIZATION@" %% "@GENERIC_MODULE_NAME@" % "@LATEST_VERSION@"
+```
+
+For information on how to use the module, refer to the [documentation](modules.md#generic).
+
+#### Refined
+
+For [refined](https://github.com/fthomas/refined) support, add the following line to your `build.sbt` file.
+
+```scala
+libraryDependencies += "@ORGANIZATION@" %% "@REFINED_MODULE_NAME@" % "@LATEST_VERSION@"
+```
+
+For information on how to use the module, refer to the [documentation](modules.md#refined).
+
+#### External Modules
+
+Following is an incomplete list of third-party integrations.
+
+- [fs2-kafka-vulcan](https://ovotech.github.io/fs2-kafka)
+
 ### Compatibility
 
 Backwards binary-compatibility for the library is guaranteed between patch versions.<br>
 For example, `@LATEST_MINOR_VERSION@.x` is backwards binary-compatible with `@LATEST_MINOR_VERSION@.y` for any `x > y`.
 
 Please note binary-compatibility is not guaranteed between milestone releases.
-
-## External Modules
-
-Following is an incomplete list of third-party integrations.
-
-- [fs2-kafka-vulcan](https://ovotech.github.io/fs2-kafka)
 
 ## Dependencies
 
