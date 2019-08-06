@@ -2,7 +2,7 @@ import ReleaseTransformations._
 
 val avroVersion = "1.9.0"
 
-val catsVersion = "2.0.0-M4"
+val catsVersion = "2.0.0-RC1"
 
 val enumeratumVersion = "1.5.13"
 
