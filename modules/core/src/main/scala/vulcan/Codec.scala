@@ -1060,6 +1060,70 @@ final object Codec {
     )
 
   /**
+    * @group Collection
+    */
+  implicit final def map[A](implicit codec: Codec[A]): Codec[Map[String, A]] =
+    Codec.instance(
+      codec.schema.map(Schema.createMap),
+      (map, schema) => {
+        schema.getType() match {
+          case Schema.Type.MAP =>
+            val valueSchema = schema.getValueType()
+
+            map.toList
+              .traverse {
+                case (key, value) =>
+                  codec
+                    .encode(value, valueSchema)
+                    .tupleLeft(new Utf8(key))
+              }
+              .map(_.toMap.asJava)
+
+          case schemaType =>
+            Left {
+              AvroError
+                .encodeUnexpectedSchemaType(
+                  "Map",
+                  schemaType,
+                  Schema.Type.MAP
+                )
+            }
+        }
+      },
+      (value, schema) => {
+        schema.getType() match {
+          case Schema.Type.MAP =>
+            value match {
+              case map: java.util.Map[_, _] =>
+                val valueSchema = schema.getValueType()
+
+                map.asScala.toList
+                  .traverse {
+                    case (key: Utf8, value) =>
+                      codec.decode(value, valueSchema).tupleLeft(key.toString)
+                    case (key, _) =>
+                      Left(AvroError.decodeUnexpectedMapKey(key))
+                  }
+                  .map(_.toMap)
+
+              case other =>
+                Left(AvroError.decodeUnexpectedType(other, "java.util.Map", "Map"))
+            }
+
+          case schemaType =>
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  "Map",
+                  schemaType,
+                  Schema.Type.MAP
+                )
+            }
+        }
+      }
+    )
+
+  /**
     * @group Cats
     */
   implicit final def nonEmptyChain[A](implicit codec: Codec[A]): Codec[NonEmptyChain[A]] =

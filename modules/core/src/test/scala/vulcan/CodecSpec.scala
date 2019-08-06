@@ -1214,6 +1214,74 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("map") {
+      describe("schema") {
+        it("should be encoded as map") {
+          assertSchemaIs[Map[String, Int]] {
+            """{"type":"map","values":"int"}"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should error if schema is not map") {
+          assertEncodeError[Map[String, Int]](
+            Map.empty,
+            SchemaBuilder.builder().intType(),
+            "Got unexpected schema type INT while encoding Map, expected schema type MAP"
+          )
+        }
+
+        it("should encode as java map using encoder for value") {
+          assertEncodeIs[Map[String, Int]](
+            Map("key" -> 1),
+            Right(Map(new Utf8("key") -> 1).asJava)
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not map") {
+          assertDecodeError[Map[String, Int]](
+            unsafeEncode[Map[String, Int]](Map("key" -> 1)),
+            SchemaBuilder.builder().intType(),
+            "Got unexpected schema type INT while decoding Map, expected schema type MAP"
+          )
+        }
+
+        it("should error if value is not java.util.Map") {
+          assertDecodeError[Map[String, Int]](
+            123,
+            unsafeSchema[Map[String, Int]],
+            "Got unexpected type java.lang.Integer while decoding Map, expected type java.util.Map"
+          )
+        }
+
+        it("should error if keys are not strings") {
+          assertDecodeError[Map[String, Int]](
+            Map(1 -> 2).asJava,
+            unsafeSchema[Map[String, Int]],
+            "Got unexpected map key with type java.lang.Integer while decoding Map, expected Utf8"
+          )
+        }
+
+        it("should error if any keys are null") {
+          assertDecodeError[Map[String, Int]](
+            Map((null, 2)).asJava,
+            unsafeSchema[Map[String, Int]],
+            "Got unexpected map key with type null while decoding Map, expected Utf8"
+          )
+        }
+
+        it("should decode to map using decoder for value") {
+          assertDecodeIs[Map[String, Int]](
+            unsafeEncode[Map[String, Int]](Map("key" -> 1)),
+            Right(Map("key" -> 1))
+          )
+        }
+      }
+    }
+
     describe("nonEmptyChain") {
       describe("schema") {
         it("should be encoded as array") {

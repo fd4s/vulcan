@@ -111,6 +111,8 @@ final class RoundtripSpec extends BaseSpec {
 
   describe("Long") { it("roundtrip") { roundtrip[Long] } }
 
+  describe("Map") { it("roundtrip") { roundtrip[Map[String, Int]] } }
+
   describe("NonEmptyChain") {
     it("roundtrip") {
       implicit def arbitraryNonEmptyChain[A](
@@ -248,7 +250,9 @@ final class RoundtripSpec extends BaseSpec {
     assert(binary.isRight)
 
     val decoded = fromBinary(binary.value)
-    assert(decoded === Right(a))
+    withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+      assert(decoded === Right(a))
+    }
   }
 
   def toBinary[A](a: A)(
