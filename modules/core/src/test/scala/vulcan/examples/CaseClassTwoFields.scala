@@ -12,8 +12,7 @@ object CaseClassTwoFields {
       name = "CaseClassTwoFields",
       namespace = Some("vulcan.examples"),
       doc = Some("some documentation for example"),
-      aliases = Seq("FirstAlias", "SecondAlias"),
-      props = Seq("custom" -> "custom record value")
+      aliases = Seq("FirstAlias", "SecondAlias")
     ) { field =>
       assert(field.toString() == "FieldBuilder")
 
@@ -24,8 +23,7 @@ object CaseClassTwoFields {
           doc = Some("some doc"),
           default = Some("default name"),
           order = Some(Schema.Field.Order.DESCENDING),
-          aliases = Seq("TheAlias"),
-          props = Seq("custom" -> "custom field value")
+          aliases = Seq("TheAlias")
         ),
         field("age", _.age)
       ).mapN(CaseClassTwoFields(_, _))

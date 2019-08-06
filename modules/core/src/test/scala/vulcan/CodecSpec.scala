@@ -1640,7 +1640,7 @@ final class CodecSpec extends BaseSpec {
         it("should have the expected schema") {
           assert {
             Codec[CaseClassTwoFields].schema.value.toString() ==
-              """{"type":"record","name":"CaseClassTwoFields","namespace":"vulcan.examples","doc":"some documentation for example","fields":[{"name":"name","type":"string","doc":"some doc","default":"default name","order":"descending","aliases":["TheAlias"],"custom":"custom field value"},{"name":"age","type":"int"}],"custom":"custom record value","aliases":["FirstAlias","SecondAlias"]}"""
+              """{"type":"record","name":"CaseClassTwoFields","namespace":"vulcan.examples","doc":"some documentation for example","fields":[{"name":"name","type":"string","doc":"some doc","default":"default name","order":"descending","aliases":["TheAlias"]},{"name":"age","type":"int"}],"aliases":["FirstAlias","SecondAlias"]}"""
           }
         }
 

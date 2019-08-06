@@ -1356,8 +1356,7 @@ final object Codec {
     name: String,
     namespace: Option[String] = None,
     doc: Option[String] = None,
-    aliases: Seq[String] = Seq.empty,
-    props: Seq[(String, String)] = Seq.empty
+    aliases: Seq[String] = Seq.empty
   )(f: FieldBuilder[A] => FreeApplicative[Field[A, ?], A]): Codec[A] = {
     val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
     val free = f(FieldBuilder.instance)
@@ -1371,30 +1370,24 @@ final object Codec {
                   schema =>
                     field.default
                       .traverse(field.codec.encode(_, schema))
-                      .map {
-                        default =>
-                          Chain.one {
-                            val schemaField =
-                              new Schema.Field(
-                                field.name,
-                                schema,
-                                field.doc.orNull,
-                                default.map {
-                                  case null  => Schema.Field.NULL_DEFAULT_VALUE
-                                  case other => other
-                                }.orNull,
-                                field.order.getOrElse(Schema.Field.Order.ASCENDING)
-                              )
+                      .map { default =>
+                        Chain.one {
+                          val schemaField =
+                            new Schema.Field(
+                              field.name,
+                              schema,
+                              field.doc.orNull,
+                              default.map {
+                                case null  => Schema.Field.NULL_DEFAULT_VALUE
+                                case other => other
+                              }.orNull,
+                              field.order.getOrElse(Schema.Field.Order.ASCENDING)
+                            )
 
-                            field.aliases.foreach(schemaField.addAlias)
+                          field.aliases.foreach(schemaField.addAlias)
 
-                            field.props.foreach {
-                              case (name, value) =>
-                                schemaField.addProp(name, value)
-                            }
-
-                            schemaField
-                          }
+                          schemaField
+                        }
                       }
                 }
             }
@@ -1411,11 +1404,6 @@ final object Codec {
             )
 
           aliases.foreach(record.addAlias)
-
-          props.foreach {
-            case (name, value) =>
-              record.addProp(name, value)
-          }
 
           record
         }
@@ -2032,8 +2020,6 @@ final object Codec {
     def order: Option[Schema.Field.Order]
 
     def aliases: Seq[String]
-
-    def props: Seq[(String, String)]
   }
 
   private[vulcan] final object Field {
@@ -2044,8 +2030,7 @@ final object Codec {
       doc: Option[String],
       default: Option[B],
       order: Option[Schema.Field.Order],
-      aliases: Seq[String],
-      props: Seq[(String, String)]
+      aliases: Seq[String]
     ): Field[A, B] = {
       val _name = name
       val _access = access
@@ -2054,7 +2039,6 @@ final object Codec {
       val _default = default
       val _order = order
       val _aliases = aliases
-      val _props = props
 
       new Field[A, B] {
         override final val name: String = _name
@@ -2064,7 +2048,6 @@ final object Codec {
         override final val default: Option[B] = _default
         override final val order: Option[Schema.Field.Order] = _order
         override final val aliases: Seq[String] = _aliases
-        override final val props: Seq[(String, String)] = _props
       }
     }
   }
@@ -2079,8 +2062,7 @@ final object Codec {
       doc: Option[String] = None,
       default: Option[B] = None,
       order: Option[Schema.Field.Order] = None,
-      aliases: Seq[String] = Seq.empty,
-      props: Seq[(String, String)] = Seq.empty
+      aliases: Seq[String] = Seq.empty
     )(implicit codec: Codec[B]): FreeApplicative[Field[A, ?], B]
   }
 
@@ -2093,8 +2075,7 @@ final object Codec {
           doc: Option[String],
           default: Option[B],
           order: Option[Schema.Field.Order],
-          aliases: Seq[String],
-          props: Seq[(String, String)]
+          aliases: Seq[String]
         )(implicit codec: Codec[B]): FreeApplicative[Field[Any, ?], B] =
           FreeApplicative.lift {
             Field(
@@ -2104,8 +2085,7 @@ final object Codec {
               doc = doc,
               default = default,
               order = order,
-              aliases = aliases,
-              props = props
+              aliases = aliases
             )
           }
 
