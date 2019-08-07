@@ -1534,7 +1534,7 @@ final class CodecSpec extends BaseSpec {
           }
         }
 
-        it("should catpure errors on nested unions") {
+        it("should capture errors on nested unions") {
           assertSchemaError[Option[Option[Int]]] {
             """org.apache.avro.AvroRuntimeException: Nested union: ["null",["null","int"]]"""
           }
@@ -1555,7 +1555,16 @@ final class CodecSpec extends BaseSpec {
             Some(1), {
               SchemaBuilder.unionOf().intType().endUnion()
             },
-            """Unexpected union schema ["int"] for Option"""
+            """Unexpected union schema ["int"] while encoding Option"""
+          )
+        }
+
+        it("should error if there is not null in union") {
+          assertEncodeError[Option[Int]](
+            Some(1), {
+              SchemaBuilder.unionOf().intType().and().stringType().endUnion()
+            },
+            """Unexpected union schema ["int","string"] while encoding Option"""
           )
         }
 
@@ -1571,7 +1580,7 @@ final class CodecSpec extends BaseSpec {
                 .nullType()
                 .endUnion()
             },
-            """Unexpected union schema ["int","string","null"] for Option"""
+            """Unexpected union schema ["int","string","null"] while encoding Option"""
           )
         }
 
@@ -1639,7 +1648,16 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(Option(1)), {
               SchemaBuilder.unionOf().intType().endUnion()
             },
-            """Unexpected union schema ["int"] for Option"""
+            """Unexpected union schema ["int"] while decoding Option"""
+          )
+        }
+
+        it("should error if there is not null in union") {
+          assertDecodeError[Option[Int]](
+            unsafeEncode(Option(1)), {
+              SchemaBuilder.unionOf().intType().and().stringType().endUnion()
+            },
+            """Unexpected union schema ["int","string"] while decoding Option"""
           )
         }
 
@@ -1648,7 +1666,7 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(Option(1)), {
               SchemaBuilder.unionOf().intType().and().stringType().and().nullType().endUnion()
             },
-            """Unexpected union schema ["int","string","null"] for Option"""
+            """Unexpected union schema ["int","string","null"] while decoding Option"""
           )
         }
 
@@ -1814,6 +1832,42 @@ final class CodecSpec extends BaseSpec {
             }
           )
         }
+
+        it("should support None as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(None)).map(Test(_))
+            }
+
+          assertEncodeIs[Test](
+            Test(None),
+            Right {
+              val record = new GenericData.Record(unsafeSchema[Test])
+              record.put(0, null)
+              record
+            }
+          )
+        }
+
+        it("should support Some as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(Some(0))).map(Test(_))
+            }
+
+          assertEncodeIs[Test](
+            Test(None),
+            Right {
+              val record = new GenericData.Record(unsafeSchema[Test])
+              record.put(0, null)
+              record
+            }
+          )
+        }
       }
 
       describe("decode") {
@@ -1917,6 +1971,34 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[CaseClassTwoFields](
             unsafeEncode(CaseClassTwoFields("name", 123)),
             Right(CaseClassTwoFields("name", 123))
+          )
+        }
+
+        it("should support None as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(None)).map(Test(_))
+            }
+
+          assertDecodeIs[Test](
+            unsafeEncode(Test(None)),
+            Right(Test(None))
+          )
+        }
+
+        it("should support Some as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(Some(0))).map(Test(_))
+            }
+
+          assertDecodeIs[Test](
+            unsafeEncode(Test(None)),
+            Right(Test(None))
           )
         }
       }

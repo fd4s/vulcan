@@ -1364,9 +1364,12 @@ final object Codec {
 
             val nonNullSchema =
               if (schemas.size == 2) {
-                if (schemas.get(0).getType() == Schema.Type.NULL)
-                  Right(schemas.get(1))
-                else Right(schemas.get(0))
+                val first = schemas.get(0)
+                val second = schemas.get(1)
+
+                if (first.getType() == Schema.Type.NULL) Right(second)
+                else if (second.getType() == Schema.Type.NULL) Right(first)
+                else Left(AvroError.encodeUnexpectedOptionSchema(schema))
               } else Left(AvroError.encodeUnexpectedOptionSchema(schema))
 
             nonNullSchema.flatMap { schema =>
@@ -1390,13 +1393,17 @@ final object Codec {
       (value, schema) => {
         schema.getType() match {
           case Schema.Type.UNION =>
-            val schemas = schema.getTypes()
+            val schemas =
+              schema.getTypes()
 
             val nonNullSchema =
               if (schemas.size == 2) {
-                if (schemas.get(0).getType() == Schema.Type.NULL)
-                  Right(schemas.get(1))
-                else Right(schemas.get(0))
+                val first = schemas.get(0)
+                val second = schemas.get(1)
+
+                if (first.getType() == Schema.Type.NULL) Right(second)
+                else if (second.getType() == Schema.Type.NULL) Right(first)
+                else Left(AvroError.decodeUnexpectedOptionSchema(schema))
               } else Left(AvroError.decodeUnexpectedOptionSchema(schema))
 
             nonNullSchema.flatMap { schema =>
