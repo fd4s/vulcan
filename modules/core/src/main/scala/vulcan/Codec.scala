@@ -2135,7 +2135,7 @@ final object Codec {
       default: Option[B] = None,
       order: Option[Schema.Field.Order] = None,
       aliases: Seq[String] = Seq.empty
-    )(implicit codec: Codec[B]): FreeApplicative[Field[A, ?], B]
+    )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[A, ?], B]
   }
 
   private[vulcan] final object FieldBuilder {
@@ -2148,12 +2148,12 @@ final object Codec {
           default: Option[B],
           order: Option[Schema.Field.Order],
           aliases: Seq[String]
-        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, ?], B] =
+        )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[Any, ?], B] =
           FreeApplicative.lift {
             Field(
               name = name,
               access = access,
-              codec = codec,
+              codec = codec(default),
               doc = doc,
               default = default,
               order = order,
@@ -2167,5 +2167,50 @@ final object Codec {
 
     final def instance[A]: FieldBuilder[A] =
       Instance.asInstanceOf[FieldBuilder[A]]
+  }
+
+  /**
+    * @group Create
+    */
+  sealed abstract class WithDefault[A] {
+    def apply(default: Option[A]): Codec[A]
+  }
+
+  /**
+    * @group Create
+    */
+  final object WithDefault extends WithDefaultLowPriority {
+    final def apply[A](implicit codec: Codec.WithDefault[A]): Codec.WithDefault[A] =
+      codec
+
+    final def instance[A](f: Option[A] => Codec[A]): Codec.WithDefault[A] =
+      new Codec.WithDefault[A] {
+        override final def apply(default: Option[A]): Codec[A] =
+          f(default)
+
+        override final def toString: String =
+          "WithDefault$" + System.identityHashCode(this)
+      }
+
+    implicit final def option[A](implicit codec: Codec[A]): Codec.WithDefault[Option[A]] =
+      Codec.WithDefault.instance {
+        case None | Some(None) =>
+          Codec.option[A]
+        case Some(Some(_)) =>
+          Codec.option[A].withSchema {
+            AvroError.catchNonFatal {
+              codec.schema.map { schema =>
+                val nullSchema = SchemaBuilder.builder().nullType()
+                val schemas = List(schema, nullSchema).asJava
+                Schema.createUnion(schemas)
+              }
+            }
+          }
+      }
+  }
+
+  private[vulcan] sealed abstract class WithDefaultLowPriority {
+    implicit final def ignore[A](implicit codec: Codec[A]): Codec.WithDefault[A] =
+      Codec.WithDefault.instance(_ => codec)
   }
 }

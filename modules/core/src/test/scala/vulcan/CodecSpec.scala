@@ -1759,6 +1759,19 @@ final class CodecSpec extends BaseSpec {
             """{"type":"record","name":"Test","fields":[{"name":"value","type":["null","int"],"default":null}]}"""
           }
         }
+
+        it("should support Some as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(Some(0))).map(Test(_))
+            }
+
+          assertSchemaIs[Test] {
+            """{"type":"record","name":"Test","fields":[{"name":"value","type":["int","null"],"default":0}]}"""
+          }
+        }
       }
 
       describe("encode") {
@@ -2478,6 +2491,92 @@ final class CodecSpec extends BaseSpec {
             .withSchema(Right(newSchema))
             .schema
             .value eq newSchema
+        }
+      }
+    }
+
+    describe("WithDefault") {
+      describe("apply") {
+        it("should return the WithDefault instance") {
+          assert {
+            Codec
+              .WithDefault[Option[Int]]
+              .apply(Some(Some(0)))
+              .schema
+              .value
+              .toString == """["int","null"]"""
+          }
+        }
+
+        it("should return the codec in a WithDefault instance") {
+          assert {
+            Codec
+              .WithDefault[Int]
+              .apply(None) eq Codec.int
+          }
+        }
+      }
+
+      describe("instance") {
+        it("should return a new instance") {
+          assert {
+            Codec.WithDefault
+              .instance[Int](_ => Codec.int)
+              .apply(None) eq Codec.int
+          }
+        }
+
+        it("should have toString starting with WithDefault$") {
+          assert {
+            Codec.WithDefault
+              .instance[Int](_ => Codec.int)
+              .toString startsWith "WithDefault$"
+          }
+        }
+      }
+
+      describe("option") {
+        it("should use default instance with no default") {
+          assert {
+            Codec.WithDefault
+              .option[Int]
+              .apply(None)
+              .schema
+              .value
+              .toString == """["null","int"]"""
+          }
+        }
+
+        it("should use default instance for None default") {
+          assert {
+            Codec.WithDefault
+              .option[Int]
+              .apply(Some(None))
+              .schema
+              .value
+              .toString == """["null","int"]"""
+          }
+        }
+
+        it("should change schema for Some default") {
+          assert {
+            Codec.WithDefault
+              .option[Int]
+              .apply(Some(Some(0)))
+              .schema
+              .value
+              .toString == """["int","null"]"""
+          }
+        }
+      }
+
+      describe("ignore") {
+        it("should return the codec in a WithDefault instance") {
+          assert {
+            Codec.WithDefault
+              .ignore[Int]
+              .apply(None) eq Codec.int
+          }
         }
       }
     }
