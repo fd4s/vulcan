@@ -2457,6 +2457,30 @@ final class CodecSpec extends BaseSpec {
         }
       }
     }
+
+    describe("withSchema") {
+      it("should replace the existing schema with an error") {
+        assert {
+          Codec.int
+            .withSchema(Left(AvroError("error")))
+            .schema
+            .swap
+            .value
+            .message == "error"
+        }
+      }
+
+      it("should replace the existing schema with another schema") {
+        assert {
+          val newSchema = SchemaBuilder.builder().nullType()
+
+          Codec.int
+            .withSchema(Right(newSchema))
+            .schema
+            .value eq newSchema
+        }
+      }
+    }
   }
 
   def unsafeSchema[A](implicit codec: Codec[A]): Schema =

@@ -72,6 +72,14 @@ sealed abstract class Codec[A] {
       (b, schema) => encode(g(b), schema),
       (a, schema) => decode(a, schema).flatMap(f)
     )
+
+  /**
+    * Returns a new [[Codec]] with the specified schema,
+    * but with the encoding and decoding functions kept
+    * unchanged.
+    */
+  final def withSchema(schema: Either[AvroError, Schema]): Codec[A] =
+    Codec.instance(schema, encode, decode)
 }
 
 /**
