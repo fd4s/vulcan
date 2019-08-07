@@ -1,0 +1,28 @@
+### Changes
+
+- Add `Codec.WithDefault` to support `Codec`s that depend on default values. ([#29][#29])
+- Add `Codec.withSchema` for changing the `Schema` used by a `Codec`. ([#29][#29])
+- Add `Codec` support for `Map[String, A]` via `Codec.map`. ([#27][#27])
+- Add support for [fixed types](https://ovotech.github.io/vulcan/docs/codecs#fixed) with `Codec.deriveFixed` and `Codec.fixed`. ([#21][#21])
+- Change `Codec.option` to perform more strict schema checks. ([#29][#29])
+- Fix using `Some` default value for `Option`s in record `Codec`s. ([#29][#29])
+- Move `encode` and `decode` to `Codec.encode` and `Codec.decode`. ([#18][#18])
+- Remove support for custom properties in schemas. ([#26][#26])
+
+### Updates
+
+- Update cats to 2.0.0-RC1. ([#24][#24])
+- Update refined to 0.9.9. Thanks [@scala-steward](https://github.com/scala-steward)! ([#17][#17])
+
+### Documentation
+
+- Add list of [external modules](https://ovotech.github.io/vulcan/docs/overview#external-modules) to website. ([#20][#20])
+
+[#17]: https://github.com/ovotech/vulcan/pull/17
+[#18]: https://github.com/ovotech/vulcan/pull/18
+[#20]: https://github.com/ovotech/vulcan/pull/20
+[#21]: https://github.com/ovotech/vulcan/pull/21
+[#24]: https://github.com/ovotech/vulcan/pull/24
+[#26]: https://github.com/ovotech/vulcan/pull/26
+[#27]: https://github.com/ovotech/vulcan/pull/27
+[#29]: https://github.com/ovotech/vulcan/pull/29
