@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Vulcan v0.2.0-M3 - vulcan</title>
-          <meta name="description" content="Vulcan v0.2.0 - M3 - vulcan" />
-          <meta name="keywords" content="Vulcan v0.2.0 M3 vulcan" />
+          <title>Vulcan v0.2.0-RC1 - vulcan</title>
+          <meta name="description" content="Vulcan v0.2.0 - RC1 - vulcan" />
+          <meta name="keywords" content="Vulcan v0.2.0 RC1 vulcan" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-M3</span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-RC1</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -153,12 +153,7 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-M3/modules/core/src/main/scala/vulcan/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
-          <span class="toggle">
-            Linear Supertypes
-          </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
-        </div></div>
+          <div id="comment" class="fullcommenttop"></div>
         
 
       <div id="mbrsel">
@@ -176,22 +171,10 @@
             <ol>
               
               <li class="alpha in"><span>Alphabetic</span></li>
-              <li class="inherit out"><span>By Inheritance</span></li>
+              
             </ol>
           </div>
-          <div class="ancestors">
-                  <span class="filtertype">Inherited<br />
-                  </span>
-                  <ol id="linearization">
-                    <li class="in" name="vulcan"><span>vulcan</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
-                  </ol>
-                </div><div class="ancestors">
-              <span class="filtertype"></span>
-              <ol>
-                <li class="hideall out"><span>Hide All</span></li>
-                <li class="showall in"><span>Show All</span></li>
-              </ol>
-            </div>
+          
           <div id="visbl">
               <span class="filtertype">Visibility</span>
               <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
@@ -225,6 +208,8 @@ in derived schemas.</p><div class="fullcomment"><div class="comment cmt"><p>Anno
 in derived schemas.</p><p>The annotation can be used in the following situations.<br>
 - Annotate a type for enum documentation when using
   <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec#deriveEnum</a>.<br>
+- Annotate a type for fixed documentation when using
+  <a href="Codec$.html#deriveFixed[A](size:Int,encode:A=&gt;Array[Byte],decode:Array[Byte]=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveFixed">Codec#deriveFixed</a>.<br>
 - Annotate a <code>case class</code> for record documentation
   when using <code>Codec#derive</code> from the generic module.<br>
 - Annotate a <code>case class</code> parameter for record field
@@ -288,6 +273,8 @@ in derived schemas.</p><div class="fullcomment"><div class="comment cmt"><p>Anno
 in derived schemas.</p><p>The annotation can be used in the following situations.<br>
 - Annotate a type for enum namespace when using
   <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec#deriveEnum</a>.<br>
+- Annotate a type for fixed namespace when using
+  <a href="Codec$.html#deriveFixed[A](size:Int,encode:A=&gt;Array[Byte],decode:Array[Byte]=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveFixed">Codec#deriveFixed</a>.<br>
 - Annotate a <code>case class</code> for record namespace when
   using <code>Codec#derive</code> from the generic module.
 </p></div></div>
@@ -332,45 +319,7 @@ for a given type.</p>
         <div class="values members">
               <h3>Value Members</h3>
               <ol>
-                <li name="vulcan#decode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="decode[A](value:Any)(implicitcodec:vulcan.Codec[A]):Either[vulcan.AvroError,A]"></a><a id="decode[A](Any)(Codec[A]):Either[AvroError,A]"></a>
-      <span class="permalink">
-      <a href="../vulcan/index.html#decode[A](value:Any)(implicitcodec:vulcan.Codec[A]):Either[vulcan.AvroError,A]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">decode</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.decode.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="vulcan.decode.A">A</span>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Decodes the specified value using the <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>
-for the specified type.</p><div class="fullcomment"><div class="comment cmt"><p>Decodes the specified value using the <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>
-for the specified type.</p><pre>scala&gt; decode[<span class="std">Int</span>](<span class="num">10</span>)
-res0: Either[AvroError, <span class="std">Int</span>] = Right(<span class="num">10</span>)</pre></div></div>
-    </li><li name="vulcan#encode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="encode[A](a:A)(implicitcodec:vulcan.Codec[A]):Either[vulcan.AvroError,Any]"></a><a id="encode[A](A)(Codec[A]):Either[AvroError,Any]"></a>
-      <span class="permalink">
-      <a href="../vulcan/index.html#encode[A](a:A)(implicitcodec:vulcan.Codec[A]):Either[vulcan.AvroError,Any]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">encode</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="a">a: <span class="extype" name="vulcan.encode.A">A</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.encode.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="scala.Any">Any</span>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Encodes the specified value using the <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>
-for the value's type.</p><div class="fullcomment"><div class="comment cmt"><p>Encodes the specified value using the <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>
-for the value's type.</p><pre>scala&gt; encode(<span class="num">10</span>)
-res0: Either[AvroError, Any] = Right(<span class="num">10</span>)</pre></div></div>
-    </li><li name="vulcan.AvroError" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+                <li name="vulcan.AvroError" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AvroError"></a><a id="AvroError:AvroError"></a>
       <span class="permalink">
       <a href="../vulcan/index.html#AvroError" title="Permalink">
@@ -428,11 +377,7 @@ res0: Either[AvroError, Any] = Right(<span class="num">10</span>)</pre></div></d
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
-            </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
-            </div>
+        
         
         </div>
 

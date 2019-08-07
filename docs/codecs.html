@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Codecs · Vulcan</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;[&lt;code&gt;Codec&lt;/code&gt;][codec] is the central concept in the library. [&lt;code&gt;Codec&lt;/code&gt;][codec]s represent an Avro &lt;code&gt;schema&lt;/code&gt;, together with an &lt;code&gt;encode&lt;/code&gt; and &lt;code&gt;decode&lt;/code&gt; function for converting between Scala types and types recognized by the Apache Avro library. There are default [&lt;code&gt;Codec&lt;/code&gt;][codec]s defined for many standard library types. For example, we can check what the default &lt;code&gt;Option[Instant]&lt;/code&gt; encoding is by asking for a [&lt;code&gt;Codec&lt;/code&gt;][codec] instance.&lt;/p&gt;
-"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Codecs · Vulcan"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ovotech.github.io/vulcan/vulcan/"/><meta property="og:description" content="&lt;p&gt;[&lt;code&gt;Codec&lt;/code&gt;][codec] is the central concept in the library. [&lt;code&gt;Codec&lt;/code&gt;][codec]s represent an Avro &lt;code&gt;schema&lt;/code&gt;, together with an &lt;code&gt;encode&lt;/code&gt; and &lt;code&gt;decode&lt;/code&gt; function for converting between Scala types and types recognized by the Apache Avro library. There are default [&lt;code&gt;Codec&lt;/code&gt;][codec]s defined for many standard library types. For example, we can check what the default &lt;code&gt;Option[Instant]&lt;/code&gt; encoding is by asking for a [&lt;code&gt;Codec&lt;/code&gt;][codec] instance.&lt;/p&gt;
-"/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/vulcan/img/favicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script src="/vulcan/js/scrollSpy.js"></script><link rel="stylesheet" href="/vulcan/css/main.css"/><script src="/vulcan/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/vulcan/"><img class="logo" src="/vulcan/img/vulcan.white.svg" alt="Vulcan"/><h2 class="headerTitleWithLogo">Vulcan</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/vulcan/api/vulcan/index.html" target="_self">API Docs</a></li><li class="siteNavGroupActive"><a href="/vulcan/docs/overview" target="_self">Documentation</a></li><li class=""><a href="https://github.com/ovotech/vulcan" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Documentation</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Documentation</h3><ul class=""><li class="navListItem"><a class="navItem" href="/vulcan/docs/overview">Overview</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/vulcan/docs/codecs">Codecs</a></li><li class="navListItem"><a class="navItem" href="/vulcan/docs/modules">Modules</a></li></ul></div></div></section></div><script>
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Codecs · Vulcan</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="[`Codec`][codec] is the central concept in the library. [`Codec`][codec]s represent an Avro `schema`, together with an `encode` and `decode` function for converting between Scala types and types recognized by the Apache Avro library. There are default [`Codec`][codec]s defined for many standard library types. For example, we can check what the default `Option[Instant]` encoding is by asking for a [`Codec`][codec] instance."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Codecs · Vulcan"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ovotech.github.io/vulcan/vulcan/"/><meta property="og:description" content="[`Codec`][codec] is the central concept in the library. [`Codec`][codec]s represent an Avro `schema`, together with an `encode` and `decode` function for converting between Scala types and types recognized by the Apache Avro library. There are default [`Codec`][codec]s defined for many standard library types. For example, we can check what the default `Option[Instant]` encoding is by asking for a [`Codec`][codec] instance."/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/vulcan/img/favicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script src="/vulcan/js/scrollSpy.js"></script><link rel="stylesheet" href="/vulcan/css/main.css"/><script src="/vulcan/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/vulcan/"><img class="logo" src="/vulcan/img/vulcan.white.svg" alt="Vulcan"/><h2 class="headerTitleWithLogo">Vulcan</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/vulcan/api/vulcan/index.html" target="_self">API Docs</a></li><li class="siteNavGroupActive"><a href="/vulcan/docs/overview" target="_self">Documentation</a></li><li class=""><a href="https://github.com/ovotech/vulcan" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Documentation</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Documentation</h3><ul class=""><li class="navListItem"><a class="navItem" href="/vulcan/docs/overview">Overview</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/vulcan/docs/codecs">Codecs</a></li><li class="navListItem"><a class="navItem" href="/vulcan/docs/modules">Modules</a></li></ul></div></div></section></div><script>
             var coll = document.getElementsByClassName('collapsible');
             var checkActiveCategory = true;
             for (var i = 0; i < coll.length; i++) {
@@ -177,6 +175,50 @@
 <span class="hljs-comment">//   "default" : "banana"</span>
 <span class="hljs-comment">// })</span>
 </code></pre>
+<h2><a class="anchor" aria-hidden="true" id="fixed"></a><a href="#fixed" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Fixed</h2>
+<p>Avro fixed types correspond to <code>Array[Byte]</code>s with a fixed size.</p>
+<p><code>Codec.deriveFixed</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for fixed types.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"Amount of pence as a single byte"</span>)
+<span class="hljs-keyword">sealed</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Pence</span>(<span class="hljs-params">value: <span class="hljs-type">Byte</span></span>)</span>
+
+<span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Pence</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">apply</span></span>(value: <span class="hljs-type">Byte</span>): <span class="hljs-type">Either</span>[<span class="hljs-type">AvroError</span>, <span class="hljs-type">Pence</span>] =
+    <span class="hljs-keyword">if</span>(<span class="hljs-number">0</span> &lt;= value &amp;&amp; value &lt; <span class="hljs-number">100</span>) <span class="hljs-type">Right</span>(<span class="hljs-keyword">new</span> <span class="hljs-type">Pence</span>(value) {})
+    <span class="hljs-keyword">else</span> <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"Expected pence value, got <span class="hljs-subst">$value</span>"</span>))
+}
+
+<span class="hljs-type">Codec</span>.deriveFixed[<span class="hljs-type">Pence</span>](
+  size = <span class="hljs-number">1</span>,
+  encode = pence =&gt; <span class="hljs-type">Array</span>[<span class="hljs-type">Byte</span>](pence.value),
+  decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head)
+)
+<span class="hljs-comment">// res8: Codec[Pence] = Codec({</span>
+<span class="hljs-comment">//   "type" : "fixed",</span>
+<span class="hljs-comment">//   "name" : "Pence",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "Amount of pence as a single byte",</span>
+<span class="hljs-comment">//   "size" : 1</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<p>Annotations like <code>@AvroDoc</code> can be used to customize the derivation.</p>
+<p>If we need more precise control of how fixed types are encoded, we can use <code>Codec.fixed</code>.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.fixed[<span class="hljs-type">Pence</span>](
+  name = <span class="hljs-string">"Pence"</span>,
+  namespace = <span class="hljs-type">Some</span>(<span class="hljs-string">"com.example"</span>),
+  size = <span class="hljs-number">1</span>,
+  encode = pence =&gt; <span class="hljs-type">Array</span>[<span class="hljs-type">Byte</span>](pence.value),
+  decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head),
+  doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"Amount of pence as a single byte"</span>)
+)
+<span class="hljs-comment">// res9: Codec[Pence] = Codec({</span>
+<span class="hljs-comment">//   "type" : "fixed",</span>
+<span class="hljs-comment">//   "name" : "Pence",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "Amount of pence as a single byte",</span>
+<span class="hljs-comment">//   "size" : 1</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
 <h2><a class="anchor" aria-hidden="true" id="records"></a><a href="#records" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Records</h2>
 <p>Avro records closely correspond to <code>case class</code>es.</p>
 <p>We can use <code>Codec.record</code> to specify a record encoding.</p>
@@ -196,7 +238,7 @@
     field(<span class="hljs-string">"age"</span>, _.age, <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">None</span>))
   ).mapN(<span class="hljs-type">Person</span>(_, _, _))
 }
-<span class="hljs-comment">// res8: Codec[Person] = Codec({</span>
+<span class="hljs-comment">// res10: Codec[Person] = Codec({</span>
 <span class="hljs-comment">//   "type" : "record",</span>
 <span class="hljs-comment">//   "name" : "Person",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -239,7 +281,7 @@
 <span class="hljs-type">Codec</span>.union[<span class="hljs-type">FirstOrSecond</span>] { alt =&gt;
   alt[<span class="hljs-type">First</span>] |+| alt[<span class="hljs-type">Second</span>]
 }
-<span class="hljs-comment">// res9: Codec[FirstOrSecond] = Codec([ "int", "string" ])</span>
+<span class="hljs-comment">// res11: Codec[FirstOrSecond] = Codec([ "int", "string" ])</span>
 </code></pre>
 <p>For generic derivation support, refer to the <a href="/vulcan/docs/modules#generic">generic module</a>.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/vulcan/docs/overview"><span class="arrow-prev">← </span><span>Overview</span></a><a class="docs-next button" href="/vulcan/docs/modules"><span>Modules</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#decimals">Decimals</a></li><li><a href="#enumerations">Enumerations</a></li><li><a href="#records">Records</a></li><li><a href="#unions">Unions</a></li></ul></nav></div><footer class="nav-footer" id="footer"><hr class="separator"/><section class="copyright">Copyright © 2019 OVO Energy Limited.<br/>Icon designed by <a href="https://www.flaticon.com/authors/kiranshastry" rel="noopener">Kiranshastry</a> from Flaticon.</section></footer></div></body></html>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/vulcan/docs/overview"><span class="arrow-prev">← </span><span>Overview</span></a><a class="docs-next button" href="/vulcan/docs/modules"><span>Modules</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#decimals">Decimals</a></li><li><a href="#enumerations">Enumerations</a></li><li><a href="#fixed">Fixed</a></li><li><a href="#records">Records</a></li><li><a href="#unions">Unions</a></li></ul></nav></div><footer class="nav-footer" id="footer"><hr class="separator"/><section class="copyright">Copyright © 2019 OVO Energy Limited.<br/>Icon designed by <a href="https://www.flaticon.com/authors/kiranshastry" rel="noopener">Kiranshastry</a> from Flaticon.</section></footer></div></body></html>
