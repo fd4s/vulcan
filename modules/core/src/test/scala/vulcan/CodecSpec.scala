@@ -1534,7 +1534,7 @@ final class CodecSpec extends BaseSpec {
           }
         }
 
-        it("should catpure errors on nested unions") {
+        it("should capture errors on nested unions") {
           assertSchemaError[Option[Option[Int]]] {
             """org.apache.avro.AvroRuntimeException: Nested union: ["null",["null","int"]]"""
           }
@@ -1555,7 +1555,16 @@ final class CodecSpec extends BaseSpec {
             Some(1), {
               SchemaBuilder.unionOf().intType().endUnion()
             },
-            """Unexpected union schema ["int"] for Option"""
+            """Unexpected union schema ["int"] while encoding Option"""
+          )
+        }
+
+        it("should error if there is not null in union") {
+          assertEncodeError[Option[Int]](
+            Some(1), {
+              SchemaBuilder.unionOf().intType().and().stringType().endUnion()
+            },
+            """Unexpected union schema ["int","string"] while encoding Option"""
           )
         }
 
@@ -1571,7 +1580,7 @@ final class CodecSpec extends BaseSpec {
                 .nullType()
                 .endUnion()
             },
-            """Unexpected union schema ["int","string","null"] for Option"""
+            """Unexpected union schema ["int","string","null"] while encoding Option"""
           )
         }
 
@@ -1639,7 +1648,16 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(Option(1)), {
               SchemaBuilder.unionOf().intType().endUnion()
             },
-            """Unexpected union schema ["int"] for Option"""
+            """Unexpected union schema ["int"] while decoding Option"""
+          )
+        }
+
+        it("should error if there is not null in union") {
+          assertDecodeError[Option[Int]](
+            unsafeEncode(Option(1)), {
+              SchemaBuilder.unionOf().intType().and().stringType().endUnion()
+            },
+            """Unexpected union schema ["int","string"] while decoding Option"""
           )
         }
 
@@ -1648,7 +1666,7 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(Option(1)), {
               SchemaBuilder.unionOf().intType().and().stringType().and().nullType().endUnion()
             },
-            """Unexpected union schema ["int","string","null"] for Option"""
+            """Unexpected union schema ["int","string","null"] while decoding Option"""
           )
         }
 
@@ -1759,6 +1777,19 @@ final class CodecSpec extends BaseSpec {
             """{"type":"record","name":"Test","fields":[{"name":"value","type":["null","int"],"default":null}]}"""
           }
         }
+
+        it("should support Some as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(Some(0))).map(Test(_))
+            }
+
+          assertSchemaIs[Test] {
+            """{"type":"record","name":"Test","fields":[{"name":"value","type":["int","null"],"default":0}]}"""
+          }
+        }
       }
 
       describe("encode") {
@@ -1797,6 +1828,42 @@ final class CodecSpec extends BaseSpec {
               val record = new GenericData.Record(unsafeSchema[CaseClassTwoFields])
               record.put(0, unsafeEncode("name"))
               record.put(1, unsafeEncode(0))
+              record
+            }
+          )
+        }
+
+        it("should support None as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(None)).map(Test(_))
+            }
+
+          assertEncodeIs[Test](
+            Test(None),
+            Right {
+              val record = new GenericData.Record(unsafeSchema[Test])
+              record.put(0, null)
+              record
+            }
+          )
+        }
+
+        it("should support Some as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(Some(0))).map(Test(_))
+            }
+
+          assertEncodeIs[Test](
+            Test(None),
+            Right {
+              val record = new GenericData.Record(unsafeSchema[Test])
+              record.put(0, null)
               record
             }
           )
@@ -1904,6 +1971,34 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[CaseClassTwoFields](
             unsafeEncode(CaseClassTwoFields("name", 123)),
             Right(CaseClassTwoFields("name", 123))
+          )
+        }
+
+        it("should support None as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(None)).map(Test(_))
+            }
+
+          assertDecodeIs[Test](
+            unsafeEncode(Test(None)),
+            Right(Test(None))
+          )
+        }
+
+        it("should support Some as default value") {
+          case class Test(value: Option[Int])
+
+          implicit val testCodec: Codec[Test] =
+            Codec.record("Test") { field =>
+              field("value", _.value, default = Some(Some(0))).map(Test(_))
+            }
+
+          assertDecodeIs[Test](
+            unsafeEncode(Test(None)),
+            Right(Test(None))
           )
         }
       }
@@ -2454,6 +2549,116 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(value),
             Right(value)
           )
+        }
+      }
+    }
+
+    describe("withSchema") {
+      it("should replace the existing schema with an error") {
+        assert {
+          Codec.int
+            .withSchema(Left(AvroError("error")))
+            .schema
+            .swap
+            .value
+            .message == "error"
+        }
+      }
+
+      it("should replace the existing schema with another schema") {
+        assert {
+          val newSchema = SchemaBuilder.builder().nullType()
+
+          Codec.int
+            .withSchema(Right(newSchema))
+            .schema
+            .value eq newSchema
+        }
+      }
+    }
+
+    describe("WithDefault") {
+      describe("apply") {
+        it("should return the WithDefault instance") {
+          assert {
+            Codec
+              .WithDefault[Option[Int]]
+              .apply(Some(Some(0)))
+              .schema
+              .value
+              .toString == """["int","null"]"""
+          }
+        }
+
+        it("should return the codec in a WithDefault instance") {
+          assert {
+            Codec
+              .WithDefault[Int]
+              .apply(None) eq Codec.int
+          }
+        }
+      }
+
+      describe("instance") {
+        it("should return a new instance") {
+          assert {
+            Codec.WithDefault
+              .instance[Int](_ => Codec.int)
+              .apply(None) eq Codec.int
+          }
+        }
+
+        it("should have toString starting with WithDefault$") {
+          assert {
+            Codec.WithDefault
+              .instance[Int](_ => Codec.int)
+              .toString startsWith "WithDefault$"
+          }
+        }
+      }
+
+      describe("option") {
+        it("should use default instance with no default") {
+          assert {
+            Codec.WithDefault
+              .option[Int]
+              .apply(None)
+              .schema
+              .value
+              .toString == """["null","int"]"""
+          }
+        }
+
+        it("should use default instance for None default") {
+          assert {
+            Codec.WithDefault
+              .option[Int]
+              .apply(Some(None))
+              .schema
+              .value
+              .toString == """["null","int"]"""
+          }
+        }
+
+        it("should change schema for Some default") {
+          assert {
+            Codec.WithDefault
+              .option[Int]
+              .apply(Some(Some(0)))
+              .schema
+              .value
+              .toString == """["int","null"]"""
+          }
+        }
+      }
+
+      describe("ignore") {
+        it("should return the codec in a WithDefault instance") {
+          assert {
+            Codec.WithDefault
+              .ignore[Int]
+              .apply(None) eq Codec.int
+          }
         }
       }
     }

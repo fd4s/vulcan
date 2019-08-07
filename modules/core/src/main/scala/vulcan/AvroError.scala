@@ -142,7 +142,7 @@ final object AvroError {
     }
 
   private[vulcan] final def decodeUnexpectedOptionSchema(schema: Schema): AvroError =
-    AvroError(s"Unexpected union schema $schema for Option")
+    AvroError(s"Unexpected union schema $schema while decoding Option")
 
   private[vulcan] final def decodeUnexpectedRecordName(
     recordFullName: String,
@@ -273,7 +273,7 @@ final object AvroError {
     }
 
   private[vulcan] final def encodeUnexpectedOptionSchema(schema: Schema): AvroError =
-    AvroError(s"Unexpected union schema $schema for Option")
+    AvroError(s"Unexpected union schema $schema while encoding Option")
 
   private[vulcan] final def encodeUnexpectedSchemaType(
     encodingTypeName: String,
