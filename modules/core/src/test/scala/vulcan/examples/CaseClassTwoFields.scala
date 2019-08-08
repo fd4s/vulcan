@@ -2,7 +2,7 @@ package vulcan.examples
 
 import cats.implicits._
 import org.apache.avro.Schema
-import vulcan.Codec
+import vulcan.{Codec, Props}
 
 final case class CaseClassTwoFields(name: String, age: Int)
 
@@ -12,7 +12,8 @@ object CaseClassTwoFields {
       name = "CaseClassTwoFields",
       namespace = Some("vulcan.examples"),
       doc = Some("some documentation for example"),
-      aliases = Seq("FirstAlias", "SecondAlias")
+      aliases = Seq("FirstAlias", "SecondAlias"),
+      props = Props.one("custom", List(1, 2, 3))
     ) { field =>
       assert(field.toString() == "FieldBuilder")
 
@@ -23,7 +24,8 @@ object CaseClassTwoFields {
           doc = Some("some doc"),
           default = Some("default name"),
           order = Some(Schema.Field.Order.DESCENDING),
-          aliases = Seq("TheAlias")
+          aliases = Seq("TheAlias"),
+          props = Props.one("custom", "value")
         ),
         field("age", _.age)
       ).mapN(CaseClassTwoFields(_, _))

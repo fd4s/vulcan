@@ -571,7 +571,7 @@ final class CodecSpec extends BaseSpec {
       describe("schema") {
         it("should have expected schema") {
           assertSchemaIs[SealedTraitEnum] {
-            """{"type":"enum","name":"SealedTraitEnum","namespace":"vulcan.examples","doc":"documentation","symbols":["first","second"],"default":"first","aliases":["first","second"]}"""
+            """{"type":"enum","name":"SealedTraitEnum","namespace":"vulcan.examples","doc":"documentation","symbols":["first","second"],"default":"first","custom1":10,"custom2":"value2","aliases":["first","second"]}"""
           }
         }
 
@@ -676,7 +676,7 @@ final class CodecSpec extends BaseSpec {
       describe("schema") {
         it("should have the expected schema") {
           assertSchemaIs[FixedBoolean] {
-            """{"type":"fixed","name":"FixedBoolean","namespace":"vulcan.examples","doc":"A boolean represented as a byte","size":1,"aliases":["SomeOtherBoolean"]}"""
+            """{"type":"fixed","name":"FixedBoolean","namespace":"vulcan.examples","doc":"A boolean represented as a byte","size":1,"custom":"value","aliases":["SomeOtherBoolean"]}"""
           }
         }
 
@@ -1726,7 +1726,7 @@ final class CodecSpec extends BaseSpec {
         it("should have the expected schema") {
           assert {
             Codec[CaseClassTwoFields].schema.value.toString() ==
-              """{"type":"record","name":"CaseClassTwoFields","namespace":"vulcan.examples","doc":"some documentation for example","fields":[{"name":"name","type":"string","doc":"some doc","default":"default name","order":"descending","aliases":["TheAlias"]},{"name":"age","type":"int"}],"aliases":["FirstAlias","SecondAlias"]}"""
+              """{"type":"record","name":"CaseClassTwoFields","namespace":"vulcan.examples","doc":"some documentation for example","fields":[{"name":"name","type":"string","doc":"some doc","default":"default name","order":"descending","aliases":["TheAlias"],"custom":"value"},{"name":"age","type":"int"}],"custom":[1,2,3],"aliases":["FirstAlias","SecondAlias"]}"""
           }
         }
 

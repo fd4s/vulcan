@@ -2,7 +2,7 @@ package vulcan.examples
 
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}
-import vulcan.{AvroError, Codec}
+import vulcan.{AvroError, Codec, Props}
 
 sealed trait FixedBoolean extends Product with Serializable
 
@@ -24,7 +24,8 @@ object FixedBoolean {
           else Left(AvroError(s"unknown byte $byte"))
         },
         doc = Some("A boolean represented as a byte"),
-        aliases = List("SomeOtherBoolean")
+        aliases = List("SomeOtherBoolean"),
+        props = Props.one("custom", "value")
       )
 
   implicit val fixedBooleanEq: Eq[FixedBoolean] =
