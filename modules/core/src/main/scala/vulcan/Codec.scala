@@ -485,9 +485,7 @@ final object Codec {
       encode = encode,
       decode = decode,
       namespace = Some(namespaceFrom(tag)),
-      aliases = Nil,
-      doc = docFrom(tag),
-      default = None
+      doc = docFrom(tag)
     )
 
   /**
@@ -508,8 +506,7 @@ final object Codec {
       encode = encode,
       decode = decode,
       namespace = Some(namespaceFrom(tag)),
-      doc = docFrom(tag),
-      aliases = Nil
+      doc = docFrom(tag)
     )
 
   /**
@@ -578,23 +575,31 @@ final object Codec {
     namespace: Option[String] = None,
     aliases: Seq[String] = Seq.empty,
     doc: Option[String] = None,
-    default: Option[A] = None
+    default: Option[A] = None,
+    props: Props = Props.empty
   ): Codec[A] = {
     val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
     Codec.instance(
       AvroError.catchNonFatal {
-        val schema =
-          Schema.createEnum(
-            name,
-            doc.orNull,
-            namespace.orNull,
-            symbols.asJava,
-            default.map(encode).orNull
-          )
+        props.toChain.map { props =>
+          val schema =
+            Schema.createEnum(
+              name,
+              doc.orNull,
+              namespace.orNull,
+              symbols.asJava,
+              default.map(encode).orNull
+            )
 
-        aliases.foreach(schema.addAlias)
+          aliases.foreach(schema.addAlias)
 
-        Right(schema)
+          props.foldLeft(()) {
+            case ((), (name, value)) =>
+              schema.addProp(name, value)
+          }
+
+          schema
+        }
       },
       (a, schema) => {
         schema.getType() match {
@@ -671,20 +676,29 @@ final object Codec {
     decode: Array[Byte] => Either[AvroError, A],
     namespace: Option[String] = None,
     aliases: Seq[String] = Seq.empty,
-    doc: Option[String] = None
+    doc: Option[String] = None,
+    props: Props = Props.empty
   ): Codec[A] = {
     val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
     Codec
       .instance(
         AvroError.catchNonFatal {
-          Right {
-            SchemaBuilder
-              .builder()
-              .fixed(name)
-              .namespace(namespace.orNull)
-              .aliases(aliases: _*)
-              .doc(doc.orNull)
-              .size(size)
+          props.toChain.map { props =>
+            val schema =
+              SchemaBuilder
+                .builder()
+                .fixed(name)
+                .namespace(namespace.orNull)
+                .aliases(aliases: _*)
+                .doc(doc.orNull)
+                .size(size)
+
+            props.foldLeft(()) {
+              case ((), (name, value)) =>
+                schema.addProp(name, value)
+            }
+
+            schema
           }
         },
         (a, schema) => {
@@ -1435,7 +1449,8 @@ final object Codec {
     name: String,
     namespace: Option[String] = None,
     doc: Option[String] = None,
-    aliases: Seq[String] = Seq.empty
+    aliases: Seq[String] = Seq.empty,
+    props: Props = Props.empty
   )(f: FieldBuilder[A] => FreeApplicative[Field[A, ?], A]): Codec[A] = {
     val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
     val free = f(FieldBuilder.instance)
@@ -1447,44 +1462,61 @@ final object Codec {
               field =>
                 field.codec.schema.flatMap {
                   schema =>
-                    field.default
-                      .traverse(field.codec.encode(_, schema))
-                      .map { default =>
-                        Chain.one {
-                          val schemaField =
-                            new Schema.Field(
-                              field.name,
-                              schema,
-                              field.doc.orNull,
-                              default.map {
-                                case null  => Schema.Field.NULL_DEFAULT_VALUE
-                                case other => other
-                              }.orNull,
-                              field.order.getOrElse(Schema.Field.Order.ASCENDING)
-                            )
+                    field.props.toChain
+                      .flatMap {
+                        props =>
+                          field.default
+                            .traverse(field.codec.encode(_, schema))
+                            .map {
+                              default =>
+                                Chain.one {
+                                  val schemaField =
+                                    new Schema.Field(
+                                      field.name,
+                                      schema,
+                                      field.doc.orNull,
+                                      default.map {
+                                        case null  => Schema.Field.NULL_DEFAULT_VALUE
+                                        case other => other
+                                      }.orNull,
+                                      field.order.getOrElse(Schema.Field.Order.ASCENDING)
+                                    )
 
-                          field.aliases.foreach(schemaField.addAlias)
+                                  field.aliases.foreach(schemaField.addAlias)
 
-                          schemaField
-                        }
+                                  props.foldLeft(()) {
+                                    case ((), (name, value)) =>
+                                      schemaField.addProp(name, value)
+                                  }
+
+                                  schemaField
+                                }
+                            }
                       }
                 }
             }
           }
 
-        fields.map { fields =>
-          val record =
-            Schema.createRecord(
-              name,
-              doc.orNull,
-              namespace.orNull,
-              false,
-              fields.toList.asJava
-            )
+        fields.flatMap { fields =>
+          props.toChain.map { props =>
+            val record =
+              Schema.createRecord(
+                name,
+                doc.orNull,
+                namespace.orNull,
+                false,
+                fields.toList.asJava
+              )
 
-          aliases.foreach(record.addAlias)
+            aliases.foreach(record.addAlias)
 
-          record
+            props.foldLeft(()) {
+              case ((), (name, value)) =>
+                record.addProp(name, value)
+            }
+
+            record
+          }
         }
       },
       (a, schema) => {
@@ -2099,6 +2131,8 @@ final object Codec {
     def order: Option[Schema.Field.Order]
 
     def aliases: Seq[String]
+
+    def props: Props
   }
 
   private[vulcan] final object Field {
@@ -2109,7 +2143,8 @@ final object Codec {
       doc: Option[String],
       default: Option[B],
       order: Option[Schema.Field.Order],
-      aliases: Seq[String]
+      aliases: Seq[String],
+      props: Props
     ): Field[A, B] = {
       val _name = name
       val _access = access
@@ -2118,6 +2153,7 @@ final object Codec {
       val _default = default
       val _order = order
       val _aliases = aliases
+      val _props = props
 
       new Field[A, B] {
         override final val name: String = _name
@@ -2127,6 +2163,7 @@ final object Codec {
         override final val default: Option[B] = _default
         override final val order: Option[Schema.Field.Order] = _order
         override final val aliases: Seq[String] = _aliases
+        override final val props: Props = _props
       }
     }
   }
@@ -2141,7 +2178,8 @@ final object Codec {
       doc: Option[String] = None,
       default: Option[B] = None,
       order: Option[Schema.Field.Order] = None,
-      aliases: Seq[String] = Seq.empty
+      aliases: Seq[String] = Seq.empty,
+      props: Props = Props.empty
     )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[A, ?], B]
   }
 
@@ -2154,7 +2192,8 @@ final object Codec {
           doc: Option[String],
           default: Option[B],
           order: Option[Schema.Field.Order],
-          aliases: Seq[String]
+          aliases: Seq[String],
+          props: Props
         )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[Any, ?], B] =
           FreeApplicative.lift {
             Field(
@@ -2164,7 +2203,8 @@ final object Codec {
               doc = doc,
               default = default,
               order = order,
-              aliases = aliases
+              aliases = aliases,
+              props = props
             )
           }
 
