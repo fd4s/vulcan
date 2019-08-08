@@ -24,13 +24,13 @@ import scala.annotation.StaticAnnotation
   *
   * The annotation can be used in the following situations.<br>
   * - Annotate a type for enum documentation when using
-  *   [[Codec#deriveEnum]].<br>
+  *   [[Codec.deriveEnum]].<br>
   * - Annotate a type for fixed documentation when using
-  *   [[Codec#deriveFixed]].<br>
+  *   [[Codec.deriveFixed]].<br>
   * - Annotate a `case class` for record documentation
-  *   when using `Codec#derive` from the generic module.<br>
+  *   when using `Codec.derive` from the generic module.<br>
   * - Annotate a `case class` parameter for record field
-  *   documentation when using `Codec#derive` from the
+  *   documentation when using `Codec.derive` from the
   *   generic module.
   */
 final class AvroDoc(final val doc: String) extends StaticAnnotation {
