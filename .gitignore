@@ -3,3 +3,6 @@
 /website/static/api/
 /website/yarn.lock
 target/
+.idea/
+.idea_modules/
+*.iml

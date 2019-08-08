@@ -16,16 +16,18 @@
 
 package vulcan
 
-import cats.{~>, Invariant, Show}
-import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyVector}
-import cats.free.FreeApplicative
+import cats.{Invariant, Show, ~>}
+import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyVector, Writer, WriterT}
+import cats.free.Free
 import cats.implicits._
 import java.nio.ByteBuffer
 import java.time.{Instant, LocalDate}
 import java.util.UUID
+
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
 import org.apache.avro.util.Utf8
+
 import scala.collection.immutable.SortedSet
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
@@ -1451,51 +1453,57 @@ final object Codec {
     doc: Option[String] = None,
     aliases: Seq[String] = Seq.empty,
     props: Props = Props.empty
-  )(f: FieldBuilder[A] => FreeApplicative[Field[A, ?], A]): Codec[A] = {
+  )(f: FieldBuilder[A] => Free[Field[A, ?], A]): Codec[A] = {
     val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
     val free = f(FieldBuilder.instance)
     Codec.instance(
       AvroError.catchNonFatal {
         val fields =
-          free.analyze {
-            λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]] {
-              field =>
-                field.codec.schema.flatMap {
-                  schema =>
-                    field.props.toChain
-                      .flatMap {
-                        props =>
-                          field.default
-                            .traverse(field.codec.encode(_, schema))
-                            .map {
-                              default =>
-                                Chain.one {
-                                  val schemaField =
-                                    new Schema.Field(
-                                      field.name,
-                                      schema,
-                                      field.doc.orNull,
-                                      default.map {
-                                        case null  => Schema.Field.NULL_DEFAULT_VALUE
-                                        case other => other
-                                      }.orNull,
-                                      field.order.getOrElse(Schema.Field.Order.ASCENDING)
-                                    )
+          free.foldMap {
+            new (Field[A, *] ~> Writer[Either[AvroError, Chain[Schema.Field]], *]) {
+              override def apply[B](
+                field: Field[A, B]
+              ): Writer[Either[AvroError, Chain[Schema.Field]], B] = {
+                Writer
+                  .tell(field.codec.schema.flatMap {
+                    schema =>
+                      field.props.toChain
+                        .flatMap {
+                          props =>
+                            field.default
+                              .traverse(field.codec.encode(_, schema))
+                              .map {
+                                default =>
+                                  Chain.one {
+                                    val schemaField =
+                                      new Schema.Field(
+                                        field.name,
+                                        schema,
+                                        field.doc.orNull,
+                                        default.map {
+                                          case null => Schema.Field.NULL_DEFAULT_VALUE
+                                          case other => other
+                                        }.orNull,
+                                        field.order.getOrElse(Schema.Field.Order.ASCENDING)
+                                      )
 
-                                  field.aliases.foreach(schemaField.addAlias)
+                                    field.aliases.foreach(schemaField.addAlias)
 
-                                  props.foldLeft(()) {
-                                    case ((), (name, value)) =>
-                                      schemaField.addProp(name, value)
+                                    props.foldLeft(()) {
+                                      case ((), (name, value)) =>
+                                        schemaField.addProp(name, value)
+                                    }
+
+                                    schemaField
                                   }
-
-                                  schemaField
-                                }
-                            }
-                      }
-                }
+                              }
+                        }
+                  })
+                  .map(_ => null)
+                  .asInstanceOf[Writer[Either[AvroError, Chain[Schema.Field]], B]]
+              }
             }
-          }
+          }.written
 
         fields.flatMap { fields =>
           props.toChain.map { props =>
@@ -1523,22 +1531,26 @@ final object Codec {
         schema.getType() match {
           case Schema.Type.RECORD =>
             if (schema.getFullName() == typeName) {
-              val schemaFields =
-                schema.getFields().asScala
+              val schemaFields = schema.getFields().asScala
 
               val fields =
-                free.analyze {
-                  λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[(Any, Int)]]]] { field =>
-                    schemaFields
-                      .collectFirst {
-                        case schemaField if schemaField.name == field.name =>
-                          field.codec
-                            .encode(field.access(a), schemaField.schema)
-                            .map(result => Chain.one((result, schemaField.pos())))
-                      }
-                      .getOrElse(Left(AvroError.encodeMissingRecordField(field.name, typeName)))
+                free.foldMap {
+                  λ[Field[A, ?] ~> WriterT[Either[AvroError, ?], Chain[(Any, Int)], ?]] { field =>
+                    WriterT {
+                      schemaFields
+                        .collectFirst {
+                          case schemaField if schemaField.name == field.name =>
+                            val fld = field.access(a)
+                            field.codec
+                              .encode(fld, schemaField.schema)
+                              .map(result => Chain.one((result, schemaField.pos())))
+                              .tupleRight(fld)
+                        }
+                        .getOrElse(Left(AvroError.encodeMissingRecordField(field.name, typeName)))
+
+                    }
                   }
-                }
+                }.written
 
               fields.map { values =>
                 val record = new GenericData.Record(schema)
@@ -2180,7 +2192,7 @@ final object Codec {
       order: Option[Schema.Field.Order] = None,
       aliases: Seq[String] = Seq.empty,
       props: Props = Props.empty
-    )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[A, ?], B]
+    )(implicit codec: Codec.WithDefault[B]): Free[Field[A, ?], B]
   }
 
   private[vulcan] final object FieldBuilder {
@@ -2194,8 +2206,10 @@ final object Codec {
           order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
-        )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[Any, ?], B] =
-          FreeApplicative.lift {
+        )(
+          implicit codec: Codec.WithDefault[B]
+        ): Free[Field[Any, ?], B] =
+          Free.liftF {
             Field(
               name = name,
               access = access,
