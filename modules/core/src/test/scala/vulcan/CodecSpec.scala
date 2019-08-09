@@ -2021,6 +2021,215 @@ final class CodecSpec extends BaseSpec {
             }
           }
         }
+
+        describe("props") {
+          it("should support boolean custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", true))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":true}]}"""
+            }
+          }
+
+          it("should support int custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", 123))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":123}]}"""
+            }
+          }
+
+          it("should support long custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", 123L))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":123}]}"""
+            }
+          }
+
+          it("should support float custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", 123.0f))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":123.0}]}"""
+            }
+          }
+
+          it("should support double custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", 123.0d))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":123.0}]}"""
+            }
+          }
+
+          it("should support bytes custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", Array[Byte](Byte.MaxValue)))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"\u007f"}]}"""
+            }
+          }
+
+          it("should support string custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", "value"))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"value"}]}"""
+            }
+          }
+
+          it("should support record custom property") {
+            case class Record(value: String)
+
+            implicit val recordCodec: Codec[Record] =
+              Codec.record("Record") { field =>
+                field("value", _.value).map(Record(_))
+              }
+
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", Record("some-value")))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":{"value":"some-value"}}]}"""
+            }
+          }
+
+          it("should support enum custom property") {
+            sealed trait CustomEnum
+            case object First extends CustomEnum
+            case object Second extends CustomEnum
+
+            implicit val customEnumCodec: Codec[CustomEnum] =
+              Codec.enum(
+                name = "CustomEnum",
+                symbols = List("first", "second"),
+                encode = {
+                  case First  => "first"
+                  case Second => "second"
+                },
+                decode = {
+                  case "first"  => Right(First)
+                  case "second" => Right(Second)
+                  case other    => Left(AvroError(other))
+                }
+              )
+
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", (First: CustomEnum)))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"first"}]}"""
+            }
+          }
+
+          it("should support array custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", List(123, 456)))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":[123,456]}]}"""
+            }
+          }
+
+          it("should support map custom property") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, props = Props.one("custom", Map("key" -> 1)))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":{"key":1}}]}"""
+            }
+          }
+
+          it("should support fixed custom property") {
+            case class Fixed(value: Array[Byte])
+
+            implicit val fixedCodec: Codec[Fixed] =
+              Codec.fixed(
+                name = "Fixed",
+                size = 1,
+                encode = _.value,
+                decode = bytes => Right(Fixed(bytes))
+              )
+
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field(
+                  "value",
+                  _.value,
+                  props = Props.one("custom", Fixed(Array[Byte](Byte.MaxValue)))
+                ).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"\u007f"}]}"""
+            }
+          }
+        }
       }
 
       describe("encode") {

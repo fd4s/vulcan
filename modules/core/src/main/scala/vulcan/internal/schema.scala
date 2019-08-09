@@ -21,7 +21,7 @@ import org.apache.avro.generic.{GenericEnumSymbol, GenericFixed, IndexedRecord}
 import vulcan.internal.converters.collection._
 
 private[vulcan] final object schema {
-  final def defaultFrom(encoded: Any): Any =
+  final def adaptForSchema(encoded: Any): Any =
     encoded match {
       case bytes: ByteBuffer =>
         bytes.array()
@@ -34,7 +34,7 @@ private[vulcan] final object schema {
         fields
           .foldLeft(Map.empty[String, Any]) { (map, field) =>
             val value = record.get(fields.indexOf(field))
-            map.updated(field.name(), defaultFrom(value))
+            map.updated(field.name(), adaptForSchema(value))
           }
           .asJava
       case other => other

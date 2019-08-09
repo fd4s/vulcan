@@ -19,6 +19,7 @@ package vulcan
 import cats.data.{Chain, NonEmptyChain}
 import cats.implicits._
 import cats.Show
+import vulcan.internal.schema.adaptForSchema
 
 /**
   * Custom properties which can be included in a schema.
@@ -51,7 +52,7 @@ final object Props {
     props: NonEmptyChain[(String, Either[AvroError, Any])]
   ) extends Props {
     override final def add[A](name: String, value: A)(implicit codec: Codec[A]): Props =
-      new NonEmptyProps(props.append(name -> Codec.encode(value)))
+      new NonEmptyProps(props.append(name -> encodeForSchema(value)))
 
     override final def toChain: Either[AvroError, Chain[(String, Any)]] =
       props.toChain.traverse {
@@ -82,6 +83,11 @@ final object Props {
       "Props()"
   }
 
+  private[this] final def encodeForSchema[A](a: A)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, Any] =
+    Codec.encode(a).map(adaptForSchema)
+
   /**
     * Returns a new [[Props]] instance including a
     * property with the specified name and value.
@@ -89,7 +95,7 @@ final object Props {
     * The value is encoded using the [[Codec]].
     */
   final def one[A](name: String, value: A)(implicit codec: Codec[A]): Props =
-    new NonEmptyProps(NonEmptyChain.one(name -> Codec.encode(value)))
+    new NonEmptyProps(NonEmptyChain.one(name -> encodeForSchema(value)))
 
   /**
     * The [[Props]] instance without any properties.

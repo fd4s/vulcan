@@ -16,6 +16,6 @@
 
 package vulcan.internal
 
-private[vulcan] object converters {
-  val collection = scala.jdk.CollectionConverters
+private[vulcan] final object converters {
+  final val collection = scala.jdk.CollectionConverters
 }
