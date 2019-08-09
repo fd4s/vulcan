@@ -1790,6 +1790,237 @@ final class CodecSpec extends BaseSpec {
             """{"type":"record","name":"Test","fields":[{"name":"value","type":["int","null"],"default":0}]}"""
           }
         }
+
+        describe("default") {
+          it("should support null default value") {
+            case class Test(value: Unit)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(())).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"null","default":null}]}"""
+            }
+          }
+
+          it("should support boolean default value") {
+            case class Test(value: Boolean)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(false)).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"boolean","default":false}]}"""
+            }
+          }
+
+          it("should support int default value") {
+            case class Test(value: Int)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(0)).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","default":0}]}"""
+            }
+          }
+
+          it("should support long default value") {
+            case class Test(value: Long)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(0L)).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"long","default":0}]}"""
+            }
+          }
+
+          it("should support float default value") {
+            case class Test(value: Float)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(0.0f)).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"float","default":0.0}]}"""
+            }
+          }
+
+          it("should support double default value") {
+            case class Test(value: Double)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(0.0d)).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"double","default":0.0}]}"""
+            }
+          }
+
+          it("should support bytes default value") {
+            case class Test(value: Array[Byte])
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(Array[Byte](Byte.MinValue, Byte.MaxValue)))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"bytes","default":"\u0080\u007f"}]}"""
+            }
+          }
+
+          it("should support string default value") {
+            case class Test(value: String)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some("default-value")).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":"string","default":"default-value"}]}"""
+            }
+          }
+
+          it("should support record default value") {
+            sealed trait CustomEnum
+            case object First extends CustomEnum
+            case object Second extends CustomEnum
+
+            implicit val customEnumCodec: Codec[CustomEnum] =
+              Codec.enum(
+                name = "CustomEnum",
+                symbols = List("first", "second"),
+                encode = {
+                  case First  => "first"
+                  case Second => "second"
+                },
+                decode = {
+                  case "first"  => Right(First)
+                  case "second" => Right(Second)
+                  case other    => Left(AvroError(other))
+                }
+              )
+
+            case class Inner(value: Int, customEnum: CustomEnum)
+
+            implicit val innerCodec: Codec[Inner] =
+              Codec.record("Inner") { field =>
+                (
+                  field("value", _.value),
+                  field("customEnum", _.customEnum, default = Some(First))
+                ).mapN(Inner(_, _))
+              }
+
+            case class Test(value: Inner)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(Inner(0, Second))).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"record","name":"Inner","fields":[{"name":"value","type":"int"},{"name":"customEnum","type":{"type":"enum","name":"CustomEnum","symbols":["first","second"]},"default":"first"}]},"default":{"value":0,"customEnum":"second"}}]}"""
+            }
+          }
+
+          it("should support enum default value") {
+            sealed trait CustomEnum
+            case object First extends CustomEnum
+            case object Second extends CustomEnum
+
+            implicit val customEnumCodec: Codec[CustomEnum] =
+              Codec.enum(
+                name = "CustomEnum",
+                symbols = List("first", "second"),
+                encode = {
+                  case First  => "first"
+                  case Second => "second"
+                },
+                decode = {
+                  case "first"  => Right(First)
+                  case "second" => Right(Second)
+                  case other    => Left(AvroError(other))
+                }
+              )
+
+            case class Test(value: CustomEnum)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(First)).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"enum","name":"CustomEnum","symbols":["first","second"]},"default":"first"}]}"""
+            }
+          }
+
+          it("should support array default value") {
+            case class Test(value: List[Int])
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(List(123, 456))).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"array","items":"int"},"default":[123,456]}]}"""
+            }
+          }
+
+          it("should support map default value") {
+            case class Test(value: Map[String, Int])
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(Map("key" -> 0))).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"map","values":"int"},"default":{"key":0}}]}"""
+            }
+          }
+
+          it("should support fixed default value") {
+            case class Inner(value: Array[Byte])
+
+            implicit val innerCodec: Codec[Inner] =
+              Codec.fixed(
+                name = "Inner",
+                size = 1,
+                encode = _.value,
+                decode = bytes => Right(Inner(bytes))
+              )
+
+            case class Test(value: Inner)
+
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test") { field =>
+                field("value", _.value, default = Some(Inner(Array[Byte](Byte.MaxValue))))
+                  .map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"fixed","name":"Inner","size":1},"default":"\u007f"}]}"""
+            }
+          }
+        }
       }
 
       describe("encode") {
