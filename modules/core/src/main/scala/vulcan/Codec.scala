@@ -29,6 +29,7 @@ import org.apache.avro.util.Utf8
 import scala.collection.immutable.SortedSet
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
+import vulcan.internal.schema.defaultFrom
 import vulcan.internal.tags._
 
 /**
@@ -1475,10 +1476,12 @@ final object Codec {
                                       field.name,
                                       schema,
                                       field.doc.orNull,
-                                      default.map {
-                                        case null  => Schema.Field.NULL_DEFAULT_VALUE
-                                        case other => other
-                                      }.orNull,
+                                      defaultFrom {
+                                        default.map {
+                                          case null  => Schema.Field.NULL_DEFAULT_VALUE
+                                          case other => other
+                                        }.orNull
+                                      },
                                       field.order.getOrElse(Schema.Field.Order.ASCENDING)
                                     )
 
