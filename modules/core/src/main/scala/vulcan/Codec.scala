@@ -26,6 +26,7 @@ import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
 import org.apache.avro.util.Utf8
+import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
@@ -36,6 +37,9 @@ import vulcan.internal.tags._
   * Provides a schema, along with encoding and decoding functions
   * for a given type.
   */
+@implicitNotFound(
+  "could not find implicit Codec[${A}]; ensure no imports are missing or manually define an instance"
+)
 sealed abstract class Codec[A] {
 
   /** The schema or an error if the schema could not be generated. */
@@ -2222,6 +2226,9 @@ final object Codec {
   /**
     * @group Create
     */
+  @implicitNotFound(
+    "could not find implicit Codec.WithDefault[${A}]; ensure no imports are missing or manually define an instance"
+  )
   sealed abstract class WithDefault[A] {
     def apply(default: Option[A]): Codec[A]
   }

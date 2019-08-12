@@ -16,11 +16,15 @@
 
 package vulcan
 
+import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 
 /**
   * Optic used for selecting a part of a coproduct type.
   */
+@implicitNotFound(
+  "could not find implicit Prism[${S}, ${A}]; ensure ${A} is a subtype of ${S} or manually define an instance"
+)
 sealed abstract class Prism[S, A] {
 
   /** Attempts to select a coproduct part. */
