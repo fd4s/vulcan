@@ -30,13 +30,13 @@ private[vulcan] final object schema {
       case fixed: GenericFixed =>
         fixed.bytes()
       case record: IndexedRecord =>
-        val fields = record.getSchema().getFields().asScala
-        fields
-          .foldLeft(Map.empty[String, Any]) { (map, field) =>
-            val value = record.get(fields.indexOf(field))
-            map.updated(field.name(), adaptForSchema(value))
+        record.getSchema.getFields.asScala.zipWithIndex
+          .foldLeft(Map.empty[String, Any]) {
+            case (map, (field, index)) =>
+              map.updated(field.name, adaptForSchema(record.get(index)))
           }
           .asJava
-      case other => other
+      case _ =>
+        encoded
     }
 }
