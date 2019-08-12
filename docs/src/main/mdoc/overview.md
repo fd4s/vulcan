@@ -35,33 +35,27 @@ Following are additional provided modules.
 
 #### Enumeratum
 
-For [enumeratum](https://github.com/lloydmeta/enumeratum) support, add the following line to your `build.sbt` file.
+For [enumeratum](modules.md#enumeratum) support, add the following line to your `build.sbt` file.
 
 ```scala
 libraryDependencies += "@ORGANIZATION@" %% "@ENUMERATUM_MODULE_NAME@" % "@LATEST_VERSION@"
 ```
 
-For information on how to use the module, refer to the [documentation](modules.md#enumeratum).
-
 #### Generic
 
-For generic derivation support, add the following line to your `build.sbt` file.
+For [generic derivation](modules.md#generic) support, add the following line to your `build.sbt` file.
 
 ```scala
 libraryDependencies += "@ORGANIZATION@" %% "@GENERIC_MODULE_NAME@" % "@LATEST_VERSION@"
 ```
 
-For information on how to use the module, refer to the [documentation](modules.md#generic).
-
 #### Refined
 
-For [refined](https://github.com/fthomas/refined) support, add the following line to your `build.sbt` file.
+For [refined](modules.md#refined) support, add the following line to your `build.sbt` file.
 
 ```scala
 libraryDependencies += "@ORGANIZATION@" %% "@REFINED_MODULE_NAME@" % "@LATEST_VERSION@"
 ```
-
-For information on how to use the module, refer to the [documentation](modules.md#refined).
 
 #### External Modules
 

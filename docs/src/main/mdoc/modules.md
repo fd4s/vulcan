@@ -7,7 +7,7 @@ The following sections describe the additional modules.
 
 ## Enumeratum
 
-The `@ENUMERATUM_MODULE_NAME@` module provides [`Codec`][codec]s for enumerations.
+The `@ENUMERATUM_MODULE_NAME@` module provides [`Codec`][codec]s for [Enumeratum](https://github.com/lloydmeta/enumeratum) enumerations.
 
 For regular `Enum`s, also mix in `VulcanEnum` to derive a [`Codec`][codec] instance.
 
@@ -78,7 +78,9 @@ Codec[Day]
 
 ## Generic
 
-The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s. To derive [`Codec`][codec]s for `case class`es or `sealed trait`s, we can use `Codec.derive`. Annotations like `@AvroDoc` and `@AvroNamespace` can be used to customize the documentation and namespace during derivation.
+The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s using [Magnolia](https://github.com/propensive/magnolia).
+
+To derive [`Codec`][codec]s for `case class`es or `sealed trait`s, we can use `Codec.derive`. Annotations like `@AvroDoc` and `@AvroNamespace` can be used to customize the documentation and namespace during derivation.
 
 ```scala mdoc
 import vulcan.generic._
@@ -104,7 +106,7 @@ final case class Second(value: String) extends FirstOrSecond
 Codec.derive[FirstOrSecond]
 ```
 
-Shapeless `Coproduct`s are also supported and correspond to Avro unions.
+[Shapeless](https://github.com/milessabin/shapeless) `Coproduct`s are also supported and correspond to Avro unions.
 
 ```scala mdoc
 import shapeless.{:+:, CNil}
@@ -114,7 +116,9 @@ Codec[Int :+: String :+: CNil]
 
 ## Refined
 
-The `@REFINED_MODULE_NAME@` module provides [`Codec`][codec]s for refinement types. Refinement types are encoded using their base type (e.g. `Int` for `PosInt`). When decoding, [`Codec`][codec]s check to ensure values conform to the predicate of the refinement type (e.g. `Positive` for `PosInt`), and raise an error for values which do not conform.
+The `@REFINED_MODULE_NAME@` module provides [`Codec`][codec]s for [refined](https://github.com/fthomas/refined) refinement types.
+
+Refinement types are encoded using their base type (e.g. `Int` for `PosInt`). When decoding, [`Codec`][codec]s check to ensure values conform to the predicate of the refinement type (e.g. `Positive` for `PosInt`), and raise an error for values which do not conform.
 
 ```scala mdoc
 import eu.timepit.refined.auto._
