@@ -3017,6 +3017,16 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("ignoreDefault") {
+      it("should always return the same codec") {
+        val codec = Codec.int.ignoreDefault
+
+        forAll { default: Option[Int] =>
+          assert(codec(default) eq Codec.int)
+        }
+      }
+    }
+
     describe("WithDefault") {
       describe("apply") {
         it("should return the WithDefault instance") {
