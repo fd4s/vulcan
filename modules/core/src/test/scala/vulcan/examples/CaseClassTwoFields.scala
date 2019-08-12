@@ -1,8 +1,7 @@
 package vulcan.examples
 
 import cats.implicits._
-import org.apache.avro.Schema
-import vulcan.{Codec, Props}
+import vulcan.{Codec, Props, SortOrder}
 
 final case class CaseClassTwoFields(name: String, age: Int)
 
@@ -23,7 +22,7 @@ object CaseClassTwoFields {
           access = _.name,
           doc = Some("some doc"),
           default = Some("default name"),
-          order = Some(Schema.Field.Order.DESCENDING),
+          order = SortOrder.Descending,
           aliases = Seq("TheAlias"),
           props = Props.one("custom", "value")
         ),
