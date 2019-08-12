@@ -85,6 +85,14 @@ sealed abstract class Codec[A] {
     */
   final def withSchema(schema: Either[AvroError, Schema]): Codec[A] =
     Codec.instance(schema, encode, decode)
+
+  /**
+    * Returns a new [[Codec.WithDefault]] where the default
+    * value is ignored, and where this [[Codec]] is always
+    * returned as the result.
+    */
+  final def ignoreDefault: Codec.WithDefault[A] =
+    Codec.WithDefault.ignore(this)
 }
 
 /**
