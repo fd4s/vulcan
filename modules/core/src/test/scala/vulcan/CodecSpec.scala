@@ -3027,12 +3027,12 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
-    describe("WithDefault") {
+    describe("Default") {
       describe("apply") {
-        it("should return the WithDefault instance") {
+        it("should return the Default instance") {
           assert {
             Codec
-              .WithDefault[Option[Int]]
+              .Default[Option[Int]]
               .apply(Some(Some(0)))
               .schema
               .value
@@ -3040,10 +3040,10 @@ final class CodecSpec extends BaseSpec {
           }
         }
 
-        it("should return the codec in a WithDefault instance") {
+        it("should return the codec in a Default instance") {
           assert {
             Codec
-              .WithDefault[Int]
+              .Default[Int]
               .apply(None) eq Codec.int
           }
         }
@@ -3052,17 +3052,17 @@ final class CodecSpec extends BaseSpec {
       describe("instance") {
         it("should return a new instance") {
           assert {
-            Codec.WithDefault
+            Codec.Default
               .instance[Int](_ => Codec.int)
               .apply(None) eq Codec.int
           }
         }
 
-        it("should have toString starting with WithDefault$") {
+        it("should have toString starting with Codec.Default$") {
           assert {
-            Codec.WithDefault
+            Codec.Default
               .instance[Int](_ => Codec.int)
-              .toString startsWith "WithDefault$"
+              .toString startsWith "Codec.Default$"
           }
         }
       }
@@ -3070,7 +3070,7 @@ final class CodecSpec extends BaseSpec {
       describe("option") {
         it("should use default instance with no default") {
           assert {
-            Codec.WithDefault
+            Codec.Default
               .option[Int]
               .apply(None)
               .schema
@@ -3081,7 +3081,7 @@ final class CodecSpec extends BaseSpec {
 
         it("should use default instance for None default") {
           assert {
-            Codec.WithDefault
+            Codec.Default
               .option[Int]
               .apply(Some(None))
               .schema
@@ -3092,7 +3092,7 @@ final class CodecSpec extends BaseSpec {
 
         it("should change schema for Some default") {
           assert {
-            Codec.WithDefault
+            Codec.Default
               .option[Int]
               .apply(Some(Some(0)))
               .schema
@@ -3103,9 +3103,9 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("ignore") {
-        it("should return the codec in a WithDefault instance") {
+        it("should return the codec in a Default instance") {
           assert {
-            Codec.WithDefault
+            Codec.Default
               .ignore[Int]
               .apply(None) eq Codec.int
           }

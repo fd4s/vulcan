@@ -87,12 +87,12 @@ sealed abstract class Codec[A] {
     Codec.instance(schema, encode, decode)
 
   /**
-    * Returns a new [[Codec.WithDefault]] where the default
-    * value is ignored, and where this [[Codec]] is always
-    * returned as the result.
+    * Returns a new [[Codec.Default]] where the default value
+    * is ignored, and where this [[Codec]] is always returned
+    * as the result.
     */
-  final def ignoreDefault: Codec.WithDefault[A] =
-    Codec.WithDefault.ignore(this)
+  final def ignoreDefault: Codec.Default[A] =
+    Codec.Default.ignore(this)
 }
 
 /**
@@ -2195,7 +2195,7 @@ final object Codec {
       order: SortOrder = SortOrder.Ascending,
       aliases: Seq[String] = Seq.empty,
       props: Props = Props.empty
-    )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[A, ?], B]
+    )(implicit codec: Codec.Default[B]): FreeApplicative[Field[A, ?], B]
   }
 
   private[vulcan] final object FieldBuilder {
@@ -2209,7 +2209,7 @@ final object Codec {
           order: SortOrder,
           aliases: Seq[String],
           props: Props
-        )(implicit codec: Codec.WithDefault[B]): FreeApplicative[Field[Any, ?], B] =
+        )(implicit codec: Codec.Default[B]): FreeApplicative[Field[Any, ?], B] =
           FreeApplicative.lift {
             Field(
               name = name,
@@ -2235,30 +2235,30 @@ final object Codec {
     * @group Create
     */
   @implicitNotFound(
-    "could not find implicit Codec.WithDefault[${A}]; ensure no imports are missing or manually define an instance"
+    "could not find implicit Codec.Default[${A}]; ensure no imports are missing or manually define an instance"
   )
-  sealed abstract class WithDefault[A] {
+  sealed abstract class Default[A] {
     def apply(default: Option[A]): Codec[A]
   }
 
   /**
     * @group Create
     */
-  final object WithDefault extends WithDefaultLowPriority {
-    final def apply[A](implicit codec: Codec.WithDefault[A]): Codec.WithDefault[A] =
+  final object Default extends DefaultLowPriority {
+    final def apply[A](implicit codec: Codec.Default[A]): Codec.Default[A] =
       codec
 
-    final def instance[A](f: Option[A] => Codec[A]): Codec.WithDefault[A] =
-      new Codec.WithDefault[A] {
+    final def instance[A](f: Option[A] => Codec[A]): Codec.Default[A] =
+      new Codec.Default[A] {
         override final def apply(default: Option[A]): Codec[A] =
           f(default)
 
         override final def toString: String =
-          "WithDefault$" + System.identityHashCode(this)
+          "Codec.Default$" + System.identityHashCode(this)
       }
 
-    implicit final def option[A](implicit codec: Codec[A]): Codec.WithDefault[Option[A]] =
-      Codec.WithDefault.instance {
+    implicit final def option[A](implicit codec: Codec[A]): Codec.Default[Option[A]] =
+      Codec.Default.instance {
         case None | Some(None) =>
           Codec.option[A]
         case Some(Some(_)) =>
@@ -2274,8 +2274,8 @@ final object Codec {
       }
   }
 
-  private[vulcan] sealed abstract class WithDefaultLowPriority {
-    implicit final def ignore[A](implicit codec: Codec[A]): Codec.WithDefault[A] =
-      Codec.WithDefault.instance(_ => codec)
+  private[vulcan] sealed abstract class DefaultLowPriority {
+    implicit final def ignore[A](implicit codec: Codec[A]): Codec.Default[A] =
+      Codec.Default.instance(_ => codec)
   }
 }
