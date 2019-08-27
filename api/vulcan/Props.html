@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Vulcan v0.2.0-RC2 - vulcan.AvroDoc</title>
-          <meta name="description" content="Vulcan v0.2.0 - RC2 - vulcan.AvroDoc" />
-          <meta name="keywords" content="Vulcan v0.2.0 RC2 vulcan.AvroDoc" />
+          <title>Vulcan v0.2.0-RC2 - vulcan.Props</title>
+          <meta name="description" content="Vulcan v0.2.0 - RC2 - vulcan.Props" />
+          <meta name="keywords" content="Vulcan v0.2.0 RC2 vulcan.Props" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -103,8 +103,8 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="vulcan">vulcan</a></dd></dl></div>
     </li><li class="current-entities indented1">
                         <span class="separator"></span>
-                        <a class="class" href="" title="Annotation which can be used to include documentation in derived schemas."></a>
-                        <a href="" title="Annotation which can be used to include documentation in derived schemas.">AvroDoc</a>
+                        <a class="class" href="AvroDoc.html" title="Annotation which can be used to include documentation in derived schemas."></a>
+                        <a href="AvroDoc.html" title="Annotation which can be used to include documentation in derived schemas.">AvroDoc</a>
                       </li><li class="current-entities indented1">
                         <a class="object" href="AvroError$.html" title=""></a>
                         <a class="class" href="AvroError.html" title="Error which occurred while generating a schema, or while encoding or decoding."></a>
@@ -127,8 +127,8 @@
                         <a href="Prism.html" title="Optic used for selecting a part of a coproduct type.">Prism</a>
                       </li><li class="current-entities indented1">
                         <a class="object" href="Props$.html" title=""></a>
-                        <a class="class" href="Props.html" title="Custom properties which can be included in a schema."></a>
-                        <a href="Props.html" title="Custom properties which can be included in a schema.">Props</a>
+                        <a class="class" href="" title="Custom properties which can be included in a schema."></a>
+                        <a href="" title="Custom properties which can be included in a schema.">Props</a>
                       </li><li class="current-entities indented1">
                         <a class="object" href="SortOrder$.html" title=""></a>
                         <a class="class" href="SortOrder.html" title="How field values should be ordered when sorting records."></a>
@@ -140,43 +140,36 @@
           <div id="content">
             <body class="class type">
       <div id="definition">
-        <div class="big-circle class">c</div>
+        <a href="Props$.html" title="See companion object"><div class="big-circle class-companion-object">c</div></a>
         <p id="owner"><a href="index.html" class="extype" name="vulcan">vulcan</a></p>
-        <h1>AvroDoc<span class="permalink">
-      <a href="../vulcan/AvroDoc.html" title="Permalink">
+        <h1><a href="Props$.html" title="See companion object">Props</a><span class="permalink">
+      <a href="../vulcan/Props.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
-        <h3><span class="morelinks"></span></h3>
+        <h3><span class="morelinks"><div>
+            Companion <a href="Props$.html" title="See companion object">object Props</a>
+          </div></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier">final </span>
+        <span class="modifier">sealed abstract </span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">AvroDoc</span><span class="result"> extends <span class="extype" name="scala.annotation.Annotation">Annotation</span> with <span class="extype" name="scala.annotation.StaticAnnotation">StaticAnnotation</span></span>
+        <span class="name">Props</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Annotation which can be used to include documentation
-in derived schemas.</p><p>The annotation can be used in the following situations.<br>
-- Annotate a type for enum documentation when using
-  <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec.deriveEnum</a>.<br>
-- Annotate a type for fixed documentation when using
-  <a href="Codec$.html#deriveFixed[A](size:Int,encode:A=&gt;Array[Byte],decode:Array[Byte]=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveFixed">Codec.deriveFixed</a>.<br>
-- Annotate a <code>case class</code> for record documentation
-  when using <code>Codec.derive</code> from the generic module.<br>
-- Annotate a <code>case class</code> parameter for record field
-  documentation when using <code>Codec.derive</code> from the
-  generic module.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-RC2/modules/core/src/main/scala/vulcan/AvroDoc.scala" target="_blank">AvroDoc.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Custom properties which can be included in a schema.</p><p>Use <a href="Props$.html#one[A](name:String,value:A)(implicitcodec:vulcan.Codec[A]):vulcan.Props" class="extmbr" name="vulcan.Props#one">Props.one</a> to create an instance, and
+<a href="#add[A](name:String,value:A)(implicitcodec:vulcan.Codec[A]):vulcan.Props" class="extmbr" name="vulcan.Props#add">Props#add</a> to add more properties.
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-RC2/modules/core/src/main/scala/vulcan/Props.scala" target="_blank">Props.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.annotation.StaticAnnotation">StaticAnnotation</span>, <span class="extype" name="scala.annotation.Annotation">Annotation</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -202,7 +195,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="vulcan.AvroDoc"><span>AvroDoc</span></li><li class="in" name="scala.annotation.StaticAnnotation"><span>StaticAnnotation</span></li><li class="in" name="scala.annotation.Annotation"><span>Annotation</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="vulcan.Props"><span>Props</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -220,38 +213,61 @@ in derived schemas.</p><p>The annotation can be used in the following situations
 
       <div id="template">
         <div id="allMembers">
-        <div id="constructors" class="members">
-              <h3>Instance Constructors</h3>
-              <ol><li name="vulcan.AvroDoc#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(doc:String):vulcan.AvroDoc"></a><a id="&lt;init&gt;:AvroDoc"></a>
-      <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#&lt;init&gt;(doc:String):vulcan.AvroDoc" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">new</span>
-      </span>
-      <span class="symbol">
-        <span class="name">AvroDoc</span><span class="params">(<span name="doc">doc: <span class="extype" name="scala.Predef.String">String</span></span>)</span>
-      </span>
-      
-      
-    </li></ol>
-            </div>
-
         
 
         
 
         <div class="values members">
-              <h3>Value Members</h3>
+              <h3>Abstract Value Members</h3>
+              <ol><li name="vulcan.Props#add" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="add[A](name:String,value:A)(implicitcodec:vulcan.Codec[A]):vulcan.Props"></a><a id="add[A](String,A)(Codec[A]):Props"></a>
+      <span class="permalink">
+      <a href="../vulcan/Props.html#add[A](name:String,value:A)(implicitcodec:vulcan.Codec[A]):vulcan.Props" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">add</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="vulcan.Props.add.A">A</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>[<span class="extype" name="vulcan.Props.add.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="vulcan.Props">Props</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Returns a new <a href="" class="extype" name="vulcan.Props">Props</a> instance including a
+property with the specified name and value.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a new <a href="" class="extype" name="vulcan.Props">Props</a> instance including a
+property with the specified name and value.</p><p>The value is encoded using the <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>.
+</p></div></div>
+    </li><li name="vulcan.Props#toChain" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="toChain:Either[vulcan.AvroError,cats.data.Chain[(String,Any)]]"></a><a id="toChain:Either[AvroError,Chain[(String,Any)]]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Props.html#toChain:Either[vulcan.AvroError,cats.data.Chain[(String,Any)]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toChain</span><span class="result">: <span class="extype" name="scala.Either">Either</span>[<a href="AvroError.html" class="extype" name="vulcan.AvroError">AvroError</a>, <span class="extype" name="cats.data.Chain">Chain</span>[(<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Any">Any</span>)]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Returns a <code>Chain</code> of name-value pairs, where
+the value has been encoded with a <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <code>Chain</code> of name-value pairs, where
+the value has been encoded with a <a href="Codec.html" class="extype" name="vulcan.Codec">Codec</a>.</p><p>If encoding of any value resulted in error,
+instead returns the first such error.
+</p></div></div>
+    </li></ol>
+            </div>
+
+        <div class="values members">
+              <h3>Concrete Value Members</h3>
               <ol>
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../vulcan/Props.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -267,7 +283,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html###():Int" title="Permalink">
+      <a href="../vulcan/Props.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -283,7 +299,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../vulcan/Props.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -299,7 +315,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../vulcan/Props.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -315,7 +331,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#clone():Object" title="Permalink">
+      <a href="../vulcan/Props.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -336,26 +352,10 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="vulcan.AvroDoc#doc" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="doc:String"></a>
-      <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#doc:String" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">doc</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../vulcan/Props.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -371,7 +371,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#equals(x$1:Any):Boolean" title="Permalink">
+      <a href="../vulcan/Props.html#equals(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -387,7 +387,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#finalize():Unit" title="Permalink">
+      <a href="../vulcan/Props.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -409,7 +409,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#getClass():Class[_]" title="Permalink">
+      <a href="../vulcan/Props.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -428,7 +428,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#hashCode():Int" title="Permalink">
+      <a href="../vulcan/Props.html#hashCode():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -447,7 +447,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../vulcan/Props.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -463,7 +463,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../vulcan/Props.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -479,7 +479,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#notify():Unit" title="Permalink">
+      <a href="../vulcan/Props.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -498,7 +498,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#notifyAll():Unit" title="Permalink">
+      <a href="../vulcan/Props.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -517,7 +517,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../vulcan/Props.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -530,26 +530,26 @@ in derived schemas.</p><p>The annotation can be used in the following situations
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="vulcan.AvroDoc#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#toString():String" title="Permalink">
+      <a href="../vulcan/Props.html#toString():String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier">final </span>
+        <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="vulcan.AvroDoc">AvroDoc</a> → AnyRef → Any</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#wait():Unit" title="Permalink">
+      <a href="../vulcan/Props.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -571,7 +571,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../vulcan/Props.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -593,7 +593,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../vulcan/AvroDoc.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../vulcan/Props.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -624,11 +624,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.annotation.StaticAnnotation">
-              <h3>Inherited from <span class="extype" name="scala.annotation.StaticAnnotation">StaticAnnotation</span></h3>
-            </div><div class="parent" name="scala.annotation.Annotation">
-              <h3>Inherited from <span class="extype" name="scala.annotation.Annotation">Annotation</span></h3>
-            </div><div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>

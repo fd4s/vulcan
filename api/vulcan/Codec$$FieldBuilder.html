@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Vulcan v0.2.0-RC1 - vulcan.Codec.FieldBuilder</title>
-          <meta name="description" content="Vulcan v0.2.0 - RC1 - vulcan.Codec.FieldBuilder" />
-          <meta name="keywords" content="Vulcan v0.2.0 RC1 vulcan.Codec.FieldBuilder" />
+          <title>Vulcan v0.2.0-RC2 - vulcan.Codec.FieldBuilder</title>
+          <meta name="description" content="Vulcan v0.2.0 - RC2 - vulcan.Codec.FieldBuilder" />
+          <meta name="keywords" content="Vulcan v0.2.0 RC2 vulcan.Codec.FieldBuilder" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-RC1</span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-RC2</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -110,6 +110,10 @@
                         <a class="class" href="Codec$$AltBuilder.html" title=""></a>
                         <a href="Codec$$AltBuilder.html" title="">AltBuilder</a>
                       </li><li class="current-entities indented2">
+                        <a class="object" href="Codec$$Default$.html" title=""></a>
+                        <a class="class" href="Codec$$Default.html" title=""></a>
+                        <a href="Codec$$Default.html" title="">Default</a>
+                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="class" href="Codec$$Field.html" title=""></a>
                         <a href="Codec$$Field.html" title="">Field</a>
@@ -117,10 +121,6 @@
                         <span class="separator"></span>
                         <a class="class" href="" title=""></a>
                         <a href="" title="">FieldBuilder</a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="Codec$$WithDefault$.html" title=""></a>
-                        <a class="class" href="Codec$$WithDefault.html" title=""></a>
-                        <a href="Codec$$WithDefault.html" title="">WithDefault</a>
                       </li>
               </ul>
             </div>
@@ -149,7 +149,7 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-RC1/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-RC2/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -204,9 +204,9 @@
         <div class="values members">
               <h3>Abstract Value Members</h3>
               <ol><li name="vulcan.Codec.FieldBuilder#apply" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="apply[B](name:String,access:A=&gt;B,doc:Option[String],default:Option[B],order:Option[org.apache.avro.Schema.Field.Order],aliases:Seq[String])(implicitcodec:vulcan.Codec.WithDefault[B]):cats.free.FreeApplicative[[β$8$]vulcan.Codec.Field[A,β$8$],B]"></a><a id="apply[B](String,(A)⇒B,Option[String],Option[B],Option[Order],Seq[String])(WithDefault[B]):FreeApplicative[[β$8$]Field[A,β$8$],B]"></a>
+      <a id="apply[B](name:String,access:A=&gt;B,doc:Option[String],default:Option[B],order:vulcan.SortOrder,aliases:Seq[String],props:vulcan.Props)(implicitcodec:vulcan.Codec.Default[B]):cats.free.FreeApplicative[[β$8$]vulcan.Codec.Field[A,β$8$],B]"></a><a id="apply[B](String,(A)⇒B,Option[String],Option[B],SortOrder,Seq[String],Props)(Default[B]):FreeApplicative[[β$8$]Field[A,β$8$],B]"></a>
       <span class="permalink">
-      <a href="../vulcan/Codec$$FieldBuilder.html#apply[B](name:String,access:A=&gt;B,doc:Option[String],default:Option[B],order:Option[org.apache.avro.Schema.Field.Order],aliases:Seq[String])(implicitcodec:vulcan.Codec.WithDefault[B]):cats.free.FreeApplicative[[β$8$]vulcan.Codec.Field[A,β$8$],B]" title="Permalink">
+      <a href="../vulcan/Codec$$FieldBuilder.html#apply[B](name:String,access:A=&gt;B,doc:Option[String],default:Option[B],order:vulcan.SortOrder,aliases:Seq[String],props:vulcan.Props)(implicitcodec:vulcan.Codec.Default[B]):cats.free.FreeApplicative[[β$8$]vulcan.Codec.Field[A,β$8$],B]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -215,7 +215,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">apply</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="access">access: (<span class="extype" name="vulcan.Codec.FieldBuilder.A">A</span>) ⇒ <span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span>] = <span class="symbol">None</span></span>, <span name="order">order: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="org.apache.avro.Schema.Field.Order">Order</span>] = <span class="symbol">None</span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq.empty</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec$$WithDefault.html" class="extype" name="vulcan.Codec.WithDefault">WithDefault</a>[<span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span>]</span>)</span><span class="result">: <span class="extype" name="cats.free.FreeApplicative">FreeApplicative</span>[[β$8$]<a href="Codec$$Field.html" class="extype" name="vulcan.Codec.Field">Field</a>[<span class="extype" name="vulcan.Codec.FieldBuilder.A">A</span>, <span class="extype" name="vulcan.Codec.FieldBuilder.&lt;refinement&gt;.Λ$.β$8$">β$8$</span>], <span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span>]</span>
+        <span class="name">apply</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="access">access: (<span class="extype" name="vulcan.Codec.FieldBuilder.A">A</span>) ⇒ <span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span>] = <span class="symbol">None</span></span>, <span name="order">order: <a href="SortOrder.html" class="extype" name="vulcan.SortOrder">SortOrder</a> = <span class="symbol"><span class="name"><a href="SortOrder$.html">SortOrder.Ascending</a></span></span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq.empty</span></span>, <span name="props">props: <a href="Props.html" class="extype" name="vulcan.Props">Props</a> = <span class="symbol"><span class="name"><a href="Props$.html">Props.empty</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="codec">codec: <a href="Codec$$Default.html" class="extype" name="vulcan.Codec.Default">Default</a>[<span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span>]</span>)</span><span class="result">: <span class="extype" name="cats.free.FreeApplicative">FreeApplicative</span>[[β$8$]<a href="Codec$$Field.html" class="extype" name="vulcan.Codec.Field">Field</a>[<span class="extype" name="vulcan.Codec.FieldBuilder.A">A</span>, <span class="extype" name="vulcan.Codec.FieldBuilder.&lt;refinement&gt;.Λ$.β$8$">β$8$</span>], <span class="extype" name="vulcan.Codec.FieldBuilder.apply.B">B</span>]</span>
       </span>
       
       

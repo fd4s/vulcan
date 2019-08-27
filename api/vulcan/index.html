@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Vulcan v0.2.0-RC1 - vulcan</title>
-          <meta name="description" content="Vulcan v0.2.0 - RC1 - vulcan" />
-          <meta name="keywords" content="Vulcan v0.2.0 RC1 vulcan" />
+          <title>Vulcan v0.2.0-RC2 - vulcan</title>
+          <meta name="description" content="Vulcan v0.2.0 - RC2 - vulcan" />
+          <meta name="keywords" content="Vulcan v0.2.0 RC2 vulcan" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-RC1</span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-RC2</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -125,6 +125,14 @@
                         <a class="object" href="Prism$.html" title=""></a>
                         <a class="class" href="Prism.html" title="Optic used for selecting a part of a coproduct type."></a>
                         <a href="Prism.html" title="Optic used for selecting a part of a coproduct type.">Prism</a>
+                      </li><li class="current-entities indented1">
+                        <a class="object" href="Props$.html" title=""></a>
+                        <a class="class" href="Props.html" title="Custom properties which can be included in a schema."></a>
+                        <a href="Props.html" title="Custom properties which can be included in a schema.">Props</a>
+                      </li><li class="current-entities indented1">
+                        <a class="object" href="SortOrder$.html" title=""></a>
+                        <a class="class" href="SortOrder.html" title="How field values should be ordered when sorting records."></a>
+                        <a href="SortOrder.html" title="How field values should be ordered when sorting records.">SortOrder</a>
                       </li>
               </ul>
             </div>
@@ -207,13 +215,13 @@
 in derived schemas.</p><div class="fullcomment"><div class="comment cmt"><p>Annotation which can be used to include documentation
 in derived schemas.</p><p>The annotation can be used in the following situations.<br>
 - Annotate a type for enum documentation when using
-  <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec#deriveEnum</a>.<br>
+  <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec.deriveEnum</a>.<br>
 - Annotate a type for fixed documentation when using
-  <a href="Codec$.html#deriveFixed[A](size:Int,encode:A=&gt;Array[Byte],decode:Array[Byte]=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveFixed">Codec#deriveFixed</a>.<br>
+  <a href="Codec$.html#deriveFixed[A](size:Int,encode:A=&gt;Array[Byte],decode:Array[Byte]=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveFixed">Codec.deriveFixed</a>.<br>
 - Annotate a <code>case class</code> for record documentation
-  when using <code>Codec#derive</code> from the generic module.<br>
+  when using <code>Codec.derive</code> from the generic module.<br>
 - Annotate a <code>case class</code> parameter for record field
-  documentation when using <code>Codec#derive</code> from the
+  documentation when using <code>Codec.derive</code> from the
   generic module.
 </p></div></div>
     </li><li name="vulcan.AvroError" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
@@ -233,7 +241,7 @@ in derived schemas.</p><p>The annotation can be used in the following situations
       
       <p class="shortcomment cmt">Error which occurred while generating a schema, or
 while encoding or decoding.</p><div class="fullcomment"><div class="comment cmt"><p>Error which occurred while generating a schema, or
-while encoding or decoding.</p><p>Use <a href="AvroError$.html#apply(message:=&gt;String):vulcan.AvroError" class="extmbr" name="vulcan.AvroError#apply">AvroError#apply</a> to create an instance, and
+while encoding or decoding.</p><p>Use <a href="AvroError$.html#apply(message:=&gt;String):vulcan.AvroError" class="extmbr" name="vulcan.AvroError#apply">AvroError.apply</a> to create an instance, and
 <a href="AvroError.html#message:String" class="extmbr" name="vulcan.AvroError#message">AvroError#message</a> to retrieve the message.
 </p></div></div>
     </li><li name="vulcan.AvroException" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
@@ -272,13 +280,13 @@ created with <a href="AvroError.html#throwable:Throwable" class="extmbr" name="v
 in derived schemas.</p><div class="fullcomment"><div class="comment cmt"><p>Annotation which can be used to set the namespace
 in derived schemas.</p><p>The annotation can be used in the following situations.<br>
 - Annotate a type for enum namespace when using
-  <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec#deriveEnum</a>.<br>
+  <a href="Codec$.html#deriveEnum[A](symbols:Seq[String],encode:A=&gt;String,decode:String=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveEnum">Codec.deriveEnum</a>.<br>
 - Annotate a type for fixed namespace when using
-  <a href="Codec$.html#deriveFixed[A](size:Int,encode:A=&gt;Array[Byte],decode:Array[Byte]=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveFixed">Codec#deriveFixed</a>.<br>
+  <a href="Codec$.html#deriveFixed[A](size:Int,encode:A=&gt;Array[Byte],decode:Array[Byte]=&gt;Either[vulcan.AvroError,A])(implicittag:reflect.runtime.universe.WeakTypeTag[A]):vulcan.Codec[A]" class="extmbr" name="vulcan.Codec#deriveFixed">Codec.deriveFixed</a>.<br>
 - Annotate a <code>case class</code> for record namespace when
-  using <code>Codec#derive</code> from the generic module.
+  using <code>Codec.derive</code> from the generic module.
 </p></div></div>
-    </li><li name="vulcan.Codec" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+    </li><li name="vulcan.Codec" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="Codec[A]extendsAnyRef"></a><a id="Codec[A]:Codec[A]"></a>
       <span class="permalink">
       <a href="../vulcan/index.html#Codec[A]extendsAnyRef" title="Permalink">
@@ -294,8 +302,16 @@ in derived schemas.</p><p>The annotation can be used in the following situations
       </span>
       
       <p class="shortcomment cmt">Provides a schema, along with encoding and decoding functions
-for a given type.</p>
-    </li><li name="vulcan.Prism" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+for a given type.</p><div class="fullcomment"><div class="comment cmt"><p>Provides a schema, along with encoding and decoding functions
+for a given type.
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@implicitNotFound</span><span class="args">(<span>
+      
+      <span class="defval" name="&quot;could not find implicit Codec[${A}]; ensure no imports are missing or manually define an instance&quot;">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="vulcan.Prism" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="Prism[S,A]extendsAnyRef"></a><a id="Prism[S,A]:Prism[S,A]"></a>
       <span class="permalink">
       <a href="../vulcan/index.html#Prism[S,A]extendsAnyRef" title="Permalink">
@@ -310,7 +326,52 @@ for a given type.</p>
         <a title="Optic used for selecting a part of a coproduct type." href="Prism.html"><span class="name">Prism</span></a><span class="tparams">[<span name="S">S</span>, <span name="A">A</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
-      <p class="shortcomment cmt">Optic used for selecting a part of a coproduct type.</p>
+      <p class="shortcomment cmt">Optic used for selecting a part of a coproduct type.</p><div class="fullcomment"><div class="comment cmt"><p>Optic used for selecting a part of a coproduct type.
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@implicitNotFound</span><span class="args">(<span>
+      
+      <span class="defval" name="&quot;could not find implicit Prism[${S}, ${A}]; ensure ${A} is a subtype of ${S} or manually define an instance&quot;">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="vulcan.Props" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="PropsextendsAnyRef"></a><a id="Props:Props"></a>
+      <span class="permalink">
+      <a href="../vulcan/index.html#PropsextendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="Custom properties which can be included in a schema." href="Props.html"><span class="name">Props</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Custom properties which can be included in a schema.</p><div class="fullcomment"><div class="comment cmt"><p>Custom properties which can be included in a schema.</p><p>Use <a href="Props$.html#one[A](name:String,value:A)(implicitcodec:vulcan.Codec[A]):vulcan.Props" class="extmbr" name="vulcan.Props#one">Props.one</a> to create an instance, and
+<a href="Props.html#add[A](name:String,value:A)(implicitcodec:vulcan.Codec[A]):vulcan.Props" class="extmbr" name="vulcan.Props#add">Props#add</a> to add more properties.
+</p></div></div>
+    </li><li name="vulcan.SortOrder" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="SortOrderextendsAnyRef"></a><a id="SortOrder:SortOrder"></a>
+      <span class="permalink">
+      <a href="../vulcan/index.html#SortOrderextendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="How field values should be ordered when sorting records." href="SortOrder.html"><span class="name">SortOrder</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">How field values should be ordered when sorting records.</p><div class="fullcomment"><div class="comment cmt"><p>How field values should be ordered when sorting records.</p><p>The following sort orders are available.<br>
+- <a href="SortOrder$.html#Ascending:vulcan.SortOrder" class="extmbr" name="vulcan.SortOrder#Ascending">SortOrder.Ascending</a> for ascending sort order,<br>
+- <a href="SortOrder$.html#Descending:vulcan.SortOrder" class="extmbr" name="vulcan.SortOrder#Descending">SortOrder.Descending</a> for descending sort order,<br>
+- <a href="SortOrder$.html#Ignore:vulcan.SortOrder" class="extmbr" name="vulcan.SortOrder#Ignore">SortOrder.Ignore</a> to ignore the field when sorting.
+</p></div></div>
     </li></ol>
             </div>
 
@@ -364,6 +425,38 @@ for a given type.</p>
       </span>
       <span class="symbol">
         <a title="" href="Prism$.html"><span class="name">Prism</span></a>
+      </span>
+      
+      
+    </li><li name="vulcan.Props" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Props"></a><a id="Props:Props"></a>
+      <span class="permalink">
+      <a href="../vulcan/index.html#Props" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Props$.html"><span class="name">Props</span></a>
+      </span>
+      
+      
+    </li><li name="vulcan.SortOrder" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SortOrder"></a><a id="SortOrder:SortOrder"></a>
+      <span class="permalink">
+      <a href="../vulcan/index.html#SortOrder" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="SortOrder$.html"><span class="name">SortOrder</span></a>
       </span>
       
       

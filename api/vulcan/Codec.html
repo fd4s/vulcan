@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Vulcan v0.2.0-RC1 - vulcan.Codec</title>
-          <meta name="description" content="Vulcan v0.2.0 - RC1 - vulcan.Codec" />
-          <meta name="keywords" content="Vulcan v0.2.0 RC1 vulcan.Codec" />
+          <title>Vulcan v0.2.0-RC2 - vulcan.Codec</title>
+          <meta name="description" content="Vulcan v0.2.0 - RC2 - vulcan.Codec" />
+          <meta name="keywords" content="Vulcan v0.2.0 RC2 vulcan.Codec" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-RC1</span></span>
+        <span id="doc-title">Vulcan<span id="doc-version">v0.2.0-RC2</span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -125,6 +125,14 @@
                         <a class="object" href="Prism$.html" title=""></a>
                         <a class="class" href="Prism.html" title="Optic used for selecting a part of a coproduct type."></a>
                         <a href="Prism.html" title="Optic used for selecting a part of a coproduct type.">Prism</a>
+                      </li><li class="current-entities indented1">
+                        <a class="object" href="Props$.html" title=""></a>
+                        <a class="class" href="Props.html" title="Custom properties which can be included in a schema."></a>
+                        <a href="Props.html" title="Custom properties which can be included in a schema.">Props</a>
+                      </li><li class="current-entities indented1">
+                        <a class="object" href="SortOrder$.html" title=""></a>
+                        <a class="class" href="SortOrder.html" title="How field values should be ordered when sorting records."></a>
+                        <a href="SortOrder.html" title="How field values should be ordered when sorting records.">SortOrder</a>
                       </li>
               </ul>
             </div>
@@ -157,7 +165,13 @@
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Provides a schema, along with encoding and decoding functions
 for a given type.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-RC1/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@implicitNotFound</span><span class="args">(<span>
+      
+      <span class="defval" name="&quot;could not find implicit Codec[${A}]; ensure no imports are missing or manually define an instance&quot;">...</span>
+    </span>)</span>
+              
+        </dd><dt>Source</dt><dd><a href="https://github.com/ovotech/vulcan/tree/v0.2.0-RC2/modules/core/src/main/scala/vulcan/Codec.scala" target="_blank">Codec.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -445,6 +459,24 @@ for a given type.
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="vulcan.Codec#ignoreDefault" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ignoreDefault:vulcan.Codec.Default[A]"></a><a id="ignoreDefault:Default[A]"></a>
+      <span class="permalink">
+      <a href="../vulcan/Codec.html#ignoreDefault:vulcan.Codec.Default[A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ignoreDefault</span><span class="result">: <a href="Codec$$Default.html" class="extype" name="vulcan.Codec.Default">Default</a>[<span class="extype" name="vulcan.Codec.A">A</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Returns a new <a href="Codec$$Default.html" class="extype" name="vulcan.Codec.Default">Codec.Default</a> where the default value
+is ignored, and where this <a href="" class="extype" name="vulcan.Codec">Codec</a> is always returned
+as the result.</p>
     </li><li name="vulcan.Codec#imap" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="imap[B](f:A=&gt;B)(g:B=&gt;A):vulcan.Codec[B]"></a><a id="imap[B]((A)⇒B)((B)⇒A):Codec[B]"></a>
       <span class="permalink">
