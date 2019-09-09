@@ -1494,7 +1494,7 @@ final object Codec {
                                           case other => other
                                         }.orNull
                                       },
-                                      field.order.asJava
+                                      field.order.getOrElse(Schema.Field.Order.ASCENDING)
                                     )
 
                                   field.aliases.foreach(schemaField.addAlias)
@@ -2143,7 +2143,7 @@ final object Codec {
 
     def default: Option[B]
 
-    def order: SortOrder
+    def order: Option[Schema.Field.Order]
 
     def aliases: Seq[String]
 
@@ -2157,7 +2157,7 @@ final object Codec {
       codec: Codec[B],
       doc: Option[String],
       default: Option[B],
-      order: SortOrder,
+      order: Option[Schema.Field.Order],
       aliases: Seq[String],
       props: Props
     ): Field[A, B] = {
@@ -2176,7 +2176,7 @@ final object Codec {
         override final val codec: Codec[B] = _codec
         override final val doc: Option[String] = _doc
         override final val default: Option[B] = _default
-        override final val order: SortOrder = _order
+        override final val order: Option[Schema.Field.Order] = _order
         override final val aliases: Seq[String] = _aliases
         override final val props: Props = _props
       }
@@ -2192,7 +2192,7 @@ final object Codec {
       access: A => B,
       doc: Option[String] = None,
       default: Option[B] = None,
-      order: SortOrder = SortOrder.Ascending,
+      order: Option[Schema.Field.Order] = None,
       aliases: Seq[String] = Seq.empty,
       props: Props = Props.empty
     )(implicit codec: Codec.Default[B]): FreeApplicative[Field[A, ?], B]
@@ -2206,7 +2206,7 @@ final object Codec {
           access: Any => B,
           doc: Option[String],
           default: Option[B],
-          order: SortOrder,
+          order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
         )(implicit codec: Codec.Default[B]): FreeApplicative[Field[Any, ?], B] =
