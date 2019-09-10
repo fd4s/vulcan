@@ -191,7 +191,7 @@ lazy val publishSettings =
   metadataSettings ++ Seq(
     publishMavenStyle := true,
     publishArtifact in Test := false,
-    publishTo := sonatypePublishTo.value,
+    publishTo := sonatypePublishToBundle.value,
     pomIncludeRepository := (_ => false),
     homepage := Some(url("https://ovotech.github.io/vulcan")),
     licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")),
@@ -234,7 +234,7 @@ lazy val publishSettings =
       commitReleaseVersion,
       tagRelease,
       releaseStepCommandAndRemaining("+publish"),
-      releaseStepCommand("sonatypeRelease"),
+      releaseStepCommand("sonatypeBundleRelease"),
       setNextVersion,
       commitNextVersion,
       pushChanges,
