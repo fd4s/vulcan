@@ -16,20 +16,29 @@ import vulcan.examples._
 
 final class RoundtripSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("coproduct") {
-    it("roundtrip") {
-      type Types = CaseClassField :+: Int :+: CaseClassAvroDoc :+: CNil
+    type Types = CaseClassField :+: Int :+: CaseClassAvroDoc :+: CNil
 
-      implicit val arbitraryTypes: Arbitrary[Types] =
-        Arbitrary {
-          Gen.oneOf(
-            arbitrary[Int].map(n => Coproduct[Types](CaseClassField(n))),
-            arbitrary[Int].map(n => Coproduct[Types](n)),
-            arbitrary[Option[String]].map(os => Coproduct[Types](CaseClassAvroDoc(os)))
-          )
+    implicit val arbitraryTypes: Arbitrary[Types] =
+      Arbitrary {
+        Gen.oneOf(
+          arbitrary[Int].map(n => Coproduct[Types](CaseClassField(n))),
+          arbitrary[Int].map(n => Coproduct[Types](n)),
+          arbitrary[Option[String]].map(os => Coproduct[Types](CaseClassAvroDoc(os)))
+        )
+      }
+
+    implicit val eqTypes: Eq[Types] =
+      Eq.fromUniversalEquals
+
+    it("roundtrip.derived") {
+      roundtrip[Types]
+    }
+
+    it("roundtrip.union") {
+      implicit val codec: Codec[Types] =
+        Codec.union { alt =>
+          alt[CaseClassField] |+| alt[Int] |+| alt[CaseClassAvroDoc]
         }
-
-      implicit val eqTypes: Eq[Types] =
-        Eq.fromUniversalEquals
 
       roundtrip[Types]
     }
