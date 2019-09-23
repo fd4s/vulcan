@@ -1,8 +1,8 @@
 package vulcan.docs
 
-import vulcan.build.info._
-
 import java.nio.file.{FileSystems, Path}
+import scala.collection.Seq
+import vulcan.build.info._
 
 object Main {
   def sourceDirectoryPath(rest: String*): Path =

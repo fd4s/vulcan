@@ -12,7 +12,7 @@ val refinedVersion = "0.9.10"
 
 val shapelessVersion = "2.3.3"
 
-val scala212 = "2.12.8"
+val scala212 = "2.12.10"
 
 val scala213 = "2.13.0"
 
@@ -20,8 +20,8 @@ lazy val vulcan = project
   .in(file("."))
   .settings(
     mimaSettings,
+    scalaSettings,
     noPublishSettings,
-    scalaVersion := scala212,
     console := (console in (core, Compile)).value,
     console in Test := (console in (core, Test)).value
   )
@@ -122,7 +122,7 @@ lazy val dependencySettings = Seq(
 lazy val mdocSettings = Seq(
   mdoc := run.in(Compile).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
-  crossScalaVersions := Seq(scala212),
+  crossScalaVersions := Seq(scalaVersion.value),
   unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, enumeratum, generic, refined),
   target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
   cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
@@ -257,7 +257,8 @@ lazy val mimaSettings = Seq(
     import com.typesafe.tools.mima.core._
     // format: off
     Seq(
-      ProblemFilters.exclude[Problem]("vulcan.internal.*")
+      ProblemFilters.exclude[Problem]("vulcan.internal.*"),
+      ProblemFilters.exclude[IncompatibleSignatureProblem]("*") // https://github.com/lightbend/mima/issues/361
     )
     // format: on
   }
@@ -270,7 +271,7 @@ lazy val noPublishSettings =
   )
 
 lazy val scalaSettings = Seq(
-  scalaVersion := scala212,
+  scalaVersion := scala213,
   crossScalaVersions := Seq(scala212, scala213),
   scalacOptions ++= Seq(
     "-deprecation",
