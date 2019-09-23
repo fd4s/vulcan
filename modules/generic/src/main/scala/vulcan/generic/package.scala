@@ -21,6 +21,7 @@ import magnolia._
 import org.apache.avro.generic._
 import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
+import shapeless.ops.coproduct.{Inject, Selector}
 import vulcan.internal.converters.collection._
 
 package object generic {
@@ -137,6 +138,12 @@ package object generic {
         }
       }
     )
+
+  implicit final def coproductPrism[C <: Coproduct, A](
+    implicit inject: Inject[C, A],
+    selector: Selector[C, A]
+  ): Prism[C, A] =
+    Prism.instance(selector(_))(inject(_))
 
   implicit final class MagnoliaCodec private[generic] (
     private val codec: Codec.type
