@@ -1,0 +1,23 @@
+### Changes
+
+- Add `Prism` for shapeless coproducts. ([#63][#63])
+
+### Updates
+
+- Update refined to 0.9.10. Thanks [@scala-steward](https://github.com/scala-steward)! ([#56][#56])
+- Update scala to 2.12.10. ([#62][#62])
+
+### Miscellaneous
+
+- Update sbt to 1.3.2. ([#61][#61])
+- Update sbt-mima-plugin to 0.6.1. Thanks [@scala-steward](https://github.com/scala-steward)! ([#59][#59])
+- Update sbt-scalafmt to 2.0.5. Thanks [@scala-steward](https://github.com/scala-steward)! ([#57][#57])
+- Update sbt-sonatype to 3.7. Thanks [@scala-steward](https://github.com/scala-steward)! ([#55][#55])
+
+[#55]: https://github.com/ovotech/vulcan/pull/55
+[#56]: https://github.com/ovotech/vulcan/pull/56
+[#57]: https://github.com/ovotech/vulcan/pull/57
+[#59]: https://github.com/ovotech/vulcan/pull/59
+[#61]: https://github.com/ovotech/vulcan/pull/61
+[#62]: https://github.com/ovotech/vulcan/pull/62
+[#63]: https://github.com/ovotech/vulcan/pull/63
