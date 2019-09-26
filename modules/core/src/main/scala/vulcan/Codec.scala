@@ -1793,10 +1793,15 @@ final object Codec {
         schema.getType() match {
           case Schema.Type.STRING =>
             value match {
+              case string: String =>
+                Right(string)
               case utf8: Utf8 =>
                 Right(utf8.toString())
               case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Utf8", "String"))
+                Left {
+                  AvroError
+                    .decodeUnexpectedTypes(other, NonEmptyList.of("String", "Utf8"), "String")
+                }
             }
 
           case schemaType =>
