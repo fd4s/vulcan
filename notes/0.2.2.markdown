@@ -1,0 +1,6 @@
+### Changes
+
+- Change to accept `String` in decoding for `String`. ([#64][#64], [#65][#65])
+
+[#64]: https://github.com/ovotech/vulcan/pull/64
+[#65]: https://github.com/ovotech/vulcan/pull/65
