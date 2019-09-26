@@ -2684,11 +2684,11 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should error if value is not utf8") {
+        it("should error if value is not utf8 or string") {
           assertDecodeError[String](
             unsafeEncode(10),
             unsafeSchema[String],
-            "Got unexpected type java.lang.Integer while decoding String, expected type Utf8"
+            "Got unexpected type java.lang.Integer while decoding String, expected types String, Utf8"
           )
         }
 
@@ -2696,6 +2696,14 @@ final class CodecSpec extends BaseSpec {
           val value = "abc"
           assertDecodeIs[String](
             unsafeEncode(value),
+            Right(value)
+          )
+        }
+
+        it("should decode string as string") {
+          val value = "abc"
+          assertDecodeIs[String](
+            value,
             Right(value)
           )
         }

@@ -17,6 +17,7 @@
 package vulcan
 
 import cats.{Eq, Show}
+import cats.data.NonEmptyList
 import cats.instances.string._
 import org.apache.avro.{Schema, LogicalType}
 import scala.util.control.NonFatal
@@ -166,9 +167,22 @@ final object AvroError {
     expectedType: String,
     decodingTypeName: String
   ): AvroError =
+    AvroError.decodeUnexpectedTypes(
+      value,
+      NonEmptyList.one(expectedType),
+      decodingTypeName
+    )
+
+  private[vulcan] final def decodeUnexpectedTypes(
+    value: Any,
+    expectedTypes: NonEmptyList[String],
+    decodingTypeName: String
+  ): AvroError =
     AvroError {
+      val expected = expectedTypes.toList.mkString(", ")
+      val types = if (expectedTypes.size > 1) "types" else "type"
       val typeName = if (value != null) value.getClass().getTypeName() else "null"
-      s"Got unexpected type $typeName while decoding $decodingTypeName, expected type $expectedType"
+      s"Got unexpected type $typeName while decoding $decodingTypeName, expected $types $expected"
     }
 
   private[vulcan] final def decodeExhaustedAlternatives(
