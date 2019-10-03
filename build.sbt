@@ -112,7 +112,7 @@ lazy val dependencySettings = Seq(
   ),
   libraryDependencies ++= Seq(
     "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
-    "org.typelevel" %% "discipline-scalatest" % "1.0.0-M1",
+    "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC1",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.28"
   ).map(_ % Test),
