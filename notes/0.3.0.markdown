@@ -9,3 +9,5 @@
   - Affects `Codec.union`, `Codec.derive` for sealed traits, and `Codec` for Shapeless `Coproduct`s.
 
 [#80]: https://github.com/ovotech/vulcan/pull/80
+
+Released on 2019-10-22.
