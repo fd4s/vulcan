@@ -3,6 +3,13 @@ package vulcan
 import cats.syntax.show._
 
 final class PropsSpec extends BaseSpec {
+  val codecSchemaError: Codec[Int] =
+    Codec.instance(
+      schema = Left(AvroError("error")),
+      encode = Codec.int.encode,
+      decode = Codec.int.decode
+    )
+
   describe("Props") {
     describe("one") {
       describe("add") {
@@ -11,7 +18,7 @@ final class PropsSpec extends BaseSpec {
             assert {
               Props
                 .one("first", "firstValue")
-                .add("second", 2)(Codec.int.withSchema(Left(AvroError("error"))))
+                .add("second", 2)(codecSchemaError)
                 .toChain
                 .isLeft
             }
@@ -21,7 +28,7 @@ final class PropsSpec extends BaseSpec {
             assert {
               Props
                 .one("first", "firstValue")
-                .add("second", 2)(Codec.int.withSchema(Left(AvroError("error"))))
+                .add("second", 2)(codecSchemaError)
                 .toString == "AvroError(error)"
             }
           }
@@ -53,21 +60,21 @@ final class PropsSpec extends BaseSpec {
             it("toChain") {
               assert {
                 Props
-                  .one("name", 1)(Codec.int.withSchema(Left(AvroError("error1"))))
-                  .add("name", 1)(Codec.int.withSchema(Left(AvroError("error2"))))
+                  .one("name", 1)(codecSchemaError)
+                  .add("name", 1)(codecSchemaError)
                   .toChain
                   .swap
                   .value
-                  .message == "error1"
+                  .message == "error"
               }
             }
 
             it("toString") {
               assert {
                 Props
-                  .one("name", 1)(Codec.int.withSchema(Left(AvroError("error1"))))
-                  .add("name", 1)(Codec.int.withSchema(Left(AvroError("error2"))))
-                  .toString == "AvroError(error1)"
+                  .one("name", 1)(codecSchemaError)
+                  .add("name", 1)(codecSchemaError)
+                  .toString == "AvroError(error)"
               }
             }
           }
@@ -75,7 +82,7 @@ final class PropsSpec extends BaseSpec {
           it("toChain") {
             assert {
               Props
-                .one("name", 1)(Codec.int.withSchema(Left(AvroError("error"))))
+                .one("name", 1)(codecSchemaError)
                 .add("name", 1)
                 .toChain
                 .swap
@@ -87,7 +94,7 @@ final class PropsSpec extends BaseSpec {
           it("toString") {
             assert {
               Props
-                .one("name", 1)(Codec.int.withSchema(Left(AvroError("error"))))
+                .one("name", 1)(codecSchemaError)
                 .add("name", 1)
                 .toString == "AvroError(error)"
             }
@@ -97,7 +104,7 @@ final class PropsSpec extends BaseSpec {
         it("toChain") {
           assert {
             Props
-              .one("name", 1)(Codec.int.withSchema(Left(AvroError("error"))))
+              .one("name", 1)(codecSchemaError)
               .toChain
               .swap
               .value
@@ -108,7 +115,7 @@ final class PropsSpec extends BaseSpec {
         it("toString") {
           assert {
             Props
-              .one("name", 1)(Codec.int.withSchema(Left(AvroError("error"))))
+              .one("name", 1)(codecSchemaError)
               .toString == "AvroError(error)"
           }
         }
@@ -171,7 +178,7 @@ final class PropsSpec extends BaseSpec {
       it("empty.add.error") {
         assert {
           Props.empty
-            .add("name", 1)(Codec.int.withSchema(Left(AvroError("error"))))
+            .add("name", 1)(codecSchemaError)
             .show == "AvroError(error)"
         }
       }
@@ -185,7 +192,7 @@ final class PropsSpec extends BaseSpec {
       it("one.error") {
         assert {
           Props
-            .one("name", 1)(Codec.int.withSchema(Left(AvroError("error"))))
+            .one("name", 1)(codecSchemaError)
             .show == "AvroError(error)"
         }
       }
@@ -203,7 +210,7 @@ final class PropsSpec extends BaseSpec {
         assert {
           Props
             .one("name", 1)
-            .add("name", 2)(Codec.int.withSchema(Left(AvroError("error"))))
+            .add("name", 2)(codecSchemaError)
             .show == "AvroError(error)"
         }
       }
@@ -211,7 +218,7 @@ final class PropsSpec extends BaseSpec {
       it("one.error.add") {
         assert {
           Props
-            .one("name", 1)(Codec.int.withSchema(Left(AvroError("error"))))
+            .one("name", 1)(codecSchemaError)
             .add("name", 2)
             .show == "AvroError(error)"
         }
@@ -220,9 +227,9 @@ final class PropsSpec extends BaseSpec {
       it("one.error.add.error") {
         assert {
           Props
-            .one("name", 1)(Codec.int.withSchema(Left(AvroError("error1"))))
-            .add("name", 2)(Codec.int.withSchema(Left(AvroError("error2"))))
-            .show == """AvroError(error1)"""
+            .one("name", 1)(codecSchemaError)
+            .add("name", 2)(codecSchemaError)
+            .show == """AvroError(error)"""
         }
       }
     }
