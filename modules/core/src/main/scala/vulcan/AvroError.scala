@@ -113,9 +113,6 @@ final object AvroError {
       s"Unable to decode $encodingTypeName using schema with name $fullName since names do not match"
     }
 
-  private[vulcan] final def decodeNotEnoughUnionSchemas(decodingTypeName: String): AvroError =
-    AvroError(s"Not enough types in union schema while decoding type $decodingTypeName")
-
   private[vulcan] final def decodeSymbolNotInSchema(
     symbol: String,
     symbols: Seq[String],
@@ -141,9 +138,6 @@ final object AvroError {
       val typeName = if (key != null) key.getClass().getTypeName() else "null"
       s"Got unexpected map key with type $typeName while decoding Map, expected Utf8"
     }
-
-  private[vulcan] final def decodeUnexpectedOptionSchema(schema: Schema): AvroError =
-    AvroError(s"Unexpected union schema $schema while decoding Option")
 
   private[vulcan] final def decodeUnexpectedRecordName(
     recordFullName: String,
@@ -263,9 +257,6 @@ final object AvroError {
       s"Unable to encode $encodingTypeName using schema with name $fullName since names do not match"
     }
 
-  private[vulcan] final def encodeNotEnoughUnionSchemas(encodingTypeName: String): AvroError =
-    AvroError(s"Not enough types in union schema while encoding type $encodingTypeName")
-
   private[vulcan] final def encodeSymbolNotInSchema(
     symbol: String,
     symbols: Seq[String],
@@ -285,9 +276,6 @@ final object AvroError {
       else
         s"Got unexpected logical type ${actualLogicalType.getName()} while encoding $encodingTypeName"
     }
-
-  private[vulcan] final def encodeUnexpectedOptionSchema(schema: Schema): AvroError =
-    AvroError(s"Unexpected union schema $schema while encoding Option")
 
   private[vulcan] final def encodeUnexpectedSchemaType(
     encodingTypeName: String,

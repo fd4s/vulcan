@@ -27,7 +27,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           assertEncodeError[CNil](
             null,
             unsafeSchema[CNil],
-            "CNil"
+            "Exhausted alternatives for type null while encoding Coproduct"
           )
         }
       }
@@ -37,7 +37,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           assertDecodeError[CNil](
             null,
             unsafeSchema[CNil],
-            "Unable to decode to any type in Coproduct"
+            "Exhausted alternatives for type null while decoding Coproduct"
           )
         }
       }
@@ -91,7 +91,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           assertEncodeError[A](
             Coproduct[A](123),
             Schema.createUnion(),
-            "Not enough types in union schema while encoding type Coproduct"
+            "Missing schema int in union for type Coproduct"
           )
         }
 
@@ -127,7 +127,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           assertDecodeError[A](
             unsafeEncode(Coproduct[A](123)),
             Schema.createUnion(),
-            "Not enough types in union schema while decoding type Coproduct"
+            "Exhausted alternatives for type java.lang.Integer while decoding Coproduct"
           )
         }
 
@@ -179,7 +179,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           assertDecodeError[A](
             unsafeEncode(Coproduct[A]("abc")),
             Schema.createUnion(),
-            "Not enough types in union schema while decoding type Coproduct"
+            "Exhausted alternatives for type org.apache.avro.util.Utf8 while decoding Coproduct"
           )
         }
 
@@ -188,7 +188,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           assertDecodeError[A](
             unsafeEncode(Coproduct[A](CaseClassField(10))),
             unsafeSchema[CNil],
-            "Not enough types in union schema while decoding type Coproduct"
+            "Missing schema vulcan.examples.CaseClassField in union for type Coproduct"
           )
         }
       }

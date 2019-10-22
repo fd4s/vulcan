@@ -28,8 +28,8 @@ package object generic {
   implicit final val cnilCodec: Codec[CNil] =
     Codec.instance(
       Right(Schema.createUnion()),
-      (_, _) => Left(AvroError("CNil")),
-      (_, _) => Left(AvroError("Unable to decode to any type in Coproduct"))
+      (cnil, _) => Left(AvroError.encodeExhaustedAlternatives(cnil, "Coproduct")),
+      (value, _) => Left(AvroError.decodeExhaustedAlternatives(value, "Coproduct"))
     )
 
   implicit final def coproductCodec[H, T <: Coproduct](
@@ -54,16 +54,21 @@ package object generic {
       (coproduct, schema) => {
         schema.getType() match {
           case Schema.Type.UNION =>
-            schema.getTypes().asScala.toList match {
-              case headSchema :: tailSchemas =>
-                coproduct.eliminate(
-                  headCodec.encode(_, headSchema),
-                  tailCodec.value.encode(_, Schema.createUnion(tailSchemas.asJava))
-                )
+            coproduct.eliminate(
+              head =>
+                headCodec.schema.flatMap { headSchema =>
+                  val headName =
+                    headSchema.getFullName
 
-              case Nil =>
-                Left(AvroError.encodeNotEnoughUnionSchemas("Coproduct"))
-            }
+                  val headUnionSchema =
+                    schema.getTypes.asScala
+                      .find(_.getFullName == headName)
+                      .toRight(AvroError.encodeMissingUnionSchema(headName, "Coproduct"))
+
+                  headUnionSchema.flatMap(headCodec.encode(head, _))
+                },
+              tail => tailCodec.value.encode(tail, schema)
+            )
 
           case schemaType =>
             Left {
@@ -83,47 +88,44 @@ package object generic {
               case container: GenericContainer =>
                 headCodec.schema.flatMap {
                   headSchema =>
-                    val name = container.getSchema().getFullName()
-                    if (headSchema.getFullName() == name) {
+                    val name = container.getSchema.getFullName
+                    if (headSchema.getFullName == name) {
                       val subschema =
-                        schema
-                          .getTypes()
-                          .asScala
-                          .find(_.getFullName() == name)
+                        schema.getTypes.asScala
+                          .find(_.getFullName == name)
                           .toRight(AvroError.decodeMissingUnionSchema(name, "Coproduct"))
 
                       subschema
-                        .flatMap(headCodec.decode(value, _))
+                        .flatMap(headCodec.decode(container, _))
                         .map(Inl(_))
                     } else {
-                      schema.getTypes().asScala.toList match {
-                        case _ :: tail =>
-                          tailCodec.value
-                            .decode(value, Schema.createUnion(tail.asJava))
-                            .map(Inr(_))
-
-                        case Nil =>
-                          Left(AvroError.decodeNotEnoughUnionSchemas("Coproduct"))
-                      }
+                      tailCodec.value
+                        .decode(container, schema)
+                        .map(Inr(_))
                     }
                 }
 
               case other =>
-                schema.getTypes().asScala.toList match {
-                  case head :: tail =>
-                    headCodec.decode(other, head) match {
-                      case Right(decoded) =>
-                        Right(Inl(decoded))
+                val schemaTypes =
+                  schema.getTypes.asScala
 
-                      case Left(_) =>
-                        tailCodec.value
-                          .decode(other, Schema.createUnion(tail.asJava))
-                          .map(Inr(_))
-                    }
-
-                  case Nil =>
-                    Left(AvroError.decodeNotEnoughUnionSchemas("Coproduct"))
-                }
+                headCodec.schema
+                  .traverse { headSchema =>
+                    val headName = headSchema.getFullName
+                    schemaTypes
+                      .find(_.getFullName == headName)
+                      .flatMap { schema =>
+                        headCodec
+                          .decode(other, schema)
+                          .map(Inl(_))
+                          .toOption
+                      }
+                  }
+                  .getOrElse {
+                    tailCodec.value
+                      .decode(other, schema)
+                      .map(Inr(_))
+                  }
             }
 
           case schemaType =>
@@ -356,15 +358,22 @@ package object generic {
                   }
 
                 case other =>
-                  val schemaTypes = schema.getTypes.asScala.toList
-                  val subtypes = sealedTrait.subtypes.toList
+                  val schemaTypes =
+                    schema.getTypes.asScala
 
-                  subtypes
-                    .zip(schemaTypes)
-                    .collectFirstSome {
-                      case (subtype, schema) =>
-                        val decoded = subtype.typeclass.decode(other, schema)
-                        if (decoded.isRight) Some(decoded) else None
+                  sealedTrait.subtypes.toList
+                    .collectFirstSome { subtype =>
+                      subtype.typeclass.schema
+                        .traverse { subtypeSchema =>
+                          val subtypeName = subtypeSchema.getFullName
+                          schemaTypes
+                            .find(_.getFullName == subtypeName)
+                            .flatMap { schema =>
+                              subtype.typeclass
+                                .decode(other, schema)
+                                .toOption
+                            }
+                        }
                     }
                     .getOrElse {
                       Left(AvroError.decodeExhaustedAlternatives(other, typeName))

@@ -1282,6 +1282,58 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("none") {
+      describe("schema") {
+        it("should be encoded as null") {
+          assertSchemaIs[None.type] {
+            """"null""""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should error if schema is not null") {
+          assertEncodeError[None.type](
+            None,
+            unsafeSchema[Int],
+            "Got unexpected schema type INT while encoding None, expected schema type NULL"
+          )
+        }
+
+        it("should encode as null") {
+          assertEncodeIs[None.type](
+            None,
+            Right(null)
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not null") {
+          assertDecodeError[None.type](
+            unsafeEncode(None),
+            unsafeSchema[Int],
+            "Got unexpected schema type INT while decoding None, expected schema type NULL"
+          )
+        }
+
+        it("should error if value is not null") {
+          assertDecodeError[None.type](
+            unsafeEncode(10),
+            unsafeSchema[None.type],
+            "Got unexpected type java.lang.Integer while decoding None, expected type null"
+          )
+        }
+
+        it("should decode null as None") {
+          assertDecodeIs[None.type](
+            unsafeEncode(()),
+            Right(None)
+          )
+        }
+      }
+    }
+
     describe("nonEmptyChain") {
       describe("schema") {
         it("should be encoded as array") {
@@ -1546,31 +1598,31 @@ final class CodecSpec extends BaseSpec {
           assertEncodeError[Option[Int]](
             Some(1),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding Option, expected schema type UNION"
+            "Got unexpected schema type INT while encoding scala.Option, expected schema type UNION"
           )
         }
 
-        it("should error if there is one schema in union") {
-          assertEncodeError[Option[Int]](
-            Some(1), {
-              SchemaBuilder.unionOf().intType().endUnion()
-            },
-            """Unexpected union schema ["int"] while encoding Option"""
+        it("should encode even if there is one schema in union") {
+          assertEncodeIs[Option[Int]](
+            Some(1),
+            Right(unsafeEncode(Option(1))),
+            Some(SchemaBuilder.unionOf().intType().endUnion())
           )
         }
 
-        it("should error if there is not null in union") {
-          assertEncodeError[Option[Int]](
-            Some(1), {
-              SchemaBuilder.unionOf().intType().and().stringType().endUnion()
-            },
-            """Unexpected union schema ["int","string"] while encoding Option"""
+        it("should encode even if there is not null in union") {
+          assertEncodeIs[Option[Int]](
+            Some(1),
+            Right(unsafeEncode(Option(1))),
+            Some(SchemaBuilder.unionOf().intType().and().stringType().endUnion())
           )
         }
 
-        it("should error if there are more than two schemas in union") {
-          assertEncodeError[Option[Int]](
-            Some(1), {
+        it("should encode even if there are more than two schemas in union") {
+          assertEncodeIs[Option[Int]](
+            Some(1),
+            Right(unsafeEncode(Option(1))),
+            Some {
               SchemaBuilder
                 .unionOf()
                 .intType()
@@ -1579,8 +1631,7 @@ final class CodecSpec extends BaseSpec {
                 .and()
                 .nullType()
                 .endUnion()
-            },
-            """Unexpected union schema ["int","string","null"] while encoding Option"""
+            }
           )
         }
 
@@ -1639,34 +1690,31 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[Option[Int]](
             unsafeEncode(Option(1)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Option, expected schema type UNION"
+            "Got unexpected schema type INT while decoding scala.Option, expected schema type UNION"
           )
         }
 
-        it("should error if there is one schema in union") {
-          assertDecodeError[Option[Int]](
-            unsafeEncode(Option(1)), {
-              SchemaBuilder.unionOf().intType().endUnion()
-            },
-            """Unexpected union schema ["int"] while decoding Option"""
+        it("should decode even if there is one schema in union") {
+          assertDecodeIs[Option[Int]](
+            unsafeEncode(Option(1)),
+            Right(Some(1)),
+            Some(SchemaBuilder.unionOf().intType().endUnion())
           )
         }
 
-        it("should error if there is not null in union") {
-          assertDecodeError[Option[Int]](
-            unsafeEncode(Option(1)), {
-              SchemaBuilder.unionOf().intType().and().stringType().endUnion()
-            },
-            """Unexpected union schema ["int","string"] while decoding Option"""
+        it("should decode even if there is not null in union") {
+          assertDecodeIs[Option[Int]](
+            unsafeEncode(Option(1)),
+            Right(Some(1)),
+            Some(SchemaBuilder.unionOf().intType().and().stringType().endUnion())
           )
         }
 
-        it("should error if there are more than two schemas in union") {
-          assertDecodeError[Option[Int]](
-            unsafeEncode(Option(1)), {
-              SchemaBuilder.unionOf().intType().and().stringType().and().nullType().endUnion()
-            },
-            """Unexpected union schema ["int","string","null"] while decoding Option"""
+        it("should decode if there are more than two schemas in union") {
+          assertDecodeIs[Option[Int]](
+            unsafeEncode(Option(1)),
+            Right(Some(1)),
+            Some(SchemaBuilder.unionOf().intType().and().stringType().and().nullType().endUnion())
           )
         }
 
@@ -1783,7 +1831,9 @@ final class CodecSpec extends BaseSpec {
 
           implicit val testCodec: Codec[Test] =
             Codec.record("Test") { field =>
-              field("value", _.value, default = Some(Some(0))).map(Test(_))
+              field("value", _.value, default = Some(Some(0)))(
+                Codec.union(alt => alt[Some[Int]] |+| alt[None.type])
+              ).map(Test(_))
             }
 
           assertSchemaIs[Test] {
@@ -2296,7 +2346,9 @@ final class CodecSpec extends BaseSpec {
 
           implicit val testCodec: Codec[Test] =
             Codec.record("Test") { field =>
-              field("value", _.value, default = Some(Some(0))).map(Test(_))
+              field("value", _.value, default = Some(Some(0)))(
+                Codec.union(alt => alt[Some[Int]] |+| alt[None.type])
+              ).map(Test(_))
             }
 
           assertEncodeIs[Test](
@@ -2433,7 +2485,9 @@ final class CodecSpec extends BaseSpec {
 
           implicit val testCodec: Codec[Test] =
             Codec.record("Test") { field =>
-              field("value", _.value, default = Some(Some(0))).map(Test(_))
+              field("value", _.value, default = Some(Some(0)))(
+                Codec.union(alt => alt[Some[Int]] |+| alt[None.type])
+              ).map(Test(_))
             }
 
           assertDecodeIs[Test](
@@ -3000,126 +3054,6 @@ final class CodecSpec extends BaseSpec {
         }
       }
     }
-
-    describe("withSchema") {
-      it("should replace the existing schema with an error") {
-        assert {
-          Codec.int
-            .withSchema(Left(AvroError("error")))
-            .schema
-            .swap
-            .value
-            .message == "error"
-        }
-      }
-
-      it("should replace the existing schema with another schema") {
-        assert {
-          val newSchema = SchemaBuilder.builder().nullType()
-
-          Codec.int
-            .withSchema(Right(newSchema))
-            .schema
-            .value eq newSchema
-        }
-      }
-    }
-
-    describe("ignoreDefault") {
-      it("should always return the same codec") {
-        val codec = Codec.int.ignoreDefault
-
-        forAll { default: Option[Int] =>
-          assert(codec(default) eq Codec.int)
-        }
-      }
-    }
-
-    describe("Default") {
-      describe("apply") {
-        it("should return the Default instance") {
-          assert {
-            Codec
-              .Default[Option[Int]]
-              .apply(Some(Some(0)))
-              .schema
-              .value
-              .toString == """["int","null"]"""
-          }
-        }
-
-        it("should return the codec in a Default instance") {
-          assert {
-            Codec
-              .Default[Int]
-              .apply(None) eq Codec.int
-          }
-        }
-      }
-
-      describe("instance") {
-        it("should return a new instance") {
-          assert {
-            Codec.Default
-              .instance[Int](_ => Codec.int)
-              .apply(None) eq Codec.int
-          }
-        }
-
-        it("should have toString starting with Codec.Default$") {
-          assert {
-            Codec.Default
-              .instance[Int](_ => Codec.int)
-              .toString startsWith "Codec.Default$"
-          }
-        }
-      }
-
-      describe("option") {
-        it("should use default instance with no default") {
-          assert {
-            Codec.Default
-              .option[Int]
-              .apply(None)
-              .schema
-              .value
-              .toString == """["null","int"]"""
-          }
-        }
-
-        it("should use default instance for None default") {
-          assert {
-            Codec.Default
-              .option[Int]
-              .apply(Some(None))
-              .schema
-              .value
-              .toString == """["null","int"]"""
-          }
-        }
-
-        it("should change schema for Some default") {
-          assert {
-            Codec.Default
-              .option[Int]
-              .apply(Some(Some(0)))
-              .schema
-              .value
-              .toString == """["int","null"]"""
-          }
-        }
-      }
-
-      describe("ignore") {
-        it("should return the codec in a Default instance") {
-          assert {
-            Codec.Default
-              .ignore[Int]
-              .apply(None) eq Codec.int
-          }
-        }
-      }
-    }
   }
 
   def unsafeSchema[A](implicit codec: Codec[A]): Schema =
@@ -3136,15 +3070,31 @@ final class CodecSpec extends BaseSpec {
 
   def assertEncodeIs[A](
     a: A,
-    encoded: Either[AvroError, Any]
+    encoded: Either[AvroError, Any],
+    schema: Option[Schema] = None
   )(implicit codec: Codec[A]): Assertion =
-    assert(unsafeEncode(a) === encoded.value)
+    assert {
+      val encode =
+        schema
+          .map(codec.encode(a, _).value)
+          .getOrElse(unsafeEncode(a))
+
+      encode === encoded.value
+    }
 
   def assertDecodeIs[A](
     value: Any,
-    decoded: Either[AvroError, A]
+    decoded: Either[AvroError, A],
+    schema: Option[Schema] = None
   )(implicit codec: Codec[A]): Assertion =
-    assert(unsafeDecode(value) === decoded.value)
+    assert {
+      val decode =
+        schema
+          .map(codec.decode(value, _).value)
+          .getOrElse(unsafeDecode(value))
+
+      decode === decoded.value
+    }
 
   def assertSchemaError[A](
     expectedErrorMessage: String

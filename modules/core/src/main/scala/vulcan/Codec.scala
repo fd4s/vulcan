@@ -77,22 +77,6 @@ sealed abstract class Codec[A] {
       (b, schema) => encode(g(b), schema),
       (a, schema) => decode(a, schema).flatMap(f)
     )
-
-  /**
-    * Returns a new [[Codec]] with the specified schema,
-    * but with the encoding and decoding functions kept
-    * unchanged.
-    */
-  final def withSchema(schema: Either[AvroError, Schema]): Codec[A] =
-    Codec.instance(schema, encode, decode)
-
-  /**
-    * Returns a new [[Codec.Default]] where the default value
-    * is ignored, and where this [[Codec]] is always returned
-    * as the result.
-    */
-  final def ignoreDefault: Codec.Default[A] =
-    Codec.Default.ignore(this)
 }
 
 /**
@@ -1159,6 +1143,47 @@ final object Codec {
     )
 
   /**
+    * @group General
+    */
+  implicit final val none: Codec[None.type] =
+    Codec.instance(
+      Right(SchemaBuilder.builder().nullType()),
+      (_, schema) => {
+        schema.getType() match {
+          case Schema.Type.NULL =>
+            Right(null)
+
+          case schemaType =>
+            Left {
+              AvroError
+                .encodeUnexpectedSchemaType(
+                  "None",
+                  schemaType,
+                  Schema.Type.NULL
+                )
+            }
+        }
+      },
+      (value, schema) => {
+        schema.getType() match {
+          case Schema.Type.NULL =>
+            if (value == null) Right(None)
+            else Left(AvroError.decodeUnexpectedType(value, "null", "None"))
+
+          case schemaType =>
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  "None",
+                  schemaType,
+                  Schema.Type.NULL
+                )
+            }
+        }
+      }
+    )
+
+  /**
     * @group Cats
     */
   implicit final def nonEmptyChain[A](implicit codec: Codec[A]): Codec[NonEmptyChain[A]] =
@@ -1375,83 +1400,7 @@ final object Codec {
     * @group General
     */
   implicit final def option[A](implicit codec: Codec[A]): Codec[Option[A]] =
-    Codec.instance(
-      AvroError.catchNonFatal {
-        codec.schema.map { schema =>
-          val nullSchema = SchemaBuilder.builder().nullType()
-          val schemas = List(nullSchema, schema).asJava
-          Schema.createUnion(schemas)
-        }
-      },
-      (option, schema) => {
-        schema.getType() match {
-          case Schema.Type.UNION =>
-            val schemas =
-              schema.getTypes()
-
-            val nonNullSchema =
-              if (schemas.size == 2) {
-                val first = schemas.get(0)
-                val second = schemas.get(1)
-
-                if (first.getType() == Schema.Type.NULL) Right(second)
-                else if (second.getType() == Schema.Type.NULL) Right(first)
-                else Left(AvroError.encodeUnexpectedOptionSchema(schema))
-              } else Left(AvroError.encodeUnexpectedOptionSchema(schema))
-
-            nonNullSchema.flatMap { schema =>
-              option match {
-                case Some(a) => codec.encode(a, schema)
-                case None    => Right(null)
-              }
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .encodeUnexpectedSchemaType(
-                  "Option",
-                  schemaType,
-                  Schema.Type.UNION
-                )
-            }
-        }
-      },
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.UNION =>
-            val schemas =
-              schema.getTypes()
-
-            val nonNullSchema =
-              if (schemas.size == 2) {
-                val first = schemas.get(0)
-                val second = schemas.get(1)
-
-                if (first.getType() == Schema.Type.NULL) Right(second)
-                else if (second.getType() == Schema.Type.NULL) Right(first)
-                else Left(AvroError.decodeUnexpectedOptionSchema(schema))
-              } else Left(AvroError.decodeUnexpectedOptionSchema(schema))
-
-            nonNullSchema.flatMap { schema =>
-              value match {
-                case null  => Right(None)
-                case other => codec.decode(other, schema).map(Some(_))
-              }
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Option",
-                  schemaType,
-                  Schema.Type.UNION
-                )
-            }
-        }
-      }
-    )
+    Codec.union(alt => alt[None.type] |+| alt[Some[A]])
 
   /**
     * Returns a new record [[Codec]] for type `A`.
@@ -1770,6 +1719,12 @@ final object Codec {
   /**
     * @group General
     */
+  implicit final def some[A](implicit codec: Codec[A]): Codec[Some[A]] =
+    codec.imap(Some(_))(_.value)
+
+  /**
+    * @group General
+    */
   implicit final val string: Codec[String] =
     Codec.instance(
       Right(SchemaBuilder.builder().stringType()),
@@ -1894,14 +1849,23 @@ final object Codec {
                 }
 
               case other =>
-                val schemaTypes = schema.getTypes.asScala.toList
+                val schemaTypes =
+                  schema.getTypes.asScala
 
-                alts.toList
-                  .zip(schemaTypes)
-                  .collectFirstSome {
-                    case (alt, schema) =>
-                      val decoded = alt.codec.decode(other, schema)
-                      if (decoded.isRight) Some(decoded.map(alt.prism.reverseGet)) else None
+                alts
+                  .collectFirstSome { alt =>
+                    alt.codec.schema
+                      .traverse { altSchema =>
+                        val altName = altSchema.getFullName
+                        schemaTypes
+                          .find(_.getFullName == altName)
+                          .flatMap { schema =>
+                            alt.codec
+                              .decode(other, schema)
+                              .map(alt.prism.reverseGet)
+                              .toOption
+                          }
+                      }
                   }
                   .getOrElse {
                     Left(AvroError.decodeExhaustedAlternatives(other, typeName))
@@ -2200,7 +2164,7 @@ final object Codec {
       order: Option[Schema.Field.Order] = None,
       aliases: Seq[String] = Seq.empty,
       props: Props = Props.empty
-    )(implicit codec: Codec.Default[B]): FreeApplicative[Field[A, ?], B]
+    )(implicit codec: Codec[B]): FreeApplicative[Field[A, ?], B]
   }
 
   private[vulcan] final object FieldBuilder {
@@ -2214,12 +2178,12 @@ final object Codec {
           order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
-        )(implicit codec: Codec.Default[B]): FreeApplicative[Field[Any, ?], B] =
+        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, ?], B] =
           FreeApplicative.lift {
             Field(
               name = name,
               access = access,
-              codec = codec(default),
+              codec = codec,
               doc = doc,
               default = default,
               order = order,
@@ -2234,53 +2198,5 @@ final object Codec {
 
     final def instance[A]: FieldBuilder[A] =
       Instance.asInstanceOf[FieldBuilder[A]]
-  }
-
-  /**
-    * @group Create
-    */
-  @implicitNotFound(
-    "could not find implicit Codec.Default[${A}]; ensure no imports are missing or manually define an instance"
-  )
-  sealed abstract class Default[A] {
-    def apply(default: Option[A]): Codec[A]
-  }
-
-  /**
-    * @group Create
-    */
-  final object Default extends DefaultLowPriority {
-    final def apply[A](implicit codec: Codec.Default[A]): Codec.Default[A] =
-      codec
-
-    final def instance[A](f: Option[A] => Codec[A]): Codec.Default[A] =
-      new Codec.Default[A] {
-        override final def apply(default: Option[A]): Codec[A] =
-          f(default)
-
-        override final def toString: String =
-          "Codec.Default$" + System.identityHashCode(this)
-      }
-
-    implicit final def option[A](implicit codec: Codec[A]): Codec.Default[Option[A]] =
-      Codec.Default.instance {
-        case None | Some(None) =>
-          Codec.option[A]
-        case Some(Some(_)) =>
-          Codec.option[A].withSchema {
-            AvroError.catchNonFatal {
-              codec.schema.map { schema =>
-                val nullSchema = SchemaBuilder.builder().nullType()
-                val schemas = List(schema, nullSchema).asJava
-                Schema.createUnion(schemas)
-              }
-            }
-          }
-      }
-  }
-
-  private[vulcan] sealed abstract class DefaultLowPriority {
-    implicit final def ignore[A](implicit codec: Codec[A]): Codec.Default[A] =
-      Codec.Default.instance(_ => codec)
   }
 }
