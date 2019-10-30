@@ -75,6 +75,39 @@ final class CodecSpec extends BaseSpec {
           )
         }
       }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          assertToJsonIs[Boolean](
+            false,
+            Right("false")
+          )
+          assertToJsonIs[Boolean](
+            true,
+            Right("true")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as Boolean from Json format") {
+          assertFromJsonIs[Boolean](
+            "false",
+            Right(false)
+          )
+          assertFromJsonIs[Boolean](
+            "true",
+            Right(true)
+          )
+        }
+
+        it("should error if the json is not a boolean") {
+          assertFromJsonErrorContains[Boolean](
+            "badValue",
+            "Unrecognized token 'badValue'"
+          )
+        }
+      }
     }
 
     describe("byte") {
@@ -146,6 +179,31 @@ final class CodecSpec extends BaseSpec {
           }
         }
       }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          assertToJsonIs[Byte](
+            1.toByte,
+            Right("1")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as byte from Json format") {
+          assertFromJsonIs[Byte](
+            "1",
+            Right(1.toByte)
+          )
+        }
+
+        it("should error if the json is not a byte") {
+          assertFromJsonErrorContains[Byte](
+            "badValue",
+            "Unrecognized token 'badValue'"
+          )
+        }
+      }
     }
 
     describe("bytes") {
@@ -195,6 +253,31 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[Array[Byte]](
             unsafeEncode[Array[Byte]](Array(1)),
             Right(Array[Byte](1))
+          )
+        }
+      }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          assertToJsonIs[Array[Byte]](
+            Array[Byte](1),
+            Right("\"\\u0001\"")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as byte array from Json format") {
+          assertFromJsonIs[Array[Byte]](
+            "\"\\u0001\"",
+            Right(Array[Byte](1))
+          )
+        }
+
+        it("should error if the json is not ByteBuffer") {
+          assertFromJsonErrorContains[Array[Byte]](
+            "badValue",
+            "Unrecognized token 'badValue'"
           )
         }
       }
@@ -248,6 +331,31 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[Chain[Int]](
             unsafeEncode(value),
             Right(value)
+          )
+        }
+      }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          assertToJsonIs[Chain[Int]](
+            Chain(1, 2, 3),
+            Right("[1,2,3]")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as chain from Json format") {
+          assertFromJsonIs[Chain[Int]](
+            "[1,2,3]",
+            Right(Chain(1, 2, 3))
+          )
+        }
+
+        it("should error if the json is not array") {
+          assertFromJsonErrorContains[Chain[Int]](
+            "badValue",
+            "Unrecognized token 'badValue'"
           )
         }
       }
@@ -310,6 +418,31 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode("ab"),
             unsafeSchema[String],
             "Got unexpected String with length 2 while decoding Char, expected length 1"
+          )
+        }
+      }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          assertToJsonIs[Char](
+            'a',
+            Right("\"a\"")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as char from Json format") {
+          assertFromJsonIs[Char](
+            "\"a\"",
+            Right('a')
+          )
+        }
+
+        it("should error if the json is not Char") {
+          assertFromJsonErrorContains[Char](
+            "badValue",
+            "Unrecognized token 'badValue'"
           )
         }
       }
@@ -463,6 +596,40 @@ final class CodecSpec extends BaseSpec {
           )
         }
       }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          implicit val codec: Codec[BigDecimal] =
+            Codec.decimal(precision = 10, scale = 5)
+
+          assertToJsonIs[BigDecimal](
+            BigDecimal("123.45678"),
+            Right("\"\\u0000¼aN\"")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as decimal from Json format") {
+          implicit val codec: Codec[BigDecimal] =
+            Codec.decimal(precision = 10, scale = 5)
+
+          assertFromJsonIs[BigDecimal](
+            "\"\\u0000¼aN\"",
+            Right(BigDecimal("123.45678"))
+          )
+        }
+
+        it("should error if the json is not a decimal") {
+          implicit val codec: Codec[BigDecimal] =
+            Codec.decimal(precision = 10, scale = 5)
+
+          assertFromJsonErrorContains[BigDecimal](
+            "badValue",
+            "Unrecognized token 'badValue'"
+          )
+        }
+      }
     }
 
     describe("decode") {
@@ -554,6 +721,31 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[Double](
             unsafeEncode(value),
             Right(value)
+          )
+        }
+      }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          assertToJsonIs[Double](
+            123d,
+            Right("123.0")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as double from Json format") {
+          assertFromJsonIs[Double](
+            "123.0",
+            Right(123d)
+          )
+        }
+
+        it("should error if the json is not a double") {
+          assertFromJsonErrorContains[Double](
+            "badValue",
+            "Unrecognized token 'badValue'"
           )
         }
       }
@@ -667,6 +859,31 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[SealedTraitEnum](
             unsafeEncode[SealedTraitEnum](FirstInSealedTraitEnum),
             Right(FirstInSealedTraitEnum)
+          )
+        }
+      }
+
+      describe("toJson") {
+        it("should encode to Json format") {
+          assertToJsonIs[SealedTraitEnum](
+            FirstInSealedTraitEnum,
+            Right("\"first\"")
+          )
+        }
+      }
+
+      describe("fromJson") {
+        it("should decode as enum value from Json format") {
+          assertFromJsonIs[SealedTraitEnum](
+            "\"first\"",
+            Right(FirstInSealedTraitEnum)
+          )
+        }
+
+        it("should error if the json is not schema symbol") {
+          assertFromJsonErrorContains[SealedTraitEnum](
+            "badValue",
+            "Unrecognized token 'badValue'"
           )
         }
       }
@@ -3164,4 +3381,23 @@ final class CodecSpec extends BaseSpec {
     expectedErrorMessage: String
   )(implicit codec: Codec[A]): Assertion =
     assert(codec.encode(a, schema).swap.value.message == expectedErrorMessage)
+
+  def assertToJsonIs[A](
+    a: A,
+    json: Either[AvroError, String]
+  )(implicit codec: Codec[A]): Assertion =
+    assert(codec.toJson(a).value == json.value)
+
+  def assertFromJsonIs[A](
+    json: String,
+    decoded: Either[AvroError, A]
+  )(implicit codec: Codec[A]): Assertion =
+    assert(codec.fromJson(json).value === decoded.value)
+
+  def assertFromJsonErrorContains[A](
+    json: String,
+    expectedErrorMessage: String
+  )(implicit codec: Codec[A]): Assertion =
+    assert(codec.fromJson(json).swap.value.message.contains(expectedErrorMessage))
+
 }

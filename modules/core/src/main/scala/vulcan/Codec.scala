@@ -20,11 +20,14 @@ import cats.{~>, Invariant, Show}
 import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyVector}
 import cats.free.FreeApplicative
 import cats.implicits._
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
+import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
@@ -32,6 +35,7 @@ import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
 import vulcan.internal.schema.adaptForSchema
 import vulcan.internal.tags._
+import scala.util.Try
 
 /**
   * Provides a schema, along with encoding and decoding functions
@@ -50,6 +54,12 @@ sealed abstract class Codec[A] {
 
   /** Attempts to decode the specified value using the provided schema. */
   def decode(value: Any, schema: Schema): Either[AvroError, A]
+
+  /** Attempts to serialize the specified value to its avro json encoding. */
+  def toJson(a: A): Either[AvroError, String]
+
+  /** Attempts to deserialize the specified value from its avro json encoding. */
+  def fromJson(json: String): Either[AvroError, A]
 
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
@@ -825,6 +835,23 @@ final object Codec {
     )
 
   /**
+    * Attempts to deserialize the specified value from its
+    * avro json encoding.
+    *
+    * @group Utilities
+    */
+  final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] = {
+    AvroError.catchNonFatal {
+      codec.schema.flatMap { schema =>
+        val inStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
+        val deserializer = DecoderFactory.get().jsonDecoder(schema, inStream)
+        val a = new GenericDatumReader[Any](schema).read(null, deserializer)
+        codec.decode(a, schema)
+      }
+    }
+  }
+
+  /**
     * Returns a new [[Codec]] instance using the specified
     * `Schema`, and encode and decode functions.
     *
@@ -848,6 +875,12 @@ final object Codec {
 
       override final def decode(value: Any, schema: Schema): Either[AvroError, A] =
         _decode(value, schema)
+
+      override final def toJson(a: A): Either[AvroError, String] =
+        Codec.toJson(a)(this)
+
+      override final def fromJson(json: String): Either[AvroError, A] =
+        Codec.fromJson(json)(this)
 
       override final def toString: String =
         schema match {
@@ -1816,6 +1849,28 @@ final object Codec {
         }
       }
     )
+
+  /**
+    * Attempts to serialize the specified value to its avro
+    * json encoding.
+    *
+    * @group Utilities
+    */
+  final def toJson[A](a: A)(implicit codec: Codec[A]): Either[AvroError, String] =
+    AvroError.catchNonFatal {
+      codec.schema.flatMap { schema =>
+        codec
+          .encode(a, schema)
+          .map { encoded =>
+            val outStream = new ByteArrayOutputStream()
+            val serializer = EncoderFactory.get().jsonEncoder(schema, outStream)
+            new GenericDatumWriter[Any](schema).write(encoded, serializer)
+            serializer.flush()
+            outStream.toByteArray()
+          }
+          .map(new String(_, StandardCharsets.UTF_8))
+      }
+    }
 
   /**
     * Returns a new union [[Codec]] for type `A`.
