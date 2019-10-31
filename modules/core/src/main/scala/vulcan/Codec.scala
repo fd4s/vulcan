@@ -35,7 +35,6 @@ import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
 import vulcan.internal.schema.adaptForSchema
 import vulcan.internal.tags._
-import scala.util.Try
 
 /**
   * Provides a schema, along with encoding and decoding functions
@@ -54,12 +53,6 @@ sealed abstract class Codec[A] {
 
   /** Attempts to decode the specified value using the provided schema. */
   def decode(value: Any, schema: Schema): Either[AvroError, A]
-
-  /** Attempts to serialize the specified value to its avro json encoding. */
-  def toJson(a: A): Either[AvroError, String]
-
-  /** Attempts to deserialize the specified value from its avro json encoding. */
-  def fromJson(json: String): Either[AvroError, A]
 
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
@@ -875,12 +868,6 @@ final object Codec {
 
       override final def decode(value: Any, schema: Schema): Either[AvroError, A] =
         _decode(value, schema)
-
-      override final def toJson(a: A): Either[AvroError, String] =
-        Codec.toJson(a)(this)
-
-      override final def fromJson(json: String): Either[AvroError, A] =
-        Codec.fromJson(json)(this)
 
       override final def toString: String =
         schema match {

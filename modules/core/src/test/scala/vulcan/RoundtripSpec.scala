@@ -290,10 +290,10 @@ final class RoundtripSpec extends BaseSpec {
     implicit codec: Codec[A],
     eq: Eq[A]
   ): Assertion = {
-    val json = codec.toJson(a)
+    val json = Codec.toJson(a)
 
     json
-      .map(codec.fromJson)
+      .map(Codec.fromJson[A])
       .map(
         decoded =>
           withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
