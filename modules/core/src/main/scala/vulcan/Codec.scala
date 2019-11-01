@@ -22,7 +22,7 @@ import cats.free.FreeApplicative
 import cats.implicits._
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
@@ -833,10 +833,21 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] = {
+  final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] =
+    fromJson[A](json, StandardCharsets.UTF_8)
+
+  /**
+    * Attempts to deserialize the specified value from its
+    * avro json encoding.
+    *
+    * @group Utilities
+    */
+  final def fromJson[A](json: String, charset: Charset)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] = {
     AvroError.catchNonFatal {
       codec.schema.flatMap { schema =>
-        val inStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
+        val inStream = new ByteArrayInputStream(json.getBytes(charset))
         val deserializer = DecoderFactory.get().jsonDecoder(schema, inStream)
         val a = new GenericDatumReader[Any](schema).read(null, deserializer)
         codec.decode(a, schema)
@@ -1844,6 +1855,15 @@ final object Codec {
     * @group Utilities
     */
   final def toJson[A](a: A)(implicit codec: Codec[A]): Either[AvroError, String] =
+    toJson[A](a, StandardCharsets.UTF_8)
+
+  /**
+    * Attempts to serialize the specified value to its avro
+    * json encoding.
+    *
+    * @group Utilities
+    */
+  final def toJson[A](a: A, charset: Charset)(implicit codec: Codec[A]): Either[AvroError, String] =
     AvroError.catchNonFatal {
       codec.schema.flatMap { schema =>
         codec
@@ -1855,7 +1875,7 @@ final object Codec {
             serializer.flush()
             outStream.toByteArray()
           }
-          .map(new String(_, StandardCharsets.UTF_8))
+          .map(new String(_, charset))
       }
     }
 

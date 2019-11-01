@@ -3,6 +3,7 @@ package vulcan
 import cats.data._
 import cats.implicits._
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, Schema, SchemaBuilder, LogicalTypes}
@@ -831,6 +832,29 @@ final class CodecSpec extends BaseSpec {
           )
         }
       }
+    }
+
+    describe("fromJson") {
+
+      it("should decode from avro json format") {
+        assert(Codec.fromJson[Int]("1") == Right(1))
+      }
+
+      it("should decode from avro json format with the specified Charset") {
+        assert(
+          Codec.fromJson[String](
+            "\"\u0048\u0065\u006C\u006C\u006F World\"",
+            StandardCharsets.UTF_16
+          ) == Right("Hello World")
+        )
+      }
+
+      it("should error if the json does not match the type") {
+        val result = Codec.fromJson[Int]("badValue")
+        assert(result.isLeft)
+        assert(result.swap.exists(_.message.contains("Unrecognized token 'badValue'")))
+      }
+
     }
 
     describe("instant") {
@@ -2707,6 +2731,23 @@ final class CodecSpec extends BaseSpec {
             Right(value)
           )
         }
+      }
+    }
+
+    describe("toJson") {
+      it("should encode to Json format using UTF-8") {
+        assert(Codec.toJson[Int](1) == Right("1"))
+      }
+
+      it("should encode to the specified charset") {
+        val utf16String =
+          new String("\u0048\u0065\u006C\u006C\u006F".getBytes(StandardCharsets.UTF_16))
+
+        assert(
+          Codec.toJson[String](utf16String, StandardCharsets.UTF_16) == Right(
+            "\"\u0048\u0065\u006C\u006C\u006F\""
+          )
+        )
       }
     }
 

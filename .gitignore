@@ -3,5 +3,3 @@
 /website/static/api/
 /website/yarn.lock
 target/
-.bloop/
-.metals/
