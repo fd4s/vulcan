@@ -3,7 +3,6 @@ package vulcan
 import cats.data._
 import cats.implicits._
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, Schema, SchemaBuilder, LogicalTypes}
