@@ -833,6 +833,19 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("fromJson") {
+      it("should decode from avro json format") {
+        assert(Codec.fromJson[Int]("1") == Right(1))
+      }
+
+      it("should error if the json does not match the type") {
+        val result = Codec.fromJson[Int]("badValue")
+        assert(result.isLeft)
+        assert(result.swap.exists(_.message.contains("Unrecognized token 'badValue'")))
+      }
+
+    }
+
     describe("instant") {
       describe("schema") {
         it("should be encoded as long with logical type timestamp-millis") {
@@ -2761,6 +2774,12 @@ final class CodecSpec extends BaseSpec {
             Right(value)
           )
         }
+      }
+    }
+
+    describe("toJson") {
+      it("should encode to Json format") {
+        assert(Codec.toJson[Int](1) == Right("1"))
       }
     }
 

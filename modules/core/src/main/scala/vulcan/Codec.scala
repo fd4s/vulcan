@@ -20,11 +20,14 @@ import cats.{~>, Invariant, Show}
 import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyVector}
 import cats.free.FreeApplicative
 import cats.implicits._
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
+import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
@@ -807,6 +810,22 @@ final object Codec {
         }
       }
     )
+
+  /**
+    * Returns the result of decoding the specified
+    * Avro JSON to the specified type.
+    *
+    * @group Utilities
+    */
+  final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] =
+    codec.schema.flatMap { schema =>
+      AvroError.catchNonFatal {
+        val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
+        val decoder = DecoderFactory.get.jsonDecoder(schema, bais)
+        val value = new GenericDatumReader[Any](schema).read(null, decoder)
+        codec.decode(value, schema)
+      }
+    }
 
   /**
     * Returns a new [[Codec]] instance using the specified
@@ -1771,6 +1790,25 @@ final object Codec {
         }
       }
     )
+
+  /**
+    * Returns the result of encoding the specified
+    * value to Avro JSON.
+    *
+    * @group Utilities
+    */
+  final def toJson[A](a: A)(implicit codec: Codec[A]): Either[AvroError, String] =
+    codec.schema.flatMap { schema =>
+      codec.encode(a, schema).flatMap { encoded =>
+        AvroError.catchNonFatal {
+          val baos = new ByteArrayOutputStream
+          val encoder = EncoderFactory.get.jsonEncoder(schema, baos)
+          new GenericDatumWriter[Any](schema).write(encoded, encoder)
+          encoder.flush()
+          Right(new String(baos.toByteArray, StandardCharsets.UTF_8))
+        }
+      }
+    }
 
   /**
     * Returns a new union [[Codec]] for type `A`.

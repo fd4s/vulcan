@@ -225,6 +225,7 @@ final class RoundtripSpec extends BaseSpec {
     forAll { a: A =>
       roundtrip(a)
       binaryRoundtrip(a)
+      jsonRoundtrip(a)
     }
   }
 
@@ -284,4 +285,21 @@ final class RoundtripSpec extends BaseSpec {
 
       codec.decode(read, schema)
     }
+
+  def jsonRoundtrip[A](a: A)(
+    implicit codec: Codec[A],
+    eq: Eq[A]
+  ): Assertion = {
+    val json = Codec.toJson(a)
+
+    json
+      .map(Codec.fromJson[A])
+      .map(
+        decoded =>
+          withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+            assert(decoded === Right(a))
+          }
+      )
+      .getOrElse(fail(s"Codec failed to create Json, $json"))
+  }
 }
