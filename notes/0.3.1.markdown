@@ -1,0 +1,7 @@
+### Changes
+
+- Add `Codec.fromBinary` and `Codec.toBinary`. ([#86][#86])
+- Add `Codec.fromJson` and `Codec.toJson`. Thanks [@msinton](https://github.com/msinton)! ([#85][#85])
+
+[#85]: https://github.com/ovotech/vulcan/pull/85
+[#86]: https://github.com/ovotech/vulcan/pull/86
