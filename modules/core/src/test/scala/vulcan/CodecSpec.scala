@@ -834,7 +834,6 @@ final class CodecSpec extends BaseSpec {
     }
 
     describe("fromJson") {
-
       it("should decode from avro json format") {
         assert(Codec.fromJson[Int]("1") == Right(1))
       }
@@ -3184,5 +3183,4 @@ final class CodecSpec extends BaseSpec {
     expectedErrorMessage: String
   )(implicit codec: Codec[A]): Assertion =
     assert(codec.encode(a, schema).swap.value.message == expectedErrorMessage)
-
 }

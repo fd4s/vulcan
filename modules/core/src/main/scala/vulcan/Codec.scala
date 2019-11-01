@@ -828,18 +828,18 @@ final object Codec {
     )
 
   /**
-    * Attempts to deserialize the specified value from its
-    * avro json encoding.
+    * Returns the result of decoding the specified
+    * Avro JSON to the specified type.
     *
     * @group Utilities
     */
   final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] =
-    AvroError.catchNonFatal {
-      codec.schema.flatMap { schema =>
-        val inStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
-        val deserializer = DecoderFactory.get().jsonDecoder(schema, inStream)
-        val a = new GenericDatumReader[Any](schema).read(null, deserializer)
-        codec.decode(a, schema)
+    codec.schema.flatMap { schema =>
+      AvroError.catchNonFatal {
+        val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
+        val decoder = DecoderFactory.get.jsonDecoder(schema, bais)
+        val value = new GenericDatumReader[Any](schema).read(null, decoder)
+        codec.decode(value, schema)
       }
     }
 
@@ -1837,24 +1837,21 @@ final object Codec {
     )
 
   /**
-    * Attempts to serialize the specified value to its avro
-    * json encoding.
+    * Returns the result of encoding the specified
+    * value to Avro JSON.
     *
     * @group Utilities
     */
   final def toJson[A](a: A)(implicit codec: Codec[A]): Either[AvroError, String] =
-    AvroError.catchNonFatal {
-      codec.schema.flatMap { schema =>
-        codec
-          .encode(a, schema)
-          .map { encoded =>
-            val outStream = new ByteArrayOutputStream()
-            val serializer = EncoderFactory.get().jsonEncoder(schema, outStream)
-            new GenericDatumWriter[Any](schema).write(encoded, serializer)
-            serializer.flush()
-            outStream.toByteArray()
-          }
-          .map(new String(_, StandardCharsets.UTF_8))
+    codec.schema.flatMap { schema =>
+      codec.encode(a, schema).flatMap { encoded =>
+        AvroError.catchNonFatal {
+          val baos = new ByteArrayOutputStream
+          val encoder = EncoderFactory.get.jsonEncoder(schema, baos)
+          new GenericDatumWriter[Any](schema).write(encoded, encoder)
+          encoder.flush()
+          Right(new String(baos.toByteArray, StandardCharsets.UTF_8))
+        }
       }
     }
 
