@@ -813,6 +813,22 @@ final object Codec {
 
   /**
     * Returns the result of decoding the specified
+    * Avro binary to the specified type.
+    *
+    * @group Utilities
+    */
+  final def fromBinary[A](bytes: Array[Byte])(implicit codec: Codec[A]): Either[AvroError, A] =
+    codec.schema.flatMap { schema =>
+      AvroError.catchNonFatal {
+        val bais = new ByteArrayInputStream(bytes)
+        val decoder = DecoderFactory.get.binaryDecoder(bais, null)
+        val value = new GenericDatumReader[Any](schema).read(null, decoder)
+        codec.decode(value, schema)
+      }
+    }
+
+  /**
+    * Returns the result of decoding the specified
     * Avro JSON to the specified type.
     *
     * @group Utilities
@@ -1790,6 +1806,25 @@ final object Codec {
         }
       }
     )
+
+  /**
+    * Returns the result of encoding the specified
+    * value to Avro binary.
+    *
+    * @group Utilities
+    */
+  final def toBinary[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Array[Byte]] =
+    codec.schema.flatMap { schema =>
+      codec.encode(a, schema).flatMap { encoded =>
+        AvroError.catchNonFatal {
+          val baos = new ByteArrayOutputStream
+          val encoder = EncoderFactory.get.binaryEncoder(baos, null)
+          new GenericDatumWriter[Any](schema).write(encoded, encoder)
+          encoder.flush()
+          Right(baos.toByteArray)
+        }
+      }
+    }
 
   /**
     * Returns the result of encoding the specified
