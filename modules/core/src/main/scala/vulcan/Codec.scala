@@ -834,26 +834,14 @@ final object Codec {
     * @group Utilities
     */
   final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] =
-    fromJson[A](json, StandardCharsets.UTF_8)
-
-  /**
-    * Attempts to deserialize the specified value from its
-    * avro json encoding.
-    *
-    * @group Utilities
-    */
-  final def fromJson[A](json: String, charset: Charset)(
-    implicit codec: Codec[A]
-  ): Either[AvroError, A] = {
     AvroError.catchNonFatal {
       codec.schema.flatMap { schema =>
-        val inStream = new ByteArrayInputStream(json.getBytes(charset))
+        val inStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
         val deserializer = DecoderFactory.get().jsonDecoder(schema, inStream)
         val a = new GenericDatumReader[Any](schema).read(null, deserializer)
         codec.decode(a, schema)
       }
     }
-  }
 
   /**
     * Returns a new [[Codec]] instance using the specified
@@ -1855,15 +1843,6 @@ final object Codec {
     * @group Utilities
     */
   final def toJson[A](a: A)(implicit codec: Codec[A]): Either[AvroError, String] =
-    toJson[A](a, StandardCharsets.UTF_8)
-
-  /**
-    * Attempts to serialize the specified value to its avro
-    * json encoding.
-    *
-    * @group Utilities
-    */
-  final def toJson[A](a: A, charset: Charset)(implicit codec: Codec[A]): Either[AvroError, String] =
     AvroError.catchNonFatal {
       codec.schema.flatMap { schema =>
         codec
@@ -1875,7 +1854,7 @@ final object Codec {
             serializer.flush()
             outStream.toByteArray()
           }
-          .map(new String(_, charset))
+          .map(new String(_, StandardCharsets.UTF_8))
       }
     }
 
