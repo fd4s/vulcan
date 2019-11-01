@@ -843,7 +843,6 @@ final class CodecSpec extends BaseSpec {
         assert(result.isLeft)
         assert(result.swap.exists(_.message.contains("Unrecognized token 'badValue'")))
       }
-
     }
 
     describe("instant") {
