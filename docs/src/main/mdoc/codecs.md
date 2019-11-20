@@ -5,7 +5,7 @@ title: Codecs
 
 [`Codec`][codec] is the central concept in the library. [`Codec`][codec]s represent an Avro `schema`, together with an `encode` and `decode` function for converting between Scala types and types recognized by the Apache Avro library. There are default [`Codec`][codec]s defined for many standard library types. For example, we can check what the default `Option[Instant]` encoding is by asking for a [`Codec`][codec] instance.
 
-```scala mdoc
+```scala mdoc:reset-object
 import java.time.Instant
 import vulcan.Codec
 
