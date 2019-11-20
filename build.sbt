@@ -14,7 +14,7 @@ val shapelessVersion = "2.3.3"
 
 val scala212 = "2.12.10"
 
-val scala213 = "2.13.0"
+val scala213 = "2.13.1"
 
 lazy val vulcan = project
   .in(file("."))
@@ -116,7 +116,7 @@ lazy val dependencySettings = Seq(
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.29"
   ).map(_ % Test),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary)
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full)
 )
 
 lazy val mdocSettings = Seq(

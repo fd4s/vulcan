@@ -11,7 +11,7 @@ The `@ENUMERATUM_MODULE_NAME@` module provides [`Codec`][codec]s for [Enumeratum
 
 For regular `Enum`s, also mix in `VulcanEnum` to derive a [`Codec`][codec] instance.
 
-```scala mdoc
+```scala mdoc:reset-object
 import enumeratum.{Enum, EnumEntry, VulcanEnum}
 import enumeratum.EnumEntry.Lowercase
 import vulcan.{AvroDoc, AvroNamespace, Codec}
