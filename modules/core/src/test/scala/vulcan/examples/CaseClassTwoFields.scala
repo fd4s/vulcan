@@ -10,7 +10,7 @@ object CaseClassTwoFields {
   implicit val codec: Codec[CaseClassTwoFields] =
     Codec.record(
       name = "CaseClassTwoFields",
-      namespace = Some("vulcan.examples"),
+      namespace = "vulcan.examples",
       doc = Some("some documentation for example"),
       aliases = Seq("FirstAlias", "SecondAlias"),
       props = Props.one("custom", List(1, 2, 3))

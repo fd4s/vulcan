@@ -11,7 +11,7 @@ object FixedBoolean {
     Codec
       .fixed(
         name = "FixedBoolean",
-        namespace = Some("vulcan.examples"),
+        namespace = "vulcan.examples",
         size = 1,
         encode = {
           case FalseFixedBoolean => Array(0.toByte)

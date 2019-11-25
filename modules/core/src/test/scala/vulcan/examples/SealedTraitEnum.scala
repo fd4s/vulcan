@@ -16,7 +16,7 @@ final object SealedTraitEnum {
   implicit final val codec: Codec[SealedTraitEnum] =
     Codec.enum(
       name = "SealedTraitEnum",
-      namespace = Some("vulcan.examples"),
+      namespace = "vulcan.examples",
       symbols = List("first", "second"),
       aliases = List("first", "second"),
       doc = Some("documentation"),

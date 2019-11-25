@@ -484,7 +484,7 @@ final object Codec {
       symbols = symbols,
       encode = encode,
       decode = decode,
-      namespace = Some(namespaceFrom(tag)),
+      namespace = namespaceFrom(tag),
       doc = docFrom(tag)
     )
 
@@ -505,7 +505,7 @@ final object Codec {
       size = size,
       encode = encode,
       decode = decode,
-      namespace = Some(namespaceFrom(tag)),
+      namespace = namespaceFrom(tag),
       doc = docFrom(tag)
     )
 
@@ -572,13 +572,13 @@ final object Codec {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A],
-    namespace: Option[String] = None,
+    namespace: String,
     aliases: Seq[String] = Seq.empty,
     doc: Option[String] = None,
     default: Option[A] = None,
     props: Props = Props.empty
   ): Codec[A] = {
-    val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
+    val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
     Codec.instance(
       AvroError.catchNonFatal {
         props.toChain.map { props =>
@@ -586,7 +586,7 @@ final object Codec {
             Schema.createEnum(
               name,
               doc.orNull,
-              namespace.orNull,
+              namespace,
               symbols.asJava,
               default.map(encode).orNull
             )
@@ -674,12 +674,12 @@ final object Codec {
     size: Int,
     encode: A => Array[Byte],
     decode: Array[Byte] => Either[AvroError, A],
-    namespace: Option[String] = None,
+    namespace: String,
     aliases: Seq[String] = Seq.empty,
     doc: Option[String] = None,
     props: Props = Props.empty
   ): Codec[A] = {
-    val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
+    val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
     Codec
       .instance(
         AvroError.catchNonFatal {
@@ -688,7 +688,7 @@ final object Codec {
               SchemaBuilder
                 .builder()
                 .fixed(name)
-                .namespace(namespace.orNull)
+                .namespace(namespace)
                 .aliases(aliases: _*)
                 .doc(doc.orNull)
                 .size(size)
@@ -1444,12 +1444,12 @@ final object Codec {
     */
   final def record[A](
     name: String,
-    namespace: Option[String] = None,
+    namespace: String,
     doc: Option[String] = None,
     aliases: Seq[String] = Seq.empty,
     props: Props = Props.empty
   )(f: FieldBuilder[A] => FreeApplicative[Field[A, ?], A]): Codec[A] = {
-    val typeName = namespace.fold(name)(namespace => s"$namespace.$name")
+    val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
     val free = f(FieldBuilder.instance)
     Codec.instance(
       AvroError.catchNonFatal {
@@ -1502,7 +1502,7 @@ final object Codec {
               Schema.createRecord(
                 name,
                 doc.orNull,
-                namespace.orNull,
+                namespace,
                 false,
                 fields.toList.asJava
               )
