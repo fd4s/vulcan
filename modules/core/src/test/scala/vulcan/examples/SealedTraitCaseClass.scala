@@ -37,7 +37,7 @@ object FirstInSealedTraitCaseClass {
   implicit val codec: Codec[FirstInSealedTraitCaseClass] =
     Codec.record(
       name = "FirstInSealedTraitCaseClass",
-      namespace = Some("com.example")
+      namespace = "com.example"
     ) { field =>
       field("value", _.value).map(apply)
     }
@@ -52,7 +52,7 @@ object SecondInSealedTraitCaseClass {
   implicit val codec: Codec[SecondInSealedTraitCaseClass] =
     Codec.record(
       name = "SecondInSealedTraitCaseClass",
-      namespace = Some("com.example")
+      namespace = "com.example"
     ) { field =>
       field("value", _.value).map(apply)
     }

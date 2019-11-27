@@ -603,7 +603,7 @@ final class CodecSpec extends BaseSpec {
           implicit val codec: Codec[SealedTraitEnum] =
             Codec.enum(
               name = "SealedTraitEnum",
-              namespace = Some("vulcan.examples"),
+              namespace = "vulcan.examples",
               symbols = List("symbol"),
               encode = _ => "not-symbol",
               decode = _ => Left(AvroError("error"))
@@ -687,7 +687,8 @@ final class CodecSpec extends BaseSpec {
                 name = "Name",
                 size = -1,
                 encode = bytes => bytes,
-                decode = bytes => Right(bytes)
+                decode = bytes => Right(bytes),
+                namespace = ""
               )
               .schema
               .swap
@@ -1799,7 +1800,7 @@ final class CodecSpec extends BaseSpec {
             )
 
           implicit val caseClassFieldCodec: Codec[CaseClassField] =
-            Codec.record[CaseClassField]("CaseClassField") { field =>
+            Codec.record[CaseClassField]("CaseClassField", "") { field =>
               field("value", _.value, default = Some(10)).map(CaseClassField(_))
             }
 
@@ -1815,7 +1816,7 @@ final class CodecSpec extends BaseSpec {
             )
 
           implicit val caseClassFieldCodec: Codec[CaseClassField] =
-            Codec.record[CaseClassField]("CaseClassField") { field =>
+            Codec.record[CaseClassField]("CaseClassField", "") { field =>
               field("value", _.value, default = Some(10)).map(CaseClassField(_))
             }
 
@@ -1829,7 +1830,7 @@ final class CodecSpec extends BaseSpec {
           case class Test(value: Option[Int])
 
           implicit val testCodec: Codec[Test] =
-            Codec.record("Test") { field =>
+            Codec.record("Test", "") { field =>
               field("value", _.value, default = Some(None)).map(Test(_))
             }
 
@@ -1842,7 +1843,7 @@ final class CodecSpec extends BaseSpec {
           case class Test(value: Option[Int])
 
           implicit val testCodec: Codec[Test] =
-            Codec.record("Test") { field =>
+            Codec.record("Test", "") { field =>
               field("value", _.value, default = Some(Some(0)))(
                 Codec.union(alt => alt[Some[Int]] |+| alt[None.type])
               ).map(Test(_))
@@ -1858,7 +1859,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Unit)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(())).map(Test(_))
               }
 
@@ -1871,7 +1872,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Boolean)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(false)).map(Test(_))
               }
 
@@ -1884,7 +1885,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(0)).map(Test(_))
               }
 
@@ -1897,7 +1898,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Long)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(0L)).map(Test(_))
               }
 
@@ -1910,7 +1911,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Float)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(0.0f)).map(Test(_))
               }
 
@@ -1923,7 +1924,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Double)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(0.0d)).map(Test(_))
               }
 
@@ -1936,7 +1937,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Array[Byte])
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(Array[Byte](Byte.MinValue, Byte.MaxValue)))
                   .map(Test(_))
               }
@@ -1950,7 +1951,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: String)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some("default-value")).map(Test(_))
               }
 
@@ -1976,13 +1977,14 @@ final class CodecSpec extends BaseSpec {
                   case "first"  => Right(First)
                   case "second" => Right(Second)
                   case other    => Left(AvroError(other))
-                }
+                },
+                namespace = ""
               )
 
             case class Inner(value: Int, customEnum: CustomEnum)
 
             implicit val innerCodec: Codec[Inner] =
-              Codec.record("Inner") { field =>
+              Codec.record("Inner", "") { field =>
                 (
                   field("value", _.value),
                   field("customEnum", _.customEnum, default = Some(First))
@@ -1992,7 +1994,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Inner)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(Inner(0, Second))).map(Test(_))
               }
 
@@ -2018,13 +2020,14 @@ final class CodecSpec extends BaseSpec {
                   case "first"  => Right(First)
                   case "second" => Right(Second)
                   case other    => Left(AvroError(other))
-                }
+                },
+                namespace = ""
               )
 
             case class Test(value: CustomEnum)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(First)).map(Test(_))
               }
 
@@ -2037,7 +2040,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: List[Int])
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(List(123, 456))).map(Test(_))
               }
 
@@ -2050,7 +2053,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Map[String, Int])
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(Map("key" -> 0))).map(Test(_))
               }
 
@@ -2067,13 +2070,14 @@ final class CodecSpec extends BaseSpec {
                 name = "Inner",
                 size = 1,
                 encode = _.value,
-                decode = bytes => Right(Inner(bytes))
+                decode = bytes => Right(Inner(bytes)),
+                namespace = ""
               )
 
             case class Test(value: Inner)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, default = Some(Inner(Array[Byte](Byte.MaxValue))))
                   .map(Test(_))
               }
@@ -2089,7 +2093,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", true))
                   .map(Test(_))
               }
@@ -2103,7 +2107,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", 123))
                   .map(Test(_))
               }
@@ -2117,7 +2121,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", 123L))
                   .map(Test(_))
               }
@@ -2131,7 +2135,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", 123.0f))
                   .map(Test(_))
               }
@@ -2145,7 +2149,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", 123.0d))
                   .map(Test(_))
               }
@@ -2159,7 +2163,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", Array[Byte](Byte.MaxValue)))
                   .map(Test(_))
               }
@@ -2173,7 +2177,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", "value"))
                   .map(Test(_))
               }
@@ -2187,14 +2191,14 @@ final class CodecSpec extends BaseSpec {
             case class Record(value: String)
 
             implicit val recordCodec: Codec[Record] =
-              Codec.record("Record") { field =>
+              Codec.record("Record", "") { field =>
                 field("value", _.value).map(Record(_))
               }
 
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", Record("some-value")))
                   .map(Test(_))
               }
@@ -2221,13 +2225,14 @@ final class CodecSpec extends BaseSpec {
                   case "first"  => Right(First)
                   case "second" => Right(Second)
                   case other    => Left(AvroError(other))
-                }
+                },
+                namespace = ""
               )
 
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", (First: CustomEnum)))
                   .map(Test(_))
               }
@@ -2241,7 +2246,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", List(123, 456)))
                   .map(Test(_))
               }
@@ -2255,7 +2260,7 @@ final class CodecSpec extends BaseSpec {
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field("value", _.value, props = Props.one("custom", Map("key" -> 1)))
                   .map(Test(_))
               }
@@ -2273,13 +2278,14 @@ final class CodecSpec extends BaseSpec {
                 name = "Fixed",
                 size = 1,
                 encode = _.value,
-                decode = bytes => Right(Fixed(bytes))
+                decode = bytes => Right(Fixed(bytes)),
+                namespace = ""
               )
 
             case class Test(value: Int)
 
             implicit val testCodec: Codec[Test] =
-              Codec.record("Test") { field =>
+              Codec.record("Test", "") { field =>
                 field(
                   "value",
                   _.value,
@@ -2339,7 +2345,7 @@ final class CodecSpec extends BaseSpec {
           case class Test(value: Option[Int])
 
           implicit val testCodec: Codec[Test] =
-            Codec.record("Test") { field =>
+            Codec.record("Test", "") { field =>
               field("value", _.value, default = Some(None)).map(Test(_))
             }
 
@@ -2357,7 +2363,7 @@ final class CodecSpec extends BaseSpec {
           case class Test(value: Option[Int])
 
           implicit val testCodec: Codec[Test] =
-            Codec.record("Test") { field =>
+            Codec.record("Test", "") { field =>
               field("value", _.value, default = Some(Some(0)))(
                 Codec.union(alt => alt[Some[Int]] |+| alt[None.type])
               ).map(Test(_))
@@ -2482,7 +2488,7 @@ final class CodecSpec extends BaseSpec {
           case class Test(value: Option[Int])
 
           implicit val testCodec: Codec[Test] =
-            Codec.record("Test") { field =>
+            Codec.record("Test", "") { field =>
               field("value", _.value, default = Some(None)).map(Test(_))
             }
 
@@ -2496,7 +2502,7 @@ final class CodecSpec extends BaseSpec {
           case class Test(value: Option[Int])
 
           implicit val testCodec: Codec[Test] =
-            Codec.record("Test") { field =>
+            Codec.record("Test", "") { field =>
               field("value", _.value, default = Some(Some(0)))(
                 Codec.union(alt => alt[Some[Int]] |+| alt[None.type])
               ).map(Test(_))

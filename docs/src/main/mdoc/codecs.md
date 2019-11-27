@@ -102,7 +102,7 @@ If we need more precise control of how enumerations are encoded, we can use `Cod
 ```scala mdoc
 Codec.enum[Fruit](
   name = "Fruit",
-  namespace = Some("com.example"),
+  namespace = "com.example",
   doc = Some("A selection of different fruits"),
   symbols = List("apple", "banana", "cherry"),
   encode = {
@@ -151,7 +151,7 @@ If we need more precise control of how fixed types are encoded, we can use `Code
 ```scala mdoc
 Codec.fixed[Pence](
   name = "Pence",
-  namespace = Some("com.example"),
+  namespace = "com.example",
   size = 1,
   encode = pence => Array[Byte](pence.value),
   decode = bytes => Pence(bytes.head),
@@ -172,7 +172,7 @@ final case class Person(firstName: String, lastName: String, age: Option[Int])
 
 Codec.record[Person](
   name = "Person",
-  namespace = Some("com.example"),
+  namespace = "com.example",
   doc = Some("Person with a full name and optional age")
 ) { field =>
   field("fullName", p => s"${p.firstName} ${p.lastName}") *>

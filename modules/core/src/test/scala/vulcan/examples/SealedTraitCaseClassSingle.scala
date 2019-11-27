@@ -18,7 +18,7 @@ object CaseClassInSealedTraitCaseClassSingle {
   implicit val codec: Codec[CaseClassInSealedTraitCaseClassSingle] =
     Codec.record(
       name = "CaseClassInSealedTraitCaseClassSingle",
-      namespace = Some("vulcan.examples")
+      namespace = "vulcan.examples"
     ) { field =>
       field("value", _.value).map(apply)
     }

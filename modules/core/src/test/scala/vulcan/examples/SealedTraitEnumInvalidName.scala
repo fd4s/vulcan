@@ -10,7 +10,8 @@ object `-SealedTraitEnumInvalidName` {
       "-SealedTraitEnumInvalidName",
       symbols = Seq("value"),
       encode = _ => "value",
-      decode = _ => Left(AvroError("error"))
+      decode = _ => Left(AvroError("error")),
+      namespace = ""
     )
 }
 
