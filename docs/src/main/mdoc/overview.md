@@ -21,7 +21,7 @@ To get started with [sbt](https://scala-sbt.org), simply add the following line 
 libraryDependencies += "@ORGANIZATION@" %% "@CORE_MODULE_NAME@" % "@LATEST_VERSION@"
 ```
 
-Published for Scala @SCALA_PUBLISH_VERSIONS@. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).
+Published for Scala @SCALA_PUBLISH_VERSIONS@. For changes, refer to the [release notes](https://github.com/fd4s/vulcan/releases).
 
 For Scala 2.12, enable partial unification by adding the following line to `build.sbt`.
 
@@ -61,7 +61,7 @@ libraryDependencies += "@ORGANIZATION@" %% "@REFINED_MODULE_NAME@" % "@LATEST_VE
 
 Following is an incomplete list of third-party integrations.
 
-- [fs2-kafka-vulcan](https://ovotech.github.io/fs2-kafka)
+- [fs2-kafka-vulcan](https://fd4s.github.io/fs2-kafka)
 
 ### Compatibility
 
@@ -87,4 +87,4 @@ Library is heavily inspired by ideas from [avro4s](https://github.com/sksamuel/a
 
 ## License
 
-Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). Refer to the [license file](https://github.com/ovotech/vulcan/blob/master/license.txt).
+Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). Refer to the [license file](https://github.com/fd4s/vulcan/blob/master/license.txt).

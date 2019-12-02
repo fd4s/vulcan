@@ -92,7 +92,7 @@ class Index extends React.Component {
       </Container>
     );
 
-    const index = `[![Travis](https://img.shields.io/travis/ovotech/vulcan/master.svg)](https://travis-ci.org/ovotech/vulcan) [![Codecov](https://img.shields.io/codecov/c/github/ovotech/vulcan.svg)](https://codecov.io/gh/ovotech/vulcan) [![Gitter](https://img.shields.io/gitter/room/ovotech/vulcan.svg?colorB=36bc97)](https://gitter.im/ovotech/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/ovotech/vulcan)
+    const index = `[![Travis](https://img.shields.io/travis/fd4s/vulcan/master.svg)](https://travis-ci.org/fd4s/vulcan) [![Codecov](https://img.shields.io/codecov/c/github/fd4s/vulcan.svg)](https://codecov.io/gh/fd4s/vulcan) [![Gitter](https://img.shields.io/gitter/room/fd4s/vulcan.svg?colorB=36bc97)](https://gitter.im/fd4s/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/fd4s/vulcan)
 
 Functional Avro encodings for Scala using the official Apache Avro library.<br>
 Project is under active development. Feedback and contributions welcome.
@@ -104,7 +104,7 @@ To get started with [sbt](https://scala-sbt.org), simply add the following line 
 libraryDependencies += "${organization}" %% "${coreModuleName}" % "${latestVersion}"
 \`\`\`
 
-Published for Scala ${scalaPublishVersions}. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).
+Published for Scala ${scalaPublishVersions}. For changes, refer to the [release notes](https://github.com/fd4s/vulcan/releases).
 `.trim();
 
     return (
