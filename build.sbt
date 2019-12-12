@@ -408,9 +408,9 @@ addCommandsAlias(
     "+test",
     "+coverageReport",
     "+mimaReportBinaryIssues",
-    "scalafmtCheck",
+    "+scalafmtCheck",
     "scalafmtSbtCheck",
-    "headerCheck",
+    "+headerCheck",
     "+doc",
     "docs/run"
   )
