@@ -202,7 +202,8 @@ lazy val publishSettings =
     headerLicense := Some(
       de.heikoseeberger.sbtheader.License.ALv2(
         s"${startYear.value.get}",
-        organizationName.value
+        organizationName.value,
+        HeaderLicenseStyle.SpdxSyntax
       )
     ),
     excludeFilter.in(headerSources) := HiddenFileFilter,
