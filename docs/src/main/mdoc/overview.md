@@ -65,7 +65,7 @@ Following is an incomplete list of third-party integrations.
 
 ### Signatures
 
-Stable release artifacts are signed by the [`7AD5 92B5 B105 24E3`](https://keys.openpgp.org/search?q=4EA20EFC74E422D0489470997AD592B5B10524E3) key.
+Stable release artifacts are signed with the [`7AD5 92B5 B105 24E3`](https://keys.openpgp.org/search?q=4EA20EFC74E422D0489470997AD592B5B10524E3) key.
 
 ### Compatibility
 
