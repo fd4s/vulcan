@@ -63,6 +63,10 @@ Following is an incomplete list of third-party integrations.
 
 - [fs2-kafka-vulcan](https://fd4s.github.io/fs2-kafka)
 
+### Signatures
+
+Stable release artifacts are signed by the [`7AD5 92B5 B105 24E3`](https://keys.openpgp.org/search?q=4EA20EFC74E422D0489470997AD592B5B10524E3) key.
+
 ### Compatibility
 
 Backwards binary-compatibility for the library is guaranteed between patch versions.<br>
