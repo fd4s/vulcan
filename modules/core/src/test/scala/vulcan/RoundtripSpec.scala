@@ -233,11 +233,13 @@ final class RoundtripSpec extends BaseSpec {
     val avroSchema = codec.schema
     assert(avroSchema.isRight)
 
-    val encoded = codec.encode(a, avroSchema.value)
+    val encoded = codec.encode(a)
     assert(encoded.isRight)
 
-    val decoded = codec.decode(encoded.value, avroSchema.value)
-    assert(decoded === Right(a))
+    val decoded: Either[AvroError, A] = codec.decode(encoded.value, avroSchema.value)
+    withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+      assert(decoded === Right(a))
+    }
   }
 
   def binaryRoundtrip[A](a: A)(
