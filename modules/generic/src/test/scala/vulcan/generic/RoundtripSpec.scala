@@ -69,7 +69,7 @@ final class RoundtripSpec extends AnyFunSpec with ScalaCheckPropertyChecks with 
     val avroSchema = codec.schema
     assert(avroSchema.isRight)
 
-    val encoded = codec.encode(a, avroSchema.value)
+    val encoded = codec.encode(a)
     assert(encoded.isRight)
 
     val decoded = codec.decode(encoded.value, avroSchema.value)
@@ -91,7 +91,7 @@ final class RoundtripSpec extends AnyFunSpec with ScalaCheckPropertyChecks with 
     implicit codec: Codec[A]
   ): Either[AvroError, Array[Byte]] =
     codec.schema.flatMap { schema =>
-      codec.encode(a, schema).map { encoded =>
+      codec.encode(a).map { encoded =>
         val baos = new ByteArrayOutputStream()
         val serializer = EncoderFactory.get().binaryEncoder(baos, null)
         new GenericDatumWriter[Any](schema)

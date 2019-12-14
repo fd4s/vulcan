@@ -1441,11 +1441,13 @@ final object Codec {
     Codec.instance(
       schema,
       a =>
-        alts.foldMapK { alt =>
-          alt.prism.getOption(a).map(alt.codec.encode)
-        }.getOrElse {
-          Left(AvroError.encodeExhaustedAlternatives(a, typeName))
-        },
+        alts
+          .foldMapK { alt =>
+            alt.prism.getOption(a).map(alt.codec.encode)
+          }
+          .getOrElse {
+            Left(AvroError.encodeExhaustedAlternatives(a, typeName))
+          },
       (value, schema) => {
         schema.getType() match {
           case Schema.Type.UNION =>
