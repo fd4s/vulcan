@@ -18,7 +18,7 @@ package object generic {
   implicit final val cnilCodec: Codec[CNil] =
     Codec.instance(
       Right(Schema.createUnion()),
-      (cnil, _) => Left(AvroError.encodeExhaustedAlternatives(cnil, "Coproduct")),
+      cnil => Left(AvroError.encodeExhaustedAlternatives(cnil, "Coproduct")),
       (value, _) => Left(AvroError.decodeExhaustedAlternatives(value, "Coproduct"))
     )
 
@@ -41,36 +41,10 @@ package object generic {
           }
         }
       },
-      (coproduct, schema) => {
-        schema.getType() match {
-          case Schema.Type.UNION =>
-            coproduct.eliminate(
-              head =>
-                headCodec.schema.flatMap { headSchema =>
-                  val headName =
-                    headSchema.getFullName
-
-                  val headUnionSchema =
-                    schema.getTypes.asScala
-                      .find(_.getFullName == headName)
-                      .toRight(AvroError.encodeMissingUnionSchema(headName, "Coproduct"))
-
-                  headUnionSchema.flatMap(headCodec.encode(head, _))
-                },
-              tail => tailCodec.value.encode(tail, schema)
-            )
-
-          case schemaType =>
-            Left {
-              AvroError
-                .encodeUnexpectedSchemaType(
-                  "Coproduct",
-                  schemaType,
-                  Schema.Type.UNION
-                )
-            }
-        }
-      },
+      _.eliminate(
+        headCodec.encode,
+        tailCodec.value.encode
+      ),
       (value, schema) => {
         schema.getType() match {
           case Schema.Type.UNION =>
