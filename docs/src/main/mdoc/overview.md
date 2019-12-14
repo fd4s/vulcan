@@ -74,6 +74,16 @@ For example, `@LATEST_MINOR_VERSION@.x` is backwards binary-compatible with `@LA
 
 Please note binary-compatibility is not guaranteed between milestone releases.
 
+### Snapshot Releases
+
+To use the latest snapshot release, add the following lines to your `build.sbt` file.
+
+```scala
+resolvers += Resolver.sonatypeRepo("snapshots")
+
+libraryDependencies += "@ORGANIZATION@" %% "@CORE_MODULE_NAME@" % "@LATEST_SNAPSHOT_VERSION@"
+```
+
 ## Dependencies
 
 Refer to the table below for dependencies and version support across modules.

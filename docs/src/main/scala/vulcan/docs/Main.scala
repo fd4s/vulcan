@@ -36,6 +36,7 @@ object Main {
           "REFINED_MODULE_NAME" -> refinedModuleName,
           "REFINED_CROSS_SCALA_VERSIONS" -> minorVersionsString(refinedCrossScalaVersions),
           "LATEST_VERSION" -> latestVersion,
+          "LATEST_SNAPSHOT_VERSION" -> latestSnapshotVersion,
           "LATEST_MINOR_VERSION" -> minorVersion(latestVersion),
           "DOCS_SCALA_MINOR_VERSION" -> scalaMinorVersion,
           "SCALA_PUBLISH_VERSIONS" -> minorVersionsString(crossScalaVersions),

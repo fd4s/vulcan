@@ -155,6 +155,9 @@ lazy val buildInfoSettings = Seq(
     scalacOptions,
     sourceDirectory,
     latestVersion in ThisBuild,
+    BuildInfoKey.map(version in ThisBuild) {
+      case (_, v) => "latestSnapshotVersion" -> v
+    },
     BuildInfoKey.map(moduleName in core) {
       case (k, v) => "core" ++ k.capitalize -> v
     },
