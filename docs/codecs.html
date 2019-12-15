@@ -68,12 +68,12 @@
 <pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Instant</span>]]]
 <span class="hljs-comment">// res2: Codec[Option[Option[Instant]]] = AvroError(org.apache.avro.AvroRuntimeException: Nested union: ["null",["null",{"type":"long","logicalType":"timestamp-millis"}]])</span>
 </code></pre>
-<p>Encoding and decoding with a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> might also be unsuccessful, so results are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. Encoding and decoding accepts a value and schema, and attempts encoding or decoding with respect to the schema. What happens if we try to encode <code>Int</code>s using a <code>Boolean</code> schema?</p>
+<p>Encoding and decoding with a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> might also be unsuccessful, so results are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. Encoding accepts a value to be encoded according to the schema defined by the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>, and decoding accepts a value and a schema to decode the value against. For example, what happens if we try to decode <code>Int</code>s using a <code>Boolean</code> schema?</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> org.apache.avro.<span class="hljs-type">SchemaBuilder</span>
 
-<span class="hljs-type">Codec</span>[<span class="hljs-type">Int</span>].encode(<span class="hljs-number">10</span>, <span class="hljs-type">SchemaBuilder</span>.builder.booleanType)
-<span class="hljs-comment">// res3: Either[vulcan.AvroError, Any] = Left(</span>
-<span class="hljs-comment">//   AvroError(Got unexpected schema type BOOLEAN while encoding Int, expected schema type INT)</span>
+<span class="hljs-type">Codec</span>[<span class="hljs-type">Int</span>].decode(<span class="hljs-number">10</span>, <span class="hljs-type">SchemaBuilder</span>.builder.booleanType)
+<span class="hljs-comment">// res3: Either[vulcan.AvroError, Int] = Left(</span>
+<span class="hljs-comment">//   AvroError(Got unexpected schema type BOOLEAN while decoding Int, expected schema type INT)</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
 <p>Since the Apache Avro library encodes and decodes using <code>Object</code>, <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s encode and decode between Scala types and <code>Any</code>. This means type safety is lost and tests should be used to ensure <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s work as intended. This becomes important when we define <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s from scratch. Note <code>Schema</code>s are treated as effectively immutable, even though they're in fact mutable.</p>
