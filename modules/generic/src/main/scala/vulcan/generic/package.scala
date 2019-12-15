@@ -122,49 +122,43 @@ package object generic {
 
       val typeName =
         s"$namespace.${caseClass.typeName.short}"
-
-      if (caseClass.isValueClass) {
-        Codec.instance(
-          caseClass.parameters.head.typeclass.schema,
-          a => {
-            val param = caseClass.parameters.head
-            param.typeclass.encode(param.dereference(a))
-          },
-          (value, schema) => {
-            caseClass.parameters.head.typeclass
-              .decode(value, schema)
-              .map(decoded => caseClass.rawConstruct(List(decoded)))
-          }
-        )
-      } else {
-        val schema = AvroError.catchNonFatal {
-          val fields =
-            caseClass.parameters.toList.traverse { param =>
-              param.typeclass.schema.map { schema =>
-                new Schema.Field(
-                  param.label,
-                  schema,
-                  param.annotations.collectFirst {
-                    case AvroDoc(doc) => doc
-                  }.orNull
-                )
+      val schema =
+        if (caseClass.isValueClass) {
+          caseClass.parameters.head.typeclass.schema
+        } else {
+          AvroError.catchNonFatal {
+            val fields =
+              caseClass.parameters.toList.traverse { param =>
+                param.typeclass.schema.map { schema =>
+                  new Schema.Field(
+                    param.label,
+                    schema,
+                    param.annotations.collectFirst {
+                      case AvroDoc(doc) => doc
+                    }.orNull
+                  )
+                }
               }
-            }
 
-          fields.map { fields =>
-            Schema.createRecord(
-              caseClass.typeName.short,
-              caseClass.annotations.collectFirst {
-                case AvroDoc(doc) => doc
-              }.orNull,
-              namespace,
-              false,
-              fields.asJava
-            )
+            fields.map { fields =>
+              Schema.createRecord(
+                caseClass.typeName.short,
+                caseClass.annotations.collectFirst {
+                  case AvroDoc(doc) => doc
+                }.orNull,
+                namespace,
+                false,
+                fields.asJava
+              )
+            }
           }
         }
-        Codec.instance(
-          schema,
+      Codec.instance(
+        schema,
+        if (caseClass.isValueClass) { a =>
+          val param = caseClass.parameters.head
+          param.typeclass.encode(param.dereference(a))
+        } else
           (a: A) =>
             schema.flatMap { schema =>
               val fields =
@@ -184,6 +178,11 @@ package object generic {
                 record
               }
             },
+        if (caseClass.isValueClass) { (value, schema) =>
+          caseClass.parameters.head.typeclass
+            .decode(value, schema)
+            .map(decoded => caseClass.rawConstruct(List(decoded)))
+        } else
           (value, schema) => {
             schema.getType() match {
               case Schema.Type.RECORD =>
@@ -223,8 +222,7 @@ package object generic {
                 }
             }
           }
-        )
-      }
+      )
     }
 
     /**
@@ -243,11 +241,10 @@ package object generic {
             .traverse(_.typeclass.schema)
             .map(schemas => Schema.createUnion(schemas.asJava))
         },
-        a => {
+        a =>
           sealedTrait.dispatch(a) { subtype =>
             subtype.typeclass.encode(subtype.cast(a))
-          }
-        },
+          },
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.UNION =>
