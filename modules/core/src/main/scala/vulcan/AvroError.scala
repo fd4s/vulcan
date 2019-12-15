@@ -216,12 +216,6 @@ final object AvroError {
       s"Got $length bytes while encoding $encodingTypeName, expected maximum fixed size $fixedSize"
     )
 
-  private[vulcan] final def encodeMissingRecordField(
-    fieldName: String,
-    encodingTypeName: String
-  ): AvroError =
-    AvroError(s"Record field '$fieldName' in schema is missing for type $encodingTypeName")
-
   private[vulcan] final def encodeExhaustedAlternatives(
     value: Any,
     encodingTypeName: String

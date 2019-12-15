@@ -1174,30 +1174,18 @@ final object Codec {
       schema,
       a =>
         schema.flatMap { schema =>
-          val schemaFields =
-            schema.getFields().asScala
-
           val fields =
             free.analyze {
-              λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[(Any, Int)]]]] { field =>
-                schemaFields
-                  .collectFirst {
-                    case schemaField if schemaField.name == field.name =>
-                      field.codec
-                        .encode(field.access(a))
-                        .map(result => Chain.one((result, schemaField.pos())))
-                  }
-                  .getOrElse(Left(AvroError.encodeMissingRecordField(field.name, typeName)))
+              λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[(String, Any)]]]] { field =>
+                field.codec.encode(field.access(a)).map(result => Chain.one((field.name, result)))
               }
             }
 
           fields.map { values =>
             val record = new GenericData.Record(schema)
             values.foldLeft(()) {
-              case ((), (value, pos)) =>
-                record.put(pos, value)
+              case ((), (name, value)) => record.put(name, value)
             }
-
             record
           }
         },
