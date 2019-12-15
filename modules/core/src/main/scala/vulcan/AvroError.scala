@@ -222,14 +222,6 @@ final object AvroError {
   ): AvroError =
     AvroError(s"Record field '$fieldName' in schema is missing for type $encodingTypeName")
 
-  private[vulcan] final def encodeMissingUnionSchema(
-    subtypeName: String,
-    encodingTypeName: String
-  ): AvroError =
-    AvroError {
-      s"Missing schema $subtypeName in union for type $encodingTypeName"
-    }
-
   private[vulcan] final def encodeExhaustedAlternatives(
     value: Any,
     encodingTypeName: String
@@ -239,14 +231,6 @@ final object AvroError {
       s"Exhausted alternatives for type $typeName while encoding $encodingTypeName"
     }
 
-  private[vulcan] final def encodeNameMismatch(
-    fullName: String,
-    encodingTypeName: String
-  ): AvroError =
-    AvroError {
-      s"Unable to encode $encodingTypeName using schema with name $fullName since names do not match"
-    }
-
   private[vulcan] final def encodeSymbolNotInSchema(
     symbol: String,
     symbols: Seq[String],
@@ -254,26 +238,6 @@ final object AvroError {
   ): AvroError =
     AvroError {
       s"Symbol $symbol is not part of schema symbols [${symbols.mkString(", ")}] for type $encodingTypeName"
-    }
-
-  private[vulcan] final def encodeUnexpectedLogicalType(
-    actualLogicalType: LogicalType,
-    encodingTypeName: String
-  ): AvroError =
-    AvroError {
-      if (actualLogicalType == null)
-        s"Got unexpected missing logical type while encoding $encodingTypeName"
-      else
-        s"Got unexpected logical type ${actualLogicalType.getName()} while encoding $encodingTypeName"
-    }
-
-  private[vulcan] final def encodeUnexpectedSchemaType(
-    encodingTypeName: String,
-    actualSchemaType: Schema.Type,
-    expectedSchemaType: Schema.Type
-  ): AvroError =
-    AvroError {
-      s"Got unexpected schema type $actualSchemaType while encoding $encodingTypeName, expected schema type $expectedSchemaType"
     }
 
   private[vulcan] final def fromThrowable(throwable: Throwable): AvroError =
