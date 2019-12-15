@@ -25,14 +25,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not boolean") {
-          assertEncodeError[Boolean](
-            false,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Boolean, expected schema type BOOLEAN"
-          )
-        }
-
         it("should encode as boolean") {
           val value = true
           assertEncodeIs[Boolean](
@@ -87,14 +79,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not int") {
-          assertEncodeError[Byte](
-            1.toByte,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Byte, expected schema type INT"
-          )
-        }
-
         it("should encode as int") {
           val value = 1.toByte
           assertEncodeIs[Byte](
@@ -158,14 +142,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error on non-bytes schema") {
-          assertEncodeError[Array[Byte]](
-            Array(1),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Array[Byte], expected schema type BYTES"
-          )
-        }
-
         it("should encode as bytes") {
           assertEncodeIs[Array[Byte]](
             Array(1),
@@ -210,14 +186,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[Chain[Int]](
-            Chain(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding Chain, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java list using encoder for underlying type") {
           assertEncodeIs[Chain[Int]](
             Chain(1, 2, 3),
@@ -263,14 +231,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not string") {
-          assertEncodeError[Char](
-            'a',
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding Char, expected schema type STRING"
-          )
-        }
-
         it("should encode as utf8") {
           val value = 'a'
           assertEncodeIs[Char](
@@ -340,48 +300,16 @@ final class CodecSpec extends BaseSpec {
         implicit val codec: Codec[BigDecimal] =
           Codec.decimal(precision = 10, scale = 5)
 
-        it("should error if schema is not bytes") {
-          assertEncodeError[BigDecimal](
-            BigDecimal("123"),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding BigDecimal, expected schema type BYTES"
-          )
-        }
-
-        it("should error if logical type is missing") {
-          assertEncodeError[BigDecimal](
-            BigDecimal("123"),
-            SchemaBuilder.builder().bytesType(),
-            "Got unexpected missing logical type while encoding BigDecimal"
-          )
-        }
-
-        it("should error if logical type is not decimal") {
-          assertEncodeError[BigDecimal](
-            BigDecimal("123"), {
-              val bytes = SchemaBuilder.builder().bytesType()
-              LogicalTypes.uuid().addToSchema(bytes)
-            },
-            "Got unexpected logical type uuid while encoding BigDecimal"
-          )
-        }
-
         it("should error if scale is different in schema") {
           assertEncodeError[BigDecimal](
-            BigDecimal("123"), {
-              val bytes = SchemaBuilder.builder().bytesType()
-              LogicalTypes.decimal(10, 5).addToSchema(bytes)
-            },
+            BigDecimal("123"),
             "Unable to encode decimal with scale 0 as scale 5"
           )
         }
 
         it("should error if precision exceeds schema precision") {
           assertEncodeError[BigDecimal](
-            BigDecimal("123456.45678"), {
-              val bytes = SchemaBuilder.builder().bytesType()
-              LogicalTypes.decimal(10, 5).addToSchema(bytes)
-            },
+            BigDecimal("123456.45678"),
             "Unable to encode decimal with precision 11 exceeding schema precision 10"
           )
         }
@@ -515,14 +443,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not double") {
-          assertEncodeError[Double](
-            123d,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Double, expected schema type DOUBLE"
-          )
-        }
-
         it("should encode as double") {
           val value = 123d
           assertEncodeIs[Double](
@@ -583,22 +503,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema type is not enum") {
-          assertEncodeError[SealedTraitEnum](
-            FirstInSealedTraitEnum,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding vulcan.examples.SealedTraitEnum, expected schema type ENUM"
-          )
-        }
-
-        it("should error if schema full name doesn't match type name") {
-          assertEncodeError[SealedTraitEnum](
-            FirstInSealedTraitEnum,
-            SchemaBuilder.builder().enumeration("the.enum").symbols(),
-            "Unable to encode vulcan.examples.SealedTraitEnum using schema with name the.enum since names do not match"
-          )
-        }
-
         it("should error if returned string is not a schema symbol") {
           implicit val codec: Codec[SealedTraitEnum] =
             Codec.enum(
@@ -611,7 +515,6 @@ final class CodecSpec extends BaseSpec {
 
           assertEncodeError[SealedTraitEnum](
             FirstInSealedTraitEnum,
-            unsafeSchema[SealedTraitEnum],
             "Symbol not-symbol is not part of schema symbols [symbol] for type vulcan.examples.SealedTraitEnum"
           )
         }
@@ -700,26 +603,9 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not fixed") {
-          assertEncodeError[FixedBoolean](
-            TrueFixedBoolean,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding vulcan.examples.FixedBoolean, expected schema type FIXED"
-          )
-        }
-
-        it("should error if schema full name does not match") {
-          assertEncodeError[FixedBoolean](
-            TrueFixedBoolean,
-            SchemaBuilder.builder().fixed("TheName").size(1),
-            "Unable to encode vulcan.examples.FixedBoolean using schema with name TheName since names do not match"
-          )
-        }
-
         it("should error if length exceeds schema size") {
           assertEncodeError[FixedBoolean](
             TrueFixedBoolean,
-            unsafeSchema[FixedBoolean],
             "Got 2 bytes while encoding vulcan.examples.FixedBoolean, expected maximum fixed size 1"
           )
         }
@@ -790,14 +676,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not float") {
-          assertEncodeError[Float](
-            123f,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Float, expected schema type FLOAT"
-          )
-        }
-
         it("should encode as float") {
           val value = 123f
           assertEncodeIs[Float](
@@ -856,33 +734,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not long") {
-          assertEncodeError[Instant](
-            Instant.now(),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Instant, expected schema type LONG"
-          )
-        }
-
-        it("should error if logical type is missing") {
-          assertEncodeError[Instant](
-            Instant.now(),
-            unsafeSchema[Long],
-            "Got unexpected missing logical type while encoding Instant"
-          )
-        }
-
-        it("should error if logical type is not timestamp-millis") {
-          assertEncodeError[Instant](
-            Instant.now(), {
-              LogicalTypes.timestampMicros().addToSchema {
-                SchemaBuilder.builder().longType()
-              }
-            },
-            "Got unexpected logical type timestamp-micros while encoding Instant"
-          )
-        }
-
         it("should encode as long") {
           val value = {
             val instant = Instant.now()
@@ -1006,14 +857,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not int") {
-          assertEncodeError[Int](
-            123,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Int, expected schema type INT"
-          )
-        }
-
         it("should encode as int") {
           val value = 123
           assertEncodeIs[Int](
@@ -1060,14 +903,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[List[Int]](
-            List(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding List, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java list using encoder for underlying type") {
           assertEncodeIs[List[Int]](
             List(1, 2, 3),
@@ -1113,22 +948,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not int") {
-          assertEncodeError[LocalDate](
-            LocalDate.now(),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding LocalDate, expected schema type INT"
-          )
-        }
-
-        it("should error if logical type is missing") {
-          assertEncodeError[LocalDate](
-            LocalDate.now(),
-            unsafeSchema[Int],
-            "Got unexpected missing logical type while encoding LocalDate"
-          )
-        }
-
         it("should encode as int") {
           val value = LocalDate.now()
           assertEncodeIs[LocalDate](
@@ -1183,14 +1002,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not long") {
-          assertEncodeError[Long](
-            123L,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Long, expected schema type LONG"
-          )
-        }
-
         it("should encode as long") {
           val value = 123L
           assertEncodeIs[Long](
@@ -1237,14 +1048,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not map") {
-          assertEncodeError[Map[String, Int]](
-            Map.empty,
-            SchemaBuilder.builder().intType(),
-            "Got unexpected schema type INT while encoding Map, expected schema type MAP"
-          )
-        }
-
         it("should encode as java map using encoder for value") {
           assertEncodeIs[Map[String, Int]](
             Map("key" -> 1),
@@ -1305,14 +1108,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not null") {
-          assertEncodeError[None.type](
-            None,
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding None, expected schema type NULL"
-          )
-        }
-
         it("should encode as null") {
           assertEncodeIs[None.type](
             None,
@@ -1357,14 +1152,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[NonEmptyChain[Int]](
-            NonEmptyChain(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding NonEmptyChain, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java list using encoder for underlying type") {
           assertEncodeIs[NonEmptyChain[Int]](
             NonEmptyChain(1, 2, 3),
@@ -1418,14 +1205,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[NonEmptyList[Int]](
-            NonEmptyList.of(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding NonEmptyList, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java list using encoder for underlying type") {
           assertEncodeIs[NonEmptyList[Int]](
             NonEmptyList.of(1, 2, 3),
@@ -1479,14 +1258,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[NonEmptySet[Int]](
-            NonEmptySet.of(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding NonEmptySet, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java list using encoder for underlying type") {
           assertEncodeIs[NonEmptySet[Int]](
             NonEmptySet.of(1, 2, 3),
@@ -1540,14 +1311,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[NonEmptyVector[Int]](
-            NonEmptyVector.of(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding NonEmptyVector, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java vector using encoder for underlying type") {
           assertEncodeIs[NonEmptyVector[Int]](
             NonEmptyVector.of(1, 2, 3),
@@ -1607,47 +1370,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not union") {
-          assertEncodeError[Option[Int]](
-            Some(1),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding scala.Option, expected schema type UNION"
-          )
-        }
-
-        it("should encode even if there is one schema in union") {
-          assertEncodeIs[Option[Int]](
-            Some(1),
-            Right(unsafeEncode(Option(1))),
-            Some(SchemaBuilder.unionOf().intType().endUnion())
-          )
-        }
-
-        it("should encode even if there is not null in union") {
-          assertEncodeIs[Option[Int]](
-            Some(1),
-            Right(unsafeEncode(Option(1))),
-            Some(SchemaBuilder.unionOf().intType().and().stringType().endUnion())
-          )
-        }
-
-        it("should encode even if there are more than two schemas in union") {
-          assertEncodeIs[Option[Int]](
-            Some(1),
-            Right(unsafeEncode(Option(1))),
-            Some {
-              SchemaBuilder
-                .unionOf()
-                .intType()
-                .and()
-                .stringType()
-                .and()
-                .nullType()
-                .endUnion()
-            }
-          )
-        }
-
         it("should support null as first schema type in union") {
           implicit val codec: Codec[Option[Int]] =
             Codec.instance(
@@ -1795,7 +1517,7 @@ final class CodecSpec extends BaseSpec {
           implicit val intCodec: Codec[Int] =
             Codec.instance(
               Codec.int.schema,
-              (_, _) => Left(AvroError("error")),
+              _ => Left(AvroError("error")),
               (_, _) => Left(AvroError("error"))
             )
 
@@ -1811,7 +1533,7 @@ final class CodecSpec extends BaseSpec {
           implicit val intCodec: Codec[Int] =
             Codec.instance(
               Codec.int.schema,
-              (_, _) => Right("invalid"),
+              _ => Right("invalid"),
               (_, _) => Left(AvroError("error"))
             )
 
@@ -2301,34 +2023,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not record") {
-          assertEncodeError[CaseClassTwoFields](
-            CaseClassTwoFields("name", 0),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding vulcan.examples.CaseClassTwoFields, expected schema type RECORD"
-          )
-        }
-
-        it("should error if record schema name does not match") {
-          assertEncodeError[CaseClassTwoFields](
-            CaseClassTwoFields("name", 0),
-            unsafeSchema[CaseClassField],
-            "Unable to encode vulcan.examples.CaseClassTwoFields using schema with name CaseClassField since names do not match"
-          )
-        }
-
-        it("should error if record schema is missing any field") {
-          assertEncodeError[CaseClassTwoFields](
-            CaseClassTwoFields("name", 0), {
-              SchemaBuilder
-                .record("vulcan.examples.CaseClassTwoFields")
-                .fields()
-                .endRecord()
-            },
-            "Record field 'name' in schema is missing for type vulcan.examples.CaseClassTwoFields"
-          )
-        }
-
         it("should encode as record") {
           assertEncodeIs[CaseClassTwoFields](
             CaseClassTwoFields("name", 0),
@@ -2526,14 +2220,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[Seq[Int]](
-            Seq(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding Seq, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java list using encoder for underlying type") {
           assertEncodeIs[Seq[Int]](
             Seq(1, 2, 3),
@@ -2606,14 +2292,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[Set[Int]](
-            Set(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding Set, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java list using encoder for underlying type") {
           assertEncodeIs[Set[Int]](
             Set(1, 2, 3),
@@ -2659,14 +2337,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not int") {
-          assertEncodeError[Short](
-            1.toShort,
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while encoding Short, expected schema type INT"
-          )
-        }
-
         it("should encode as int") {
           val value = 1.toShort
           assertEncodeIs[Short](
@@ -2730,14 +2400,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not string") {
-          assertEncodeError[String](
-            "abc",
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding String, expected schema type STRING"
-          )
-        }
-
         it("should encode as utf8") {
           val value = "abc"
           assertEncodeIs[String](
@@ -2804,26 +2466,9 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not union") {
-          assertEncodeError[SealedTraitCaseClass](
-            FirstInSealedTraitCaseClass(0),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding vulcan.examples.SealedTraitCaseClass, expected schema type UNION"
-          )
-        }
-
-        it("should error if alternative name is not in union") {
-          assertEncodeError[SealedTraitCaseClass](
-            FirstInSealedTraitCaseClass(0),
-            unsafeSchema[Option[Int]],
-            "Missing schema com.example.FirstInSealedTraitCaseClass in union for type vulcan.examples.SealedTraitCaseClass"
-          )
-        }
-
         it("should error if subtype is not an alternative") {
           assertEncodeError[SealedTraitCaseClassIncomplete](
             SecondInSealedTraitCaseClassIncomplete(0d),
-            unsafeSchema[SealedTraitCaseClassIncomplete],
             "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
           )
         }
@@ -2831,7 +2476,6 @@ final class CodecSpec extends BaseSpec {
         it("should error if subtype is not an alternative and value null") {
           assertEncodeError[SealedTraitCaseClassIncomplete](
             null,
-            unsafeSchema[SealedTraitCaseClassIncomplete],
             "Exhausted alternatives for type null while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
           )
         }
@@ -2905,14 +2549,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not null") {
-          assertEncodeError[Unit](
-            (),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding Unit, expected schema type NULL"
-          )
-        }
-
         it("should encode as null") {
           val value = ()
           assertEncodeIs[Unit](
@@ -2958,22 +2594,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not string") {
-          assertEncodeError[UUID](
-            UUID.randomUUID(),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding UUID, expected schema type STRING"
-          )
-        }
-
-        it("should error if no logical type") {
-          assertEncodeError[UUID](
-            UUID.randomUUID(),
-            unsafeSchema[String],
-            "Got unexpected missing logical type while encoding UUID"
-          )
-        }
-
         it("should encode as utf8") {
           val value = UUID.randomUUID()
           assertEncodeIs[UUID](
@@ -3036,14 +2656,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("encode") {
-        it("should error if schema is not array") {
-          assertEncodeError[Vector[Int]](
-            Vector(1, 2, 3),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while encoding Vector, expected schema type ARRAY"
-          )
-        }
-
         it("should encode as java vector using encoder for underlying type") {
           assertEncodeIs[Vector[Int]](
             Vector(1, 2, 3),
@@ -3084,7 +2696,7 @@ final class CodecSpec extends BaseSpec {
     codec.schema.value
 
   def unsafeEncode[A](a: A)(implicit codec: Codec[A]): Any =
-    codec.schema.flatMap(codec.encode(a, _)).value
+    codec.encode(a).value
 
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
     codec.schema.flatMap(codec.decode(value, _)).value
@@ -3094,15 +2706,10 @@ final class CodecSpec extends BaseSpec {
 
   def assertEncodeIs[A](
     a: A,
-    encoded: Either[AvroError, Any],
-    schema: Option[Schema] = None
+    encoded: Either[AvroError, Any]
   )(implicit codec: Codec[A]): Assertion =
     assert {
-      val encode =
-        schema
-          .map(codec.encode(a, _).value)
-          .getOrElse(unsafeEncode(a))
-
+      val encode = codec.encode(a).value
       encode === encoded.value
     }
 
@@ -3134,8 +2741,7 @@ final class CodecSpec extends BaseSpec {
 
   def assertEncodeError[A](
     a: A,
-    schema: Schema,
     expectedErrorMessage: String
   )(implicit codec: Codec[A]): Assertion =
-    assert(codec.encode(a, schema).swap.value.message == expectedErrorMessage)
+    assert(codec.encode(a).swap.value.message == expectedErrorMessage)
 }

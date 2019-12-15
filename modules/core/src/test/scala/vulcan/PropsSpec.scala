@@ -6,7 +6,7 @@ final class PropsSpec extends BaseSpec {
   val codecSchemaError: Codec[Int] =
     Codec.instance(
       schema = Left(AvroError("error")),
-      encode = Codec.int.encode,
+      encode = _ => Left(AvroError("error")),
       decode = Codec.int.decode
     )
 
