@@ -47,8 +47,8 @@ package object generic {
       ), {
         case container: GenericContainer =>
           headCodec.schema.flatMap { headSchema =>
-            val name = container.getSchema.getFullName
-            if (headSchema.getFullName == name) {
+            val name = container.getSchema.getName
+            if (headSchema.getName == name) {
               headCodec
                 .decode(container)
                 .map(Inl(_))
@@ -189,11 +189,11 @@ package object generic {
           }, {
           case container: GenericContainer =>
             val subtypeName =
-              container.getSchema.getFullName
+              container.getSchema.getName
 
             def subtypeMatching =
               sealedTrait.subtypes
-                .find(_.typeclass.schema.exists(_.getFullName == subtypeName))
+                .find(_.typeclass.schema.exists(_.getName == subtypeName))
                 .toRight(AvroError.decodeMissingUnionAlternative(subtypeName, typeName))
 
             subtypeMatching.flatMap { subtype =>

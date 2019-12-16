@@ -1016,11 +1016,11 @@ final object Codec {
           }, {
         case container: GenericContainer =>
           val altName =
-            container.getSchema.getFullName
+            container.getSchema.getName
 
           def altMatching =
             alts
-              .find(_.codec.schema.exists(_.getFullName == altName))
+              .find(_.codec.schema.exists(_.getName == altName))
               .toRight(AvroError.decodeMissingUnionAlternative(altName, typeName))
 
           altMatching.flatMap { alt =>
