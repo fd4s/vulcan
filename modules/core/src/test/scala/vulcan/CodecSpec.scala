@@ -592,11 +592,11 @@ final class CodecSpec extends BaseSpec {
 
     describe("fromJson") {
       it("should decode from avro json format") {
-        assert(Codec.fromJson[Int]("1") == Right(1))
+        assert(Codec.fromJson[Int]("1", unsafeSchema[Int]) == Right(1))
       }
 
       it("should error if the json does not match the type") {
-        val result = Codec.fromJson[Int]("badValue")
+        val result = Codec.fromJson[Int]("badValue", unsafeSchema[Int])
         assert(result.isLeft)
         assert(result.swap.exists(_.message.contains("Unrecognized token 'badValue'")))
       }
@@ -2321,7 +2321,7 @@ final class CodecSpec extends BaseSpec {
     Codec.toBinary(a).value
 
   def unsafeDecode[A](bytes: Array[Byte])(implicit codec: Codec[A]): A =
-    Codec.fromBinary(bytes).value
+    Codec.fromBinary(bytes, unsafeSchema[Array[Byte]]).value
 
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
     codec.decode(value).value

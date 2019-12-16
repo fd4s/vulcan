@@ -485,22 +485,6 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromBinary[A](bytes: Array[Byte])(implicit codec: Codec[A]): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
-      AvroError.catchNonFatal {
-        val bais = new ByteArrayInputStream(bytes)
-        val decoder = DecoderFactory.get.binaryDecoder(bais, null)
-        val value = new GenericDatumReader[Any](schema).read(null, decoder)
-        codec.decode(value)
-      }
-    }
-
-  /**
-    * Returns the result of decoding the specified
-    * Avro binary to the specified type.
-    *
-    * @group Utilities
-    */
   final def fromBinary[A](bytes: Array[Byte], writer: Schema)(
     implicit codec: Codec[A]
   ): Either[AvroError, A] =
@@ -519,12 +503,12 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] =
+  final def fromJson[A](json: String, writer: Schema)(implicit codec: Codec[A]): Either[AvroError, A] =
     codec.schema.flatMap { schema =>
       AvroError.catchNonFatal {
         val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
         val decoder = DecoderFactory.get.jsonDecoder(schema, bais)
-        val value = new GenericDatumReader[Any](schema).read(null, decoder)
+        val value = new GenericDatumReader[Any](schema, writer).read(null, decoder)
         codec.decode(value)
       }
     }
@@ -572,7 +556,7 @@ final object Codec {
         case instant: Instant =>
           Right(instant)
         case other =>
-          Left(AvroError.decodeUnexpectedType(other, "Long", "Instant"))
+          Left(AvroError.decodeUnexpectedType(other, "Instant", "Instant"))
       }
     )
 
