@@ -276,6 +276,8 @@ final class CodecSpec extends BaseSpec {
     }
 
     describe("decimal") {
+      GenericData.get().addLogicalTypeConversion(new Conversions.DecimalConversion())
+
       describe("schema") {
         it("should be encoded as bytes with logical type decimal") {
           implicit val codec: Codec[BigDecimal] =
@@ -314,73 +316,52 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should encode as bytes") {
+        it("should encode as java.math.BigDecimal") {
           implicit val codec: Codec[BigDecimal] =
             Codec.decimal(precision = 10, scale = 5)
 
           val value = BigDecimal("123.45678")
           assertEncodeIs[BigDecimal](
             value,
-            Right {
-              new Conversions.DecimalConversion().toBytes(
-                value.underlying(),
-                unsafeSchema[BigDecimal],
-                unsafeSchema[BigDecimal].getLogicalType()
-              )
-            }
+            Right(value.underlying())
           )
         }
       }
 
       describe("decode") {
+
         implicit val codec: Codec[BigDecimal] =
           Codec.decimal(precision = 10, scale = 5)
 
-        it("should error if schema is not bytes") {
-          assertDecodeError[BigDecimal](
-            unsafeEncode(BigDecimal("123.45678")),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding BigDecimal, expected schema type BYTES"
-          )
-        }
-
-        it("should error if value is not byte buffer") {
+        it("should error if value is not BigDecimal") {
           assertDecodeError[BigDecimal](
             unsafeEncode(10),
             unsafeSchema[BigDecimal],
-            "Got unexpected type java.lang.Integer while decoding BigDecimal, expected type ByteBuffer"
-          )
-        }
-
-        it("should error if logical type is missing") {
-          assertDecodeError[BigDecimal](
-            unsafeEncode(BigDecimal("123.45678")),
-            SchemaBuilder.builder().bytesType(),
-            "Got unexpected missing logical type while decoding BigDecimal"
-          )
-        }
-
-        it("should error if logical type is not decimal") {
-          assertDecodeError[BigDecimal](
-            unsafeEncode(BigDecimal("123.45678")), {
-              val bytes = SchemaBuilder.builder().bytesType()
-              LogicalTypes.uuid().addToSchema(bytes)
-            },
-            "Got unexpected logical type uuid while decoding BigDecimal"
+            "Got unexpected type java.lang.Integer while decoding BigDecimal, expected type java.math.BigDecimal"
           )
         }
 
         it("should error if precision exceeds schema precision") {
-          assertDecodeError[BigDecimal](
-            unsafeEncode(BigDecimal("123.45678")), {
-              val bytes = SchemaBuilder.builder().bytesType()
-              LogicalTypes.decimal(6, 5).addToSchema(bytes)
-            },
+          val writer = (Codec.decimal(8, 5))
+
+          assertDecodeErrorBin(
+            unsafeEncodeBin(BigDecimal("123.45678"))(writer),
+            writer.schema.value,
             "Unable to decode decimal with precision 8 exceeding schema precision 6"
-          )
+          )(Codec.decimal(6, 5))
         }
 
-        it("should decode bytes") {
+        it("should error if scales mismatch") {
+          val writer = (Codec.decimal(8, 5))
+
+          assertDecodeErrorBin(
+            unsafeEncodeBin(BigDecimal("123.45678"))(writer),
+            writer.schema.value,
+            "Cannot decode decimal with scale 5 as scale 4"
+          )(Codec.decimal(8, 4))
+        }
+
+        it("should decode BigDecimal") {
           implicit val codec: Codec[BigDecimal] =
             Codec.decimal(precision = 10, scale = 5)
 
@@ -2698,6 +2679,12 @@ final class CodecSpec extends BaseSpec {
   def unsafeEncode[A](a: A)(implicit codec: Codec[A]): Any =
     codec.encode(a).value
 
+  def unsafeEncodeBin[A](a: A)(implicit codec: Codec[A]): Array[Byte] =
+    Codec.toBinary(a).value
+
+  def unsafeDecode[A](bytes: Array[Byte])(implicit codec: Codec[A]): A =
+    Codec.fromBinary(bytes).value
+
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
     codec.schema.flatMap(codec.decode(value, _)).value
 
@@ -2738,6 +2725,13 @@ final class CodecSpec extends BaseSpec {
     expectedErrorMessage: String
   )(implicit codec: Codec[A]): Assertion =
     assert(codec.decode(value, schema).swap.value.message == expectedErrorMessage)
+
+  def assertDecodeErrorBin[A](
+    value: Array[Byte],
+    writer: Schema,
+    expectedErrorMessage: String
+  )(implicit codec: Codec[A]): Assertion =
+    assert(Codec.fromBinary(value, writer).swap.value.message == expectedErrorMessage)
 
   def assertEncodeError[A](
     a: A,

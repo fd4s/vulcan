@@ -15,7 +15,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
-import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
+import org.apache.avro.{LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
@@ -42,7 +42,7 @@ sealed abstract class Codec[A] {
   def encode(a: A): Either[AvroError, Any]
 
   /** Attempts to decode the specified value using the provided schema. */
-  def decode(value: Any, schema: Schema): Either[AvroError, A]
+  def decode(value: Any, writerSchema: Schema): Either[AvroError, A]
 
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
@@ -287,7 +287,6 @@ final object Codec {
     precision: Int,
     scale: Int
   ): Codec[BigDecimal] = {
-    val conversion = new Conversions.DecimalConversion()
     val logicalType = LogicalTypes.decimal(precision, scale)
     val schema = AvroError.catchNonFatal {
       Right {
@@ -299,7 +298,7 @@ final object Codec {
       bigDecimal =>
         if (bigDecimal.scale == scale) {
           if (bigDecimal.precision <= precision) {
-            schema.map(conversion.toBytes(bigDecimal.underlying(), _, logicalType))
+            Right(bigDecimal.underlying())
           } else {
             Left {
               AvroError
@@ -311,44 +310,31 @@ final object Codec {
           }
         } else
           Left(AvroError.encodeDecimalScalesMismatch(bigDecimal.scale, scale)),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.BYTES =>
-            schema.getLogicalType() match {
-              case decimal: LogicalTypes.Decimal =>
-                value match {
-                  case buffer: ByteBuffer =>
-                    val bigDecimal = BigDecimal(conversion.fromBytes(buffer, schema, decimal))
-                    if (bigDecimal.precision <= decimal.getPrecision()) {
-                      Right(bigDecimal)
-                    } else {
-                      Left {
-                        AvroError
-                          .decodeDecimalPrecisionExceeded(
-                            bigDecimal.precision,
-                            decimal.getPrecision()
-                          )
-                      }
-                    }
-
-                  case other =>
-                    Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "BigDecimal"))
+      (value, _) => {
+        value match {
+          case bigDecimal: java.math.BigDecimal =>
+            if (bigDecimal.scale == scale) {
+              if (bigDecimal.precision <= precision)
+                Right(BigDecimal(bigDecimal))
+              else
+                Left {
+                  AvroError
+                    .decodeDecimalPrecisionExceeded(
+                      bigDecimal.precision,
+                      precision
+                    )
                 }
-
-              case logicalType =>
-                Left(AvroError.decodeUnexpectedLogicalType(logicalType, "BigDecimal"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "BigDecimal",
-                  schemaType,
-                  Schema.Type.BYTES
+            } else {
+              Left(
+                AvroError(
+                  "Cannot decode decimal with scale " + bigDecimal.scale + " as scale " + scale
                 )
+              )
             }
+          case other =>
+            Left(AvroError.decodeUnexpectedType(other, "java.math.BigDecimal", "BigDecimal"))
         }
+
       }
     )
   }
@@ -661,6 +647,24 @@ final object Codec {
 
   /**
     * Returns the result of decoding the specified
+    * Avro binary to the specified type.
+    *
+    * @group Utilities
+    */
+  final def fromBinary[A](bytes: Array[Byte], writer: Schema)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
+    codec.schema.flatMap { schema =>
+      AvroError.catchNonFatal {
+        val bais = new ByteArrayInputStream(bytes)
+        val decoder = DecoderFactory.get.binaryDecoder(bais, null)
+        val value = new GenericDatumReader[Any](schema, writer).read(null, decoder)
+        codec.decode(value, schema)
+      }
+    }
+
+  /**
+    * Returns the result of decoding the specified
     * Avro JSON to the specified type.
     *
     * @group Utilities
@@ -697,8 +701,8 @@ final object Codec {
       override final def encode(a: A): Either[AvroError, Any] =
         _encode(a)
 
-      override final def decode(value: Any, schema: Schema): Either[AvroError, A] =
-        _decode(value, schema)
+      override final def decode(value: Any, writerSchema: Schema): Either[AvroError, A] =
+        _decode(value, writerSchema)
 
       override final def toString: String =
         schema match {
