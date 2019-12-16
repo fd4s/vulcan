@@ -35,7 +35,6 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         it("should error") {
           assertDecodeError[CNil](
             null,
-            unsafeSchema[CNil],
             "Exhausted alternatives for type null while decoding Coproduct"
           )
         }
@@ -64,7 +63,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
                 Codec.instance[CNil](
                   Right(SchemaBuilder.builder().nullType()),
                   _ => Left(AvroError("encode")),
-                  (_, _) => Left(AvroError("decode"))
+                  _ => Left(AvroError("decode"))
                 )
               }
             )
@@ -94,24 +93,6 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
       }
 
       describe("decode") {
-        it("should error if schema is not union") {
-          type A = Int :+: String :+: CNil
-          assertDecodeError[A](
-            unsafeEncode(Coproduct[A](123)),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Coproduct, expected schema type UNION"
-          )
-        }
-
-        it("should error on empty union schema") {
-          type A = Int :+: String :+: CNil
-          assertDecodeError[A](
-            unsafeEncode(Coproduct[A](123)),
-            Schema.createUnion(),
-            "Exhausted alternatives for type java.lang.Integer while decoding Coproduct"
-          )
-        }
-
         it("should decode first in coproduct using first type") {
           type A = Int :+: String :+: CNil
           assertDecodeIs[A](
@@ -146,32 +127,12 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           )
         }
 
-        it("should error if no schema in union with container name") {
-          type A = Int :+: CaseClassField :+: CNil
-          assertDecodeError[A](
-            unsafeEncode(Coproduct[A](CaseClassField(10))),
-            unsafeSchema[Int :+: String :+: CNil],
-            "Missing schema vulcan.examples.CaseClassField in union for type Coproduct"
-          )
-        }
-
-        it("should error when not enough union schemas") {
-          type A = Int :+: String :+: CNil
-          assertDecodeError[A](
-            unsafeEncode(Coproduct[A]("abc")),
-            Schema.createUnion(),
-            "Exhausted alternatives for type org.apache.avro.util.Utf8 while decoding Coproduct"
-          )
-        }
-
-        it("should error when not enough union schemas when decoding record") {
-          type A = Int :+: CaseClassField :+: CNil
-          assertDecodeError[A](
-            unsafeEncode(Coproduct[A](CaseClassField(10))),
-            unsafeSchema[CNil],
-            "Missing schema vulcan.examples.CaseClassField in union for type Coproduct"
-          )
-        }
+//        it("should error if no schema in union with container name") {
+//          assertDecodeError[SealedTraitCaseClass](
+//            unsafeEncode[SealedTraitCaseClassIncomplete](SecondInSealedTraitCaseClassIncomplete(10)),
+//            "Missing schema vulcan.examples.CaseClassField in union for type Coproduct"
+//          )
+//        }
       }
     }
 
@@ -249,44 +210,11 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             )
           }
 
-          it("should error if schema is not record") {
-            assertDecodeError[CaseClassField](
-              unsafeEncode(CaseClassField(123)),
-              unsafeSchema[String],
-              "Got unexpected schema type STRING while decoding vulcan.examples.CaseClassField, expected schema type RECORD"
-            )
-          }
 
-          it("should error if value is not indexed record") {
+          it("should error if value is not generic record") {
             assertDecodeError[CaseClassField](
               unsafeEncode(123),
-              unsafeSchema[CaseClassField],
               "Got unexpected type java.lang.Integer while decoding vulcan.examples.CaseClassField, expected type IndexedRecord"
-            )
-          }
-
-          it("should error if writer schema full name does not match") {
-            assertDecodeError[CaseClassField](
-              {
-                val schema =
-                  Schema.createRecord("Record", null, "com.xyz", false)
-
-                schema.setFields(
-                  List(
-                    new Schema.Field(
-                      "value",
-                      unsafeSchema[Int],
-                      null
-                    )
-                  ).asJava
-                )
-
-                val record = new GenericData.Record(schema)
-                record.put(0, 123)
-                record
-              },
-              unsafeSchema[CaseClassField],
-              "Got record writer schema with name com.xyz.Record, expected name vulcan.examples.CaseClassField"
             )
           }
 
@@ -310,7 +238,6 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
                 record.put(0, 123)
                 record
               },
-              unsafeSchema[CaseClassField],
               "Record writer schema is missing field 'value' while decoding vulcan.examples.CaseClassField"
             )
           }
@@ -363,37 +290,20 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         }
 
         describe("decode") {
-          it("should error if schema is not union") {
-            assertDecodeError[SealedTraitCaseClass](
-              unsafeEncode[SealedTraitCaseClass](CaseClassInSealedTrait(0)),
-              unsafeSchema[String],
-              "Got unexpected schema type STRING while decoding vulcan.examples.SealedTraitCaseClass, expected schema type UNION"
-            )
-          }
 
           it("should error if value is not an alternative") {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode(123),
-              unsafeSchema[SealedTraitCaseClass],
               "Exhausted alternatives for type java.lang.Integer while decoding vulcan.examples.SealedTraitCaseClass"
             )
           }
 
-          it("should error if no schema in union with container name") {
-            assertDecodeError[SealedTraitCaseObject](
-              unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
-              unsafeSchema[SealedTraitCaseClass],
-              "Missing schema vulcan.examples.CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseObject"
-            )
-          }
-
-          it("should error if no subtype with container name") {
-            assertDecodeError[SealedTraitCaseClass](
-              unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
-              unsafeSchema[SealedTraitCaseObject],
-              "Missing alternative vulcan.examples.CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
-            )
-          }
+//          it("should error if no subtype with container name") {
+//            assertDecodeError[SealedTraitCaseClassIncomplete](
+//              unsafeEncode[SealedTraitCaseClass](SecondInSealedTraitCaseClass("hello")),
+//              "Missing alternative vulcan.examples.CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
+//            )
+//          }
 
           it("should decode using schema and decoder for subtype") {
             assertDecodeIs[SealedTraitCaseClass](
@@ -413,7 +323,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
     codec.encode(a).value
 
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
-    codec.schema.flatMap(codec.decode(value, _)).value
+    codec.decode(value).value
 
   def assertSchemaIs[A](expectedSchema: String)(implicit codec: Codec[A]): Assertion =
     assert(codec.schema.value.toString == expectedSchema)
@@ -437,10 +347,9 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
 
   def assertDecodeError[A](
     value: Any,
-    schema: Schema,
     expectedErrorMessage: String
   )(implicit codec: Codec[A]): Assertion =
-    assert(codec.decode(value, schema).swap.value.message == expectedErrorMessage)
+    assert(codec.decode(value).swap.value.message == expectedErrorMessage)
 
   def assertEncodeError[A](
     a: A,

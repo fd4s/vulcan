@@ -6,8 +6,7 @@ import java.nio.ByteBuffer
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 
-import org.apache.avro.{Conversions, Schema, SchemaBuilder}
-import org.apache.avro.data.TimeConversions
+import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
