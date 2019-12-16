@@ -236,7 +236,7 @@ final class RoundtripSpec extends BaseSpec {
     val encoded = codec.encode(a)
     assert(encoded.isRight)
 
-    val decoded: Either[AvroError, A] = codec.decode(encoded.value, avroSchema.value)
+    val decoded: Either[AvroError, A] = codec.decode(encoded.value)
     withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
       assert(decoded === Right(a))
     }
