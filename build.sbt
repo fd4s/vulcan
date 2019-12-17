@@ -115,7 +115,7 @@ lazy val dependencySettings = Seq(
     "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
     "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC1",
     "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.29"
+    "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test),
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full)
 )
