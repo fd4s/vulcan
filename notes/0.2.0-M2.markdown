@@ -1,3 +1,0 @@
-Identical to 0.2.0-M1 except also published for Scala 2.13.
-
-Released on 2019-07-10.
