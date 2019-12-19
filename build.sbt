@@ -194,9 +194,7 @@ lazy val buildInfoSettings = Seq(
 )
 
 lazy val metadataSettings = Seq(
-  organization := "com.ovoenergy",
-  organizationName := "OVO Energy Limited",
-  organizationHomepage := Some(url("https://ovoenergy.com"))
+  organization := "com.github.fd4s"
 )
 
 lazy val publishSettings =
@@ -209,7 +207,7 @@ lazy val publishSettings =
     headerLicense := Some(
       de.heikoseeberger.sbtheader.License.ALv2(
         s"${startYear.value.get}",
-        organizationName.value,
+        "OVO Energy Limited",
         HeaderLicenseStyle.SpdxSyntax
       )
     ),
