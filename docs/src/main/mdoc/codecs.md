@@ -18,7 +18,7 @@ In some cases, it's not possible to generate Avro schemas. This is why [`Codec`]
 Codec[Option[Option[Instant]]]
 ```
 
-Encoding and decoding with a [`Codec`][codec] might also be unsuccessful, so results are wrapped in `Either` with error type [`AvroError`][avroerror]. Encoding accepts a value to be encoded according to the schema defined by the [`Codec`][codec], and decoding accepts a value to decode. For example, what happens if we try to decode `Int`s using a `Boolean` decoder?
+Encoding and decoding with a [`Codec`][codec] might also be unsuccessful, so results are wrapped in `Either` with error type [`AvroError`][avroerror]. Encoding accepts a value to be encoded according to the schema defined by the [`Codec`][codec], and decoding accepts a value to decode. For example, what happens if we try to decode `Int`s using a `Boolean` codec?
 
 ```scala mdoc
 Codec[Boolean].decode(10)
