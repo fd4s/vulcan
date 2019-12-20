@@ -9,7 +9,6 @@ package vulcan
 import cats.{Eq, Show}
 import cats.data.NonEmptyList
 import cats.instances.string._
-import org.apache.avro.{Schema, LogicalType}
 import scala.util.control.NonFatal
 
 /**
@@ -83,25 +82,11 @@ final object AvroError {
       s"Record writer schema is missing field '$fieldName' while decoding $decodingTypeName"
     }
 
-  private[vulcan] final def decodeMissingUnionSchema(
-    subtypeName: String,
-    decodingTypeName: String
-  ): AvroError =
-    AvroError(s"Missing schema $subtypeName in union for type $decodingTypeName")
-
   private[vulcan] final def decodeMissingUnionAlternative(
     alternativeName: String,
     decodingTypeName: String
   ): AvroError =
     AvroError(s"Missing alternative $alternativeName in union for type $decodingTypeName")
-
-  private[vulcan] final def decodeNameMismatch(
-    fullName: String,
-    encodingTypeName: String
-  ): AvroError =
-    AvroError {
-      s"Unable to decode $encodingTypeName using schema with name $fullName since names do not match"
-    }
 
   private[vulcan] final def decodeSymbolNotInSchema(
     symbol: String,
@@ -111,17 +96,6 @@ final object AvroError {
     AvroError(
       s"$symbol is not part of schema symbols ${symbols.mkString("[", ", ", "]")} for type $decodingTypeName"
     )
-
-  private[vulcan] final def decodeUnexpectedLogicalType(
-    actualLogicalType: LogicalType,
-    decodingTypeName: String
-  ): AvroError =
-    AvroError {
-      if (actualLogicalType == null)
-        s"Got unexpected missing logical type while decoding $decodingTypeName"
-      else
-        s"Got unexpected logical type ${actualLogicalType.getName()} while decoding $decodingTypeName"
-    }
 
   private[vulcan] final def decodeUnexpectedMapKey(key: Any): AvroError =
     AvroError {
@@ -135,15 +109,6 @@ final object AvroError {
   ): AvroError =
     AvroError {
       s"Got record writer schema with name $recordFullName, expected name $decodingTypeName"
-    }
-
-  private[vulcan] final def decodeUnexpectedSchemaType(
-    decodingTypeName: String,
-    actualSchemaType: Schema.Type,
-    expectedSchemaType: Schema.Type
-  ): AvroError =
-    AvroError {
-      s"Got unexpected schema type $actualSchemaType while decoding $decodingTypeName, expected schema type $expectedSchemaType"
     }
 
   private[vulcan] final def decodeUnexpectedType(
