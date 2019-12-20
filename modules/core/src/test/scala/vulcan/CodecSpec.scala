@@ -627,10 +627,10 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if value is not long") {
+        it("should error if value is not instant") {
           assertDecodeError[Instant](
             unsafeEncode(123),
-            "Got unexpected type java.lang.Integer while decoding Instant, expected type Long"
+            "Got unexpected type java.lang.Integer while decoding Instant, expected type Instant"
           )
         }
 
@@ -2184,7 +2184,7 @@ final class CodecSpec extends BaseSpec {
         it("should error if no alternative with container name") {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
-            "Missing alternative vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union for type vulcan.examples.SealedTraitCaseClass"
+            "Missing alternative CaseClassInSealedTraitCaseClassSingle in union for type vulcan.examples.SealedTraitCaseClass"
           )
         }
 
