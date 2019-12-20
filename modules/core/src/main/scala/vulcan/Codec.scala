@@ -858,7 +858,7 @@ final object Codec {
             }
           }
         case other =>
-          Left(AvroError.decodeUnexpectedType(other, "IndexedRecord", typeName))
+          Left(AvroError.decodeUnexpectedType(other, "GenericRecord", typeName))
       }
     )
   }

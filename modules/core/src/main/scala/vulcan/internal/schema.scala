@@ -7,7 +7,7 @@
 package vulcan.internal
 
 import java.nio.ByteBuffer
-import org.apache.avro.generic.{GenericEnumSymbol, GenericFixed, IndexedRecord}
+import org.apache.avro.generic.{GenericEnumSymbol, GenericFixed, GenericRecord}
 import vulcan.internal.converters.collection._
 
 private[vulcan] final object schema {
@@ -19,11 +19,11 @@ private[vulcan] final object schema {
         enum.toString()
       case fixed: GenericFixed =>
         fixed.bytes()
-      case record: IndexedRecord =>
-        record.getSchema.getFields.asScala.zipWithIndex
+      case record: GenericRecord =>
+        record.getSchema.getFields.asScala
           .foldLeft(Map.empty[String, Any]) {
-            case (map, (field, index)) =>
-              map.updated(field.name, adaptForSchema(record.get(index)))
+            case (map, field) =>
+              map.updated(field.name, adaptForSchema(record.get(field.name)))
           }
           .asJava
       case _ =>

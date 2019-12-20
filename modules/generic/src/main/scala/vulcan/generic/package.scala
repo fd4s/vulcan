@@ -162,7 +162,7 @@ package object generic {
               .map(caseClass.rawConstruct)
 
           case other =>
-            Left(AvroError.decodeUnexpectedType(other, "IndexedRecord", typeName))
+            Left(AvroError.decodeUnexpectedType(other, "GenericRecord", typeName))
         }
       )
     }
