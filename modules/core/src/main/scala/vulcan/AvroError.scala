@@ -103,14 +103,6 @@ final object AvroError {
       s"Got unexpected map key with type $typeName while decoding Map, expected Utf8"
     }
 
-  private[vulcan] final def decodeUnexpectedRecordName(
-    recordFullName: String,
-    decodingTypeName: String
-  ): AvroError =
-    AvroError {
-      s"Got record writer schema with name $recordFullName, expected name $decodingTypeName"
-    }
-
   private[vulcan] final def decodeUnexpectedType(
     value: Any,
     expectedType: String,
