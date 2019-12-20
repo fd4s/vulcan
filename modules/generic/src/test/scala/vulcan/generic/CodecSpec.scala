@@ -210,7 +210,6 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             )
           }
 
-
           it("should error if value is not generic record") {
             assertDecodeError[CaseClassField](
               unsafeEncode(123),

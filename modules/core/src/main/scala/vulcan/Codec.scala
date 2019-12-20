@@ -121,7 +121,6 @@ final object Codec {
   final def apply[A](implicit codec: Codec[A]): Codec[A] =
     codec
 
-
   /**
     * @group General
     */
@@ -503,7 +502,9 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromJson[A](json: String, writer: Schema)(implicit codec: Codec[A]): Either[AvroError, A] =
+  final def fromJson[A](json: String, writer: Schema)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
     codec.schema.flatMap { schema =>
       AvroError.catchNonFatal {
         val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
