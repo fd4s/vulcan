@@ -293,8 +293,8 @@ final class CodecSpec extends BaseSpec {
         it("should error if precision exceeds schema precision") {
           val writer = (Codec.decimal(8, 5))
 
-          assertDecodeErrorBin(
-            unsafeEncodeBin(BigDecimal("123.45678"))(writer),
+          assertBinaryDecodeError(
+            unsafeEncodeBinary(BigDecimal("123.45678"))(writer),
             writer.schema.value,
             "Unable to decode decimal with precision 8 exceeding schema precision 6"
           )(Codec.decimal(6, 5))
@@ -303,8 +303,8 @@ final class CodecSpec extends BaseSpec {
         it("should error if scales mismatch") {
           val writer = (Codec.decimal(8, 5))
 
-          assertDecodeErrorBin(
-            unsafeEncodeBin(BigDecimal("123.45678"))(writer),
+          assertBinaryDecodeError(
+            unsafeEncodeBinary(BigDecimal("123.45678"))(writer),
             writer.schema.value,
             "Cannot decode decimal with scale 5 as scale 4"
           )(Codec.decimal(8, 4))
@@ -1828,7 +1828,7 @@ final class CodecSpec extends BaseSpec {
         it("should error if value is not indexed record") {
           assertDecodeError[CaseClassTwoFields](
             unsafeEncode(123),
-            "Got unexpected type java.lang.Integer while decoding vulcan.examples.CaseClassTwoFields, expected type IndexedRecord"
+            "Got unexpected type java.lang.Integer while decoding vulcan.examples.CaseClassTwoFields, expected type GenericRecord"
           )
         }
 
@@ -2317,7 +2317,7 @@ final class CodecSpec extends BaseSpec {
   def unsafeEncode[A](a: A)(implicit codec: Codec[A]): Any =
     codec.encode(a).value
 
-  def unsafeEncodeBin[A](a: A)(implicit codec: Codec[A]): Array[Byte] =
+  def unsafeEncodeBinary[A](a: A)(implicit codec: Codec[A]): Array[Byte] =
     Codec.toBinary(a).value
 
   def unsafeDecode[A](bytes: Array[Byte])(implicit codec: Codec[A]): A =
@@ -2359,7 +2359,7 @@ final class CodecSpec extends BaseSpec {
   )(implicit codec: Codec[A]): Assertion =
     assert(codec.decode(value).swap.value.message == expectedErrorMessage)
 
-  def assertDecodeErrorBin[A](
+  def assertBinaryDecodeError[A](
     value: Array[Byte],
     writer: Schema,
     expectedErrorMessage: String

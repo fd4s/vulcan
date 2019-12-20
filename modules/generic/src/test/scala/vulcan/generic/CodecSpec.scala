@@ -213,7 +213,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if value is not generic record") {
             assertDecodeError[CaseClassField](
               unsafeEncode(123),
-              "Got unexpected type java.lang.Integer while decoding vulcan.examples.CaseClassField, expected type IndexedRecord"
+              "Got unexpected type java.lang.Integer while decoding vulcan.examples.CaseClassField, expected type GenericRecord"
             )
           }
 
