@@ -16,13 +16,13 @@ import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
+import org.apache.avro.data.TimeConversions
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
 import scala.reflect.runtime.universe.WeakTypeTag
-import org.apache.avro.data.TimeConversions
 import vulcan.internal.converters.collection._
 import vulcan.internal.schema.adaptForSchema
 import vulcan.internal.tags._
@@ -109,9 +109,9 @@ sealed abstract class Codec[A] {
 final object Codec {
   GenericData.get.addLogicalTypeConversion(new TimeConversions.DateConversion())
   GenericData.get.addLogicalTypeConversion(new Conversions.DecimalConversion())
-  GenericData.get.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion)
-  GenericData.get.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion)
-  GenericData.get.addLogicalTypeConversion(new Conversions.UUIDConversion)
+  GenericData.get.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion())
+  GenericData.get.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion())
+  GenericData.get.addLogicalTypeConversion(new Conversions.UUIDConversion())
 
   /**
     * Returns the [[Codec]] for the specified type.
@@ -246,11 +246,9 @@ final object Codec {
                   )
               }
           } else {
-            Left(
-              AvroError(
-                "Cannot decode decimal with scale " + bigDecimal.scale + " as scale " + scale
-              )
-            )
+            Left {
+              AvroError(s"Cannot decode decimal with scale ${bigDecimal.scale} as scale $scale")
+            }
           }
         case other =>
           Left(AvroError.decodeUnexpectedType(other, "java.math.BigDecimal", "BigDecimal"))
@@ -487,11 +485,11 @@ final object Codec {
   final def fromBinary[A](bytes: Array[Byte], writer: Schema)(
     implicit codec: Codec[A]
   ): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
+    codec.schema.flatMap { reader =>
       AvroError.catchNonFatal {
         val bais = new ByteArrayInputStream(bytes)
         val decoder = DecoderFactory.get.binaryDecoder(bais, null)
-        val value = new GenericDatumReader[Any](schema, writer).read(null, decoder)
+        val value = new GenericDatumReader[Any](writer, reader).read(null, decoder)
         codec.decode(value)
       }
     }
@@ -505,11 +503,11 @@ final object Codec {
   final def fromJson[A](json: String, writer: Schema)(
     implicit codec: Codec[A]
   ): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
+    codec.schema.flatMap { reader =>
       AvroError.catchNonFatal {
         val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
-        val decoder = DecoderFactory.get.jsonDecoder(schema, bais)
-        val value = new GenericDatumReader[Any](schema, writer).read(null, decoder)
+        val decoder = DecoderFactory.get.jsonDecoder(reader, bais)
+        val value = new GenericDatumReader[Any](writer, reader).read(null, decoder)
         codec.decode(value)
       }
     }
@@ -1047,7 +1045,8 @@ final object Codec {
     Codec.instance(
       Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
       uuid => Right(uuid), {
-        case uuid: UUID => uuid.asRight
+        case uuid: UUID =>
+          Right(uuid)
         case other =>
           Left(AvroError.decodeUnexpectedType(other, "UUID", "UUID"))
       }
