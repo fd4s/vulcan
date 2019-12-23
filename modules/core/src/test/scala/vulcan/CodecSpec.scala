@@ -1177,31 +1177,6 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-
-        it("should decode even if there is one schema in union") {
-          assertDecodeIs[Option[Int]](
-            unsafeEncode(Option(1)),
-            Right(Some(1)),
-            Some(SchemaBuilder.unionOf().intType().endUnion())
-          )
-        }
-
-        it("should decode even if there is not null in union") {
-          assertDecodeIs[Option[Int]](
-            unsafeEncode(Option(1)),
-            Right(Some(1)),
-            Some(SchemaBuilder.unionOf().intType().and().stringType().endUnion())
-          )
-        }
-
-        it("should decode if there are more than two schemas in union") {
-          assertDecodeIs[Option[Int]](
-            unsafeEncode(Option(1)),
-            Right(Some(1)),
-            Some(SchemaBuilder.unionOf().intType().and().stringType().and().nullType().endUnion())
-          )
-        }
-
         it("should support null as first schema type in union") {
           implicit val codec: Codec[Option[Int]] =
             Codec.instance(
@@ -2320,9 +2295,6 @@ final class CodecSpec extends BaseSpec {
   def unsafeEncodeBinary[A](a: A)(implicit codec: Codec[A]): Array[Byte] =
     Codec.toBinary(a).value
 
-  def unsafeDecode[A](bytes: Array[Byte])(implicit codec: Codec[A]): A =
-    Codec.fromBinary(bytes, unsafeSchema[Array[Byte]]).value
-
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
     codec.decode(value).value
 
@@ -2340,13 +2312,9 @@ final class CodecSpec extends BaseSpec {
 
   def assertDecodeIs[A](
     value: Any,
-    decoded: Either[AvroError, A],
-    schema: Option[Schema] = None
+    decoded: Either[AvroError, A]
   )(implicit codec: Codec[A]): Assertion =
-    assert {
-      val _ = schema
-      unsafeDecode(value) === decoded.value
-    }
+    assert(unsafeDecode(value) === decoded.value)
 
   def assertSchemaError[A](
     expectedErrorMessage: String
