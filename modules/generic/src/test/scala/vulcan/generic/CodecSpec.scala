@@ -127,12 +127,13 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           )
         }
 
-//        it("should error if no schema in union with container name") {
-//          assertDecodeError[SealedTraitCaseClass](
-//            unsafeEncode[SealedTraitCaseClassIncomplete](SecondInSealedTraitCaseClassIncomplete(10)),
-//            "Missing schema vulcan.examples.CaseClassField in union for type Coproduct"
-//          )
-//        }
+        it("should error if no schema in union with container name") {
+          type A = SealedTraitCaseClass :+: Int :+: CNil
+          assertDecodeError[A](
+            unsafeEncode(CaseClassField(10)),
+            "Exhausted alternatives for type org.apache.avro.generic.GenericData$Record while decoding Coproduct"
+          )
+        }
       }
     }
 
@@ -272,13 +273,6 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         }
 
         describe("encode") {
-          it("should error if value is not an alternative") {
-            assertEncodeError[SealedTraitCaseClassIncomplete](
-              SecondInSealedTraitCaseClassIncomplete(0),
-              "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
-            )
-          }
-
           it("should encode with encoder for subtype") {
             val value = CaseClassInSealedTrait(0)
             assertEncodeIs[SealedTraitCaseClass](
@@ -289,7 +283,6 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         }
 
         describe("decode") {
-
           it("should error if value is not an alternative") {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode(123),
@@ -297,12 +290,12 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             )
           }
 
-//          it("should error if no subtype with container name") {
-//            assertDecodeError[SealedTraitCaseClassIncomplete](
-//              unsafeEncode[SealedTraitCaseClass](SecondInSealedTraitCaseClass("hello")),
-//              "Missing alternative vulcan.examples.CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
-//            )
-//          }
+          it("should error if no subtype with container name") {
+            assertDecodeError[SealedTraitCaseClass](
+              unsafeEncode(CaseClassField(20)),
+              "Missing alternative CaseClassField in union for type vulcan.examples.SealedTraitCaseClass"
+            )
+          }
 
           it("should decode using schema and decoder for subtype") {
             assertDecodeIs[SealedTraitCaseClass](
