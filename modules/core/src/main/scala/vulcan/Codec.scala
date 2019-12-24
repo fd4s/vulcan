@@ -485,13 +485,11 @@ final object Codec {
   final def fromBinary[A](bytes: Array[Byte], writer: Schema)(
     implicit codec: Codec[A]
   ): Either[AvroError, A] =
-    codec.schema.flatMap { reader =>
-      AvroError.catchNonFatal {
-        val bais = new ByteArrayInputStream(bytes)
-        val decoder = DecoderFactory.get.binaryDecoder(bais, null)
-        val value = new GenericDatumReader[Any](writer, reader).read(null, decoder)
-        codec.decode(value)
-      }
+    AvroError.catchNonFatal {
+      val bais = new ByteArrayInputStream(bytes)
+      val decoder = DecoderFactory.get.binaryDecoder(bais, null)
+      val value = new GenericDatumReader[Any](writer).read(null, decoder)
+      codec.decode(value)
     }
 
   /**
