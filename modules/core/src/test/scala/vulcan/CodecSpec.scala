@@ -3,9 +3,10 @@ package vulcan
 import cats.data._
 import cats.implicits._
 import java.nio.ByteBuffer
+import java.nio.charset.Charset
 import java.time.{Instant, LocalDate}
 import java.util.UUID
-import org.apache.avro.{Conversions, Schema, SchemaBuilder, LogicalTypes}
+import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
@@ -2458,7 +2459,7 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not string") {
+        it("should error if schema is not string or bytes") {
           assertDecodeError[String](
             unsafeEncode("abc"),
             unsafeSchema[Int],
@@ -2466,7 +2467,7 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should error if value is not utf8 or string") {
+        it("should error if value is not utf8, string, or bytes") {
           assertDecodeError[String](
             unsafeEncode(10),
             unsafeSchema[String],
@@ -2487,6 +2488,15 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[String](
             value,
             Right(value)
+          )
+        }
+
+        it("should decode bytes as string") {
+          val value = ByteBuffer.wrap("abc".getBytes(Charset.forName("UTF-8")))
+          assertDecodeIs[String](
+            value,
+            Right("abc"),
+            Some(SchemaBuilder.builder().bytesType())
           )
         }
       }

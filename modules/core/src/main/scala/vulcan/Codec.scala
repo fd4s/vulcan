@@ -12,7 +12,7 @@ import cats.free.FreeApplicative
 import cats.implicits._
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
@@ -1326,12 +1326,14 @@ final object Codec {
       new Utf8(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case Schema.Type.STRING =>
+          case Schema.Type.STRING | Schema.Type.BYTES =>
             value match {
               case string: String =>
                 Right(string)
               case utf8: Utf8 =>
                 Right(utf8.toString())
+              case bytes: ByteBuffer =>
+                AvroError.catchNonFatal(Right(Charset.forName("UTF-8").decode(bytes).toString))
               case other =>
                 Left {
                   AvroError
