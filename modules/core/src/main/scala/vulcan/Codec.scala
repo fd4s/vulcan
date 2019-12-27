@@ -366,15 +366,6 @@ final object Codec {
   final def decode[A](value: Any)(implicit codec: Codec[A]): Either[AvroError, A] =
     codec.schema.flatMap(codec.decode(value, _))
 
-  private[vulcan] def decodeExpectedType[A](
-    value: Any,
-    expectedValueType: String,
-    decodingTypeName: String
-  )(pf: PartialFunction[Any, Either[AvroError, A]]): Either[AvroError, A] =
-    pf.lift(value).getOrElse {
-      Left(AvroError.decodeUnexpectedType(value, expectedValueType, decodingTypeName))
-    }
-
   /**
     * Returns an enum [[Codec]] for type `A`, deriving details
     * like the name, namespace, and [[AvroDoc]] documentation
@@ -424,19 +415,33 @@ final object Codec {
     Codec.instance(
       Right(SchemaBuilder.builder().doubleType()),
       java.lang.Double.valueOf(_).asRight,
-      (value, schema) =>
-        validateSchemaType(
-          schema,
-          "Double",
-          Schema.Type.DOUBLE,
-          List(Schema.Type.FLOAT, Schema.Type.INT, Schema.Type.LONG)
-        ) >>
-          decodeExpectedType(value, "Double", "Double") {
-            case double: java.lang.Double => Right(double)
-            case float: java.lang.Float   => Right(float.toDouble)
-            case int: java.lang.Integer   => Right(int.toDouble)
-            case long: java.lang.Long     => Right(long.toDouble)
-          }
+      (value, schema) => {
+        schema.getType() match {
+          case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
+            value match {
+              case double: java.lang.Double =>
+                Right(double)
+              case float: java.lang.Float =>
+                Right(float.toDouble)
+              case int: java.lang.Integer =>
+                Right(int.toDouble)
+              case long: java.lang.Long =>
+                Right(long.toDouble)
+              case other =>
+                Left(AvroError.decodeUnexpectedType(other, "Double", "Double"))
+            }
+
+          case schemaType =>
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  "Double",
+                  schemaType,
+                  Schema.Type.DOUBLE
+                )
+            }
+        }
+      }
     )
 
   /**
@@ -625,18 +630,31 @@ final object Codec {
     Codec.instance(
       Right(SchemaBuilder.builder().floatType()),
       java.lang.Float.valueOf(_).asRight,
-      (value, schema) =>
-        validateSchemaType(
-          schema,
-          "Float",
-          Schema.Type.FLOAT,
-          List(Schema.Type.INT, Schema.Type.LONG)
-        ) >>
-          decodeExpectedType(value, "Float", "Float") {
-            case float: java.lang.Float => Right(float)
-            case int: java.lang.Integer => Right(int.toFloat)
-            case long: java.lang.Long   => Right(long.toFloat)
-          }
+      (value, schema) => {
+        schema.getType() match {
+          case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
+            value match {
+              case float: java.lang.Float =>
+                Right(float)
+              case int: java.lang.Integer =>
+                Right(int.toFloat)
+              case long: java.lang.Long =>
+                Right(long.toFloat)
+              case other =>
+                Left(AvroError.decodeUnexpectedType(other, "Float", "Float"))
+            }
+
+          case schemaType =>
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  "Float",
+                  schemaType,
+                  Schema.Type.FLOAT
+                )
+            }
+        }
+      }
     )
 
   /**
@@ -838,14 +856,29 @@ final object Codec {
     Codec.instance(
       Right(SchemaBuilder.builder().longType()),
       java.lang.Long.valueOf(_).asRight,
-      (value, schema) =>
-        validateSchemaType(schema, "Long", Schema.Type.LONG, List(Schema.Type.INT)) *>
-          decodeExpectedType(value, "Long", "Long") {
-            case long: java.lang.Long =>
-              Right(long)
-            case int: java.lang.Integer =>
-              Right(int.toLong)
-          }
+      (value, schema) => {
+        schema.getType() match {
+          case Schema.Type.LONG | Schema.Type.INT =>
+            value match {
+              case long: java.lang.Long =>
+                Right(long)
+              case int: java.lang.Integer =>
+                Right(int.toLong)
+              case other =>
+                Left(AvroError.decodeUnexpectedType(other, "Long", "Long"))
+            }
+
+          case schemaType =>
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  "Long",
+                  schemaType,
+                  Schema.Type.LONG
+                )
+            }
+        }
+      }
     )
 
   /**
@@ -1543,24 +1576,6 @@ final object Codec {
         }
       }
     )
-
-  private[vulcan] def validateSchemaType(
-    schema: Schema,
-    decodingTypeName: String,
-    expectedSchemaType: Schema.Type,
-    promotableSchemaTypes: List[Schema.Type] = Nil
-  ): Either[AvroError, Unit] = {
-    if ((expectedSchemaType :: promotableSchemaTypes) contains schema.getType) Right(())
-    else
-      Left {
-        AvroError
-          .decodeUnexpectedSchemaType(
-            decodingTypeName,
-            schema.getType,
-            expectedSchemaType
-          )
-      }
-  }
 
   /**
     * @group Collection
