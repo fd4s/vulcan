@@ -424,9 +424,9 @@ final object Codec {
         validateSchemaType(schema, "Double", Schema.Type.DOUBLE, List(Schema.Type.FLOAT, Schema.Type.INT, Schema.Type.LONG)) *>
           decodeExpectedType(value, "Double", "Double") {
             case double: java.lang.Double => Right(double)
-            case float: java.lang.Float => Right(float.toDouble)
-            case int: java.lang.Integer => Right(int.toDouble)
-            case long: java.lang.Long => Right(long.toDouble)
+            case float: java.lang.Float   => Right(float.toDouble)
+            case int: java.lang.Integer   => Right(int.toDouble)
+            case long: java.lang.Long     => Right(long.toDouble)
           }
     )
 
@@ -616,27 +616,18 @@ final object Codec {
     Codec.instance(
       Right(SchemaBuilder.builder().floatType()),
       java.lang.Float.valueOf(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.FLOAT =>
-            value match {
-              case float: java.lang.Float =>
-                Right(float)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Float", "Float"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Float",
-                  schemaType,
-                  Schema.Type.FLOAT
-                )
-            }
-        }
-      }
+      (value, schema) =>
+        validateSchemaType(
+          schema,
+          "Float",
+          Schema.Type.FLOAT,
+          List(Schema.Type.INT, Schema.Type.LONG)
+        ) >>
+          decodeExpectedType(value, "Float", "Float") {
+            case float: java.lang.Float => Right(float)
+            case int: java.lang.Integer => Right(int.toFloat)
+            case long: java.lang.Long   => Right(long.toFloat)
+          }
     )
 
   /**

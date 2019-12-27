@@ -710,23 +710,39 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not float") {
+        it("should error if schema is not float or promotable to float") {
           assertDecodeError[Float](
             unsafeEncode(123f),
-            unsafeSchema[Long],
-            "Got unexpected schema type LONG while decoding Float, expected schema type FLOAT"
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Float, expected schema type FLOAT"
           )
         }
 
-        it("should error if value is not float") {
+        it("should error if value is not float or promotable to float") {
           assertDecodeError[Float](
-            unsafeEncode(10L),
+            unsafeEncode("foo"),
             unsafeSchema[Float],
-            "Got unexpected type java.lang.Long while decoding Float, expected type Float"
+            "Got unexpected type org.apache.avro.util.Utf8 while decoding Float, expected type Float"
           )
         }
 
-        it("should decode as Float") {
+        it("should decode Int as Float") {
+          assertDecodeIs[Float](
+            unsafeEncode(123),
+            Right(123f),
+            Some(unsafeSchema[Int])
+          )
+        }
+
+        it("should decode Long as Float") {
+          assertDecodeIs[Float](
+            unsafeEncode(123L),
+            Right(123f),
+            Some(unsafeSchema[Long])
+          )
+        }
+
+        it("should decode Float as Float") {
           val value = 123f
           assertDecodeIs[Float](
             unsafeEncode(value),
