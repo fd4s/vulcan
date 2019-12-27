@@ -420,27 +420,14 @@ final object Codec {
     Codec.instance(
       Right(SchemaBuilder.builder().doubleType()),
       java.lang.Double.valueOf(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.DOUBLE =>
-            value match {
-              case double: java.lang.Double =>
-                Right(double)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Double", "Double"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Double",
-                  schemaType,
-                  Schema.Type.DOUBLE
-                )
-            }
-        }
-      }
+      (value, schema) =>
+        validateSchemaType(schema, "Double", Schema.Type.DOUBLE, List(Schema.Type.FLOAT, Schema.Type.INT, Schema.Type.LONG)) *>
+          decodeExpectedType(value, "Double", "Double") {
+            case double: java.lang.Double => Right(double)
+            case float: java.lang.Float => Right(float.toDouble)
+            case int: java.lang.Integer => Right(int.toDouble)
+            case long: java.lang.Long => Right(long.toDouble)
+          }
     )
 
   /**

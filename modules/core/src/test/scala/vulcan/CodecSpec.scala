@@ -453,23 +453,47 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not double") {
+        it("should error if schema is not double or promotable to double") {
           assertDecodeError[Double](
             unsafeEncode(123d),
-            unsafeSchema[Long],
-            "Got unexpected schema type LONG while decoding Double, expected schema type DOUBLE"
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Double, expected schema type DOUBLE"
           )
         }
 
-        it("should error if value is not double") {
+        it("should error if value is not double or promotable to double") {
           assertDecodeError[Double](
-            unsafeEncode(10L),
+            unsafeEncode("foo"),
             unsafeSchema[Double],
-            "Got unexpected type java.lang.Long while decoding Double, expected type Double"
+            "Got unexpected type org.apache.avro.util.Utf8 while decoding Double, expected type Double"
           )
         }
 
-        it("should decode as Double") {
+        it("should decode Float as Double") {
+          assertDecodeIs[Double](
+            unsafeEncode(123f),
+            Right(123d),
+            Some(unsafeSchema[Float])
+          )
+        }
+
+        it("should decode Int as Double") {
+          assertDecodeIs[Double](
+            unsafeEncode(123),
+            Right(123d),
+            Some(unsafeSchema[Int])
+          )
+        }
+
+        it("should decode Long as Double") {
+          assertDecodeIs[Double](
+            unsafeEncode(123L),
+            Right(123d),
+            Some(unsafeSchema[Long])
+          )
+        }
+
+        it("should decode Double as Double") {
           val value = 123d
           assertDecodeIs[Double](
             unsafeEncode(value),
