@@ -838,27 +838,14 @@ final object Codec {
     Codec.instance(
       Right(SchemaBuilder.builder().longType()),
       java.lang.Long.valueOf(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.LONG =>
-            value match {
-              case long: java.lang.Long =>
-                Right(long)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Long", "Long"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Long",
-                  schemaType,
-                  Schema.Type.LONG
-                )
-            }
-        }
-      }
+      (value, schema) =>
+        validateSchemaType(schema, "Long", Schema.Type.LONG, List(Schema.Type.INT)) *>
+          decodeExpectedType(value, "Long", "Long") {
+            case long: java.lang.Long =>
+              Right(long)
+            case int: java.lang.Integer =>
+              Right(int.toLong)
+          }
     )
 
   /**

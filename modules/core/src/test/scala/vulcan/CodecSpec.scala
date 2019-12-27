@@ -1036,23 +1036,31 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not long") {
+        it("should error if schema is not int or long") {
           assertDecodeError[Long](
             unsafeEncode(123L),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Long, expected schema type LONG"
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Long, expected schema type LONG"
           )
         }
 
-        it("should error if value is not long") {
+        it("should error if value is not int or long") {
           assertDecodeError[Long](
-            unsafeEncode(10),
+            unsafeEncode(123.0),
             unsafeSchema[Long],
-            "Got unexpected type java.lang.Integer while decoding Long, expected type Long"
+            "Got unexpected type java.lang.Double while decoding Long, expected type Long"
           )
         }
 
-        it("should decode utf8 as string") {
+        it("should decode int as long") {
+          assertDecodeIs[Long](
+            unsafeEncode(123),
+            Right(123L),
+            Some(unsafeSchema[Int])
+          )
+        }
+
+        it("should decode long as long") {
           val value = 123L
           assertDecodeIs[Long](
             unsafeEncode(value),
