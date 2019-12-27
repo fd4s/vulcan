@@ -362,6 +362,15 @@ final object Codec {
   final def decode[A](value: Any)(implicit codec: Codec[A]): Either[AvroError, A] =
     codec.schema.flatMap(codec.decode(value, _))
 
+  private[vulcan] def decodeExpectedType[A](
+    value: Any,
+    expectedValueType: String,
+    decodingTypeName: String
+  )(pf: PartialFunction[Any, Either[AvroError, A]]): Either[AvroError, A] =
+    pf.lift(value).getOrElse {
+      Left(AvroError.decodeUnexpectedType(value, expectedValueType, decodingTypeName))
+    }
+
   /**
     * Returns an enum [[Codec]] for type `A`, deriving details
     * like the name, namespace, and [[AvroDoc]] documentation
@@ -1558,6 +1567,24 @@ final object Codec {
         }
       }
     )
+
+  private[vulcan] def validateSchemaType(
+      schema: Schema,
+      decodingTypeName: String,
+      expectedSchemaType: Schema.Type,
+      promotableSchemaTypes: List[Schema.Type] = Nil
+  ): Either[AvroError, Unit] = {
+    if ((expectedSchemaType :: promotableSchemaTypes) contains schema.getType) Right(())
+    else
+      Left {
+        AvroError
+          .decodeUnexpectedSchemaType(
+            decodingTypeName,
+            schema.getType,
+            expectedSchemaType
+          )
+      }
+  }
 
   /**
     * @group Collection
