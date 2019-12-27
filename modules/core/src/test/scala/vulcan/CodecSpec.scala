@@ -3,10 +3,11 @@ package vulcan
 import cats.data._
 import cats.implicits._
 import java.nio.ByteBuffer
-import java.nio.charset.Charset
-import java.time.{Instant, LocalDate}
+import java.nio.charset.StandardCharsets
+import java.time.{ Instant, LocalDate }
 import java.util.UUID
-import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
+
+import org.apache.avro.{ Conversions, LogicalTypes, Schema, SchemaBuilder }
 import org.apache.avro.generic.GenericData
 import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
@@ -152,11 +153,11 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error on non-bytes schema") {
+        it("should error on schema other than bytes or string") {
           assertDecodeError[Array[Byte]](
             unsafeEncode[Array[Byte]](Array(1)),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Array[Byte], expected schema type BYTES"
+            unsafeSchema[Int],
+            "Got unexpected schema type INT while decoding Array[Byte], expected schema type BYTES"
           )
         }
 
@@ -168,7 +169,14 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should decode as bytes") {
+        it("should decode string as bytes") {
+          assertDecodeIs[Array[Byte]](
+            unsafeEncode("foo"),
+            Right("foo".getBytes(StandardCharsets.UTF_8))
+          )
+        }
+
+        it("should decode bytes as bytes") {
           assertDecodeIs[Array[Byte]](
             unsafeEncode[Array[Byte]](Array(1)),
             Right(Array[Byte](1))
@@ -2492,7 +2500,7 @@ final class CodecSpec extends BaseSpec {
         }
 
         it("should decode bytes as string") {
-          val value = ByteBuffer.wrap("abc".getBytes(Charset.forName("UTF-8")))
+          val value = ByteBuffer.wrap("abc".getBytes(StandardCharsets.UTF_8))
           assertDecodeIs[String](
             value,
             Right("abc"),

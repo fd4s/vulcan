@@ -12,7 +12,7 @@ import cats.free.FreeApplicative
 import cats.implicits._
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
-import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
@@ -191,10 +191,14 @@ final object Codec {
       ByteBuffer.wrap(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case Schema.Type.BYTES =>
+          case Schema.Type.BYTES | Schema.Type.STRING =>
             value match {
               case buffer: ByteBuffer =>
                 Right(buffer.array())
+              case utf8: Utf8 =>
+                Right(utf8.getBytes)
+              case string: String =>
+                Right(string.getBytes(StandardCharsets.UTF_8))
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "Array[Byte]"))
             }
@@ -1333,7 +1337,7 @@ final object Codec {
               case utf8: Utf8 =>
                 Right(utf8.toString())
               case bytes: ByteBuffer =>
-                AvroError.catchNonFatal(Right(Charset.forName("UTF-8").decode(bytes).toString))
+                AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
               case other =>
                 Left {
                   AvroError
