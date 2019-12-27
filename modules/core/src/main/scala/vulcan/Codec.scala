@@ -421,7 +421,12 @@ final object Codec {
       Right(SchemaBuilder.builder().doubleType()),
       java.lang.Double.valueOf(_).asRight,
       (value, schema) =>
-        validateSchemaType(schema, "Double", Schema.Type.DOUBLE, List(Schema.Type.FLOAT, Schema.Type.INT, Schema.Type.LONG)) *>
+        validateSchemaType(
+          schema,
+          "Double",
+          Schema.Type.DOUBLE,
+          List(Schema.Type.FLOAT, Schema.Type.INT, Schema.Type.LONG)
+        ) >>
           decodeExpectedType(value, "Double", "Double") {
             case double: java.lang.Double => Right(double)
             case float: java.lang.Float   => Right(float.toDouble)
@@ -1534,10 +1539,10 @@ final object Codec {
     )
 
   private[vulcan] def validateSchemaType(
-      schema: Schema,
-      decodingTypeName: String,
-      expectedSchemaType: Schema.Type,
-      promotableSchemaTypes: List[Schema.Type] = Nil
+    schema: Schema,
+    decodingTypeName: String,
+    expectedSchemaType: Schema.Type,
+    promotableSchemaTypes: List[Schema.Type] = Nil
   ): Either[AvroError, Unit] = {
     if ((expectedSchemaType :: promotableSchemaTypes) contains schema.getType) Right(())
     else
