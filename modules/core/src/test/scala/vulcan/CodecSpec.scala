@@ -1425,7 +1425,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[Option[Int]](
             unsafeEncode(Option(1)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding scala.Option, expected schema type UNION"
+            "Got unexpected schema type INT while decoding union, expected schema type UNION"
           )
         }
 
@@ -2469,14 +2469,14 @@ final class CodecSpec extends BaseSpec {
         it("should error if subtype is not an alternative") {
           assertEncodeError[SealedTraitCaseClassIncomplete](
             SecondInSealedTraitCaseClassIncomplete(0d),
-            "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
+            "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete"
           )
         }
 
         it("should error if subtype is not an alternative and value null") {
           assertEncodeError[SealedTraitCaseClassIncomplete](
             null,
-            "Exhausted alternatives for type null while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
+            "Exhausted alternatives for type null"
           )
         }
 
@@ -2494,7 +2494,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding vulcan.examples.SealedTraitCaseClass, expected schema type UNION"
+            "Got unexpected schema type STRING while decoding union, expected schema type UNION"
           )
         }
 
@@ -2502,7 +2502,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode(123d),
             unsafeSchema[SealedTraitCaseClass],
-            "Exhausted alternatives for type java.lang.Double while decoding vulcan.examples.SealedTraitCaseClass"
+            "Exhausted alternatives for type java.lang.Double"
           )
         }
 
@@ -2510,7 +2510,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[SealedTraitCaseClass](
             null,
             unsafeSchema[SealedTraitCaseClass],
-            "Exhausted alternatives for type null while decoding vulcan.examples.SealedTraitCaseClass"
+            "Exhausted alternatives for type null"
           )
         }
 
@@ -2518,7 +2518,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[SealedTraitCaseClassSingle](
             unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
             unsafeSchema[SealedTraitCaseClass],
-            "Missing schema vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union for type vulcan.examples.SealedTraitCaseClassSingle"
+            "Missing schema vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union"
           )
         }
 
@@ -2526,7 +2526,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
             unsafeSchema[SealedTraitCaseClassSingle],
-            "Missing alternative vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union for type vulcan.examples.SealedTraitCaseClass"
+            "Missing alternative vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union"
           )
         }
 

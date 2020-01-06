@@ -18,8 +18,8 @@ package object generic {
   implicit final val cnilCodec: Codec[CNil] =
     Codec.instance(
       Right(Schema.createUnion()),
-      cnil => Left(AvroError.encodeExhaustedAlternatives(cnil, "Coproduct")),
-      (value, _) => Left(AvroError.decodeExhaustedAlternatives(value, "Coproduct"))
+      cnil => Left(AvroError.encodeExhaustedAlternatives(cnil, Some("Coproduct"))),
+      (value, _) => Left(AvroError.decodeExhaustedAlternatives(value, Some("Coproduct")))
     )
 
   implicit final def coproductCodec[H, T <: Coproduct](
@@ -57,7 +57,7 @@ package object generic {
                       val subschema =
                         schema.getTypes.asScala
                           .find(_.getFullName == name)
-                          .toRight(AvroError.decodeMissingUnionSchema(name, "Coproduct"))
+                          .toRight(AvroError.decodeMissingUnionSchema(name, Some("Coproduct")))
 
                       subschema
                         .flatMap(headCodec.decode(container, _))
@@ -256,12 +256,12 @@ package object generic {
                   val subtypeUnionSchema =
                     schema.getTypes.asScala
                       .find(_.getFullName == subtypeName)
-                      .toRight(AvroError.decodeMissingUnionSchema(subtypeName, typeName))
+                      .toRight(AvroError.decodeMissingUnionSchema(subtypeName, Some(typeName)))
 
                   def subtypeMatching =
                     sealedTrait.subtypes
                       .find(_.typeclass.schema.exists(_.getFullName == subtypeName))
-                      .toRight(AvroError.decodeMissingUnionAlternative(subtypeName, typeName))
+                      .toRight(AvroError.decodeMissingUnionAlternative(subtypeName, Some(typeName)))
 
                   subtypeUnionSchema.flatMap { subtypeSchema =>
                     subtypeMatching.flatMap { subtype =>
@@ -288,7 +288,7 @@ package object generic {
                         }
                     }
                     .getOrElse {
-                      Left(AvroError.decodeExhaustedAlternatives(other, typeName))
+                      Left(AvroError.decodeExhaustedAlternatives(other, Some(typeName)))
                     }
               }
 

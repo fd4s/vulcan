@@ -1416,16 +1416,14 @@ final object Codec {
     *
     * @group Create
     */
-  final def union[A](f: AltBuilder[A] => Chain[Alt[A]])(
-    implicit tag: WeakTypeTag[A]
-  ): Codec[A] = {
-    val typeName = fullNameFrom(tag)
+  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec[A] = {
     val alts = f(AltBuilder.instance)
     val schema = AvroError.catchNonFatal {
       alts.toList
         .traverse(_.codec.schema)
         .map(schemas => Schema.createUnion(schemas.asJava))
     }
+
     Codec.instance(
       schema,
       a =>
@@ -1434,7 +1432,7 @@ final object Codec {
             alt.prism.getOption(a).map(alt.codec.encode)
           }
           .getOrElse {
-            Left(AvroError.encodeExhaustedAlternatives(a, typeName))
+            Left(AvroError.encodeExhaustedAlternatives(a, None))
           },
       (value, schema) => {
         schema.getType() match {
@@ -1447,12 +1445,12 @@ final object Codec {
                 val altUnionSchema =
                   schema.getTypes.asScala
                     .find(_.getFullName == altName)
-                    .toRight(AvroError.decodeMissingUnionSchema(altName, typeName))
+                    .toRight(AvroError.decodeMissingUnionSchema(altName, None))
 
                 def altMatching =
                   alts
                     .find(_.codec.schema.exists(_.getFullName == altName))
-                    .toRight(AvroError.decodeMissingUnionAlternative(altName, typeName))
+                    .toRight(AvroError.decodeMissingUnionAlternative(altName, None))
 
                 altUnionSchema.flatMap { altSchema =>
                   altMatching.flatMap { alt =>
@@ -1482,7 +1480,7 @@ final object Codec {
                       }
                   }
                   .getOrElse {
-                    Left(AvroError.decodeExhaustedAlternatives(other, typeName))
+                    Left(AvroError.decodeExhaustedAlternatives(other, None))
                   }
             }
 
@@ -1490,7 +1488,7 @@ final object Codec {
             Left {
               AvroError
                 .decodeUnexpectedSchemaType(
-                  typeName,
+                  "union",
                   schemaType,
                   Schema.Type.UNION
                 )
