@@ -449,13 +449,13 @@ final object Codec {
     */
   final def enum[A](
     name: String,
+    namespace: String,
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A],
-    namespace: String,
-    aliases: Seq[String] = Seq.empty,
-    doc: Option[String] = None,
     default: Option[A] = None,
+    doc: Option[String] = None,
+    aliases: Seq[String] = Seq.empty,
     props: Props = Props.empty
   ): Codec[A] = {
     val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
@@ -535,12 +535,12 @@ final object Codec {
     */
   final def fixed[A](
     name: String,
+    namespace: String,
     size: Int,
     encode: A => Array[Byte],
     decode: Array[Byte] => Either[AvroError, A],
-    namespace: String,
-    aliases: Seq[String] = Seq.empty,
     doc: Option[String] = None,
+    aliases: Seq[String] = Seq.empty,
     props: Props = Props.empty
   ): Codec[A] = {
     val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
