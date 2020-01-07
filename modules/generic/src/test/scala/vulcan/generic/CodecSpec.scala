@@ -349,7 +349,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if value is not an alternative") {
             assertEncodeError[SealedTraitCaseClassIncomplete](
               SecondInSealedTraitCaseClassIncomplete(0),
-              "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete while encoding vulcan.examples.SealedTraitCaseClassIncomplete"
+              "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete"
             )
           }
 

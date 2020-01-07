@@ -16,9 +16,6 @@ private[vulcan] final object tags {
         doc.substring(1, doc.length - 1)
     }
 
-  final def fullNameFrom[A](tag: WeakTypeTag[A]): String =
-    tag.tpe.typeSymbol.fullName
-
   final def nameFrom[A](tag: WeakTypeTag[A]): String =
     tag.tpe.typeSymbol.name.decodedName.toString
 

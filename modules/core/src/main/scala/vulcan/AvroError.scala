@@ -85,15 +85,25 @@ final object AvroError {
 
   private[vulcan] final def decodeMissingUnionSchema(
     subtypeName: String,
-    decodingTypeName: String
+    decodingTypeName: Option[String]
   ): AvroError =
-    AvroError(s"Missing schema $subtypeName in union for type $decodingTypeName")
+    AvroError(decodingTypeName match {
+      case Some(decodingTypeName) =>
+        s"Missing schema $subtypeName in union for type $decodingTypeName"
+      case None =>
+        s"Missing schema $subtypeName in union"
+    })
 
   private[vulcan] final def decodeMissingUnionAlternative(
     alternativeName: String,
-    decodingTypeName: String
+    decodingTypeName: Option[String]
   ): AvroError =
-    AvroError(s"Missing alternative $alternativeName in union for type $decodingTypeName")
+    AvroError(decodingTypeName match {
+      case Some(decodingTypeName) =>
+        s"Missing alternative $alternativeName in union for type $decodingTypeName"
+      case None =>
+        s"Missing alternative $alternativeName in union"
+    })
 
   private[vulcan] final def decodeNameMismatch(
     fullName: String,
@@ -171,11 +181,16 @@ final object AvroError {
 
   private[vulcan] final def decodeExhaustedAlternatives(
     value: Any,
-    decodingTypeName: String
+    decodingTypeName: Option[String]
   ): AvroError =
     AvroError {
       val typeName = if (value != null) value.getClass().getTypeName() else "null"
-      s"Exhausted alternatives for type $typeName while decoding $decodingTypeName"
+      decodingTypeName match {
+        case Some(decodingTypeName) =>
+          s"Exhausted alternatives for type $typeName while decoding $decodingTypeName"
+        case None =>
+          s"Exhausted alternatives for type $typeName"
+      }
     }
 
   private[vulcan] final def unexpectedChar(
@@ -218,11 +233,16 @@ final object AvroError {
 
   private[vulcan] final def encodeExhaustedAlternatives(
     value: Any,
-    encodingTypeName: String
+    encodingTypeName: Option[String]
   ): AvroError =
     AvroError {
       val typeName = if (value != null) value.getClass().getTypeName() else "null"
-      s"Exhausted alternatives for type $typeName while encoding $encodingTypeName"
+      encodingTypeName match {
+        case Some(encodingTypeName) =>
+          s"Exhausted alternatives for type $typeName while encoding $encodingTypeName"
+        case None =>
+          s"Exhausted alternatives for type $typeName"
+      }
     }
 
   private[vulcan] final def encodeSymbolNotInSchema(
