@@ -66,10 +66,7 @@ lazy val generic = project
     publishSettings,
     mimaSettings,
     scalaSettings,
-    testSettings ++ Seq(
-      // Magnolia uses deprecated Either#left.get on Scala 2.13
-      scalacOptions in Test -= "-Xfatal-warnings"
-    )
+    testSettings
   )
   .dependsOn(core)
 
