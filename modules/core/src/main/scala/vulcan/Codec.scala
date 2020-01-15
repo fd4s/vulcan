@@ -494,16 +494,13 @@ final object Codec {
           case Schema.Type.ENUM =>
             value match {
               case enum: GenericEnumSymbol[_] =>
-                val fullName = schema.getFullName()
-                if (fullName == typeName) {
-                  val symbols = schema.getEnumSymbols().asScala.toList
-                  val symbol = enum.toString()
+                val symbols = schema.getEnumSymbols().asScala.toList
+                val symbol = enum.toString()
 
-                  if (symbols.contains(symbol))
-                    decode(symbol)
-                  else
-                    Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, typeName))
-                } else Left(AvroError.decodeNameMismatch(schema.getFullName(), typeName))
+                if (symbols.contains(symbol))
+                  decode(symbol)
+                else
+                  Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, typeName))
 
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "GenericEnumSymbol", typeName))
@@ -578,26 +575,24 @@ final object Codec {
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.FIXED =>
-              if (schema.getFullName() == typeName) {
-                value match {
-                  case fixed: GenericFixed =>
-                    val bytes = fixed.bytes()
-                    if (bytes.length == schema.getFixedSize()) {
-                      decode(bytes)
-                    } else {
-                      Left {
-                        AvroError.decodeNotEqualFixedSize(
-                          bytes.length,
-                          schema.getFixedSize(),
-                          typeName
-                        )
-                      }
+              value match {
+                case fixed: GenericFixed =>
+                  val bytes = fixed.bytes()
+                  if (bytes.length == schema.getFixedSize()) {
+                    decode(bytes)
+                  } else {
+                    Left {
+                      AvroError.decodeNotEqualFixedSize(
+                        bytes.length,
+                        schema.getFixedSize(),
+                        typeName
+                      )
                     }
+                  }
 
-                  case other =>
-                    Left(AvroError.decodeUnexpectedType(other, "GenericFixed", typeName))
-                }
-              } else Left(AvroError.decodeNameMismatch(schema.getFullName(), typeName))
+                case other =>
+                  Left(AvroError.decodeUnexpectedType(other, "GenericFixed", typeName))
+              }
 
             case schemaType =>
               Left {
@@ -1195,24 +1190,21 @@ final object Codec {
             value match {
               case record: IndexedRecord =>
                 val recordSchema = record.getSchema()
-                if (recordSchema.getFullName() == typeName) {
-                  val recordFields = recordSchema.getFields()
+                val recordFields = recordSchema.getFields()
 
-                  free.foldMap {
-                    λ[Field[A, ?] ~> Either[AvroError, ?]] { field =>
-                      val schemaField = recordSchema.getField(field.name)
-                      if (schemaField != null) {
-                        val value = record.get(recordFields.indexOf(schemaField))
-                        field.codec.decode(value, schemaField.schema())
-                      } else {
-                        field.default.toRight {
-                          AvroError.decodeMissingRecordField(field.name, typeName)
-                        }
+                free.foldMap {
+                  λ[Field[A, ?] ~> Either[AvroError, ?]] { field =>
+                    val schemaField = recordSchema.getField(field.name)
+                    if (schemaField != null) {
+                      val value = record.get(recordFields.indexOf(schemaField))
+                      field.codec.decode(value, schemaField.schema())
+                    } else {
+                      field.default.toRight {
+                        AvroError.decodeMissingRecordField(field.name, typeName)
                       }
                     }
                   }
-                } else
-                  Left(AvroError.decodeUnexpectedRecordName(recordSchema.getFullName(), typeName))
+                }
 
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "IndexedRecord", typeName))
@@ -1440,16 +1432,16 @@ final object Codec {
             value match {
               case container: GenericContainer =>
                 val altName =
-                  container.getSchema.getFullName
+                  container.getSchema.getName
 
                 val altUnionSchema =
                   schema.getTypes.asScala
-                    .find(_.getFullName == altName)
+                    .find(_.getName == altName)
                     .toRight(AvroError.decodeMissingUnionSchema(altName, None))
 
                 def altMatching =
                   alts
-                    .find(_.codec.schema.exists(_.getFullName == altName))
+                    .find(_.codec.schema.exists(_.getName == altName))
                     .toRight(AvroError.decodeMissingUnionAlternative(altName, None))
 
                 altUnionSchema.flatMap { altSchema =>
@@ -1468,9 +1460,9 @@ final object Codec {
                   .collectFirstSome { alt =>
                     alt.codec.schema
                       .traverse { altSchema =>
-                        val altName = altSchema.getFullName
+                        val altName = altSchema.getName
                         schemaTypes
-                          .find(_.getFullName == altName)
+                          .find(_.getName == altName)
                           .flatMap { schema =>
                             alt.codec
                               .decode(other, schema)

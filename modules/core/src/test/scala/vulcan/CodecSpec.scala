@@ -544,14 +544,6 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should error if schema full name doesn't match type name") {
-          assertDecodeError[SealedTraitEnum](
-            unsafeEncode[SealedTraitEnum](FirstInSealedTraitEnum),
-            SchemaBuilder.builder().enumeration("the.enum").symbols(),
-            "Unable to decode vulcan.examples.SealedTraitEnum using schema with name the.enum since names do not match"
-          )
-        }
-
         it("should error if encoded value is not a schema symbol") {
           assertDecodeError[SealedTraitEnum](
             new GenericData.EnumSymbol(
@@ -624,14 +616,6 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode[FixedBoolean](FalseFixedBoolean),
             unsafeSchema[String],
             "Got unexpected schema type STRING while decoding vulcan.examples.FixedBoolean, expected schema type FIXED"
-          )
-        }
-
-        it("should error if schema full name does not match") {
-          assertDecodeError[FixedBoolean](
-            unsafeEncode[FixedBoolean](FalseFixedBoolean),
-            SchemaBuilder.builder().fixed("TheName").size(1),
-            "Unable to decode vulcan.examples.FixedBoolean using schema with name TheName since names do not match"
           )
         }
 
@@ -2091,37 +2075,6 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should error if writer schema full name does not match") {
-          assertDecodeError[CaseClassTwoFields](
-            {
-              val schema =
-                Schema.createRecord("Record", null, "com.xyz", false)
-
-              schema.setFields(
-                List(
-                  new Schema.Field(
-                    "name",
-                    unsafeSchema[String],
-                    null
-                  ),
-                  new Schema.Field(
-                    "age",
-                    unsafeSchema[Int],
-                    null
-                  )
-                ).asJava
-              )
-
-              val record = new GenericData.Record(schema)
-              record.put(0, "name")
-              record.put(1, 123)
-              record
-            },
-            unsafeSchema[CaseClassTwoFields],
-            "Got record writer schema with name com.xyz.Record, expected name vulcan.examples.CaseClassTwoFields"
-          )
-        }
-
         it("should error if any field without default value is missing") {
           assertDecodeError[CaseClassTwoFields](
             {
@@ -2518,7 +2471,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[SealedTraitCaseClassSingle](
             unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
             unsafeSchema[SealedTraitCaseClass],
-            "Missing schema vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union"
+            "Missing schema CaseClassInSealedTraitCaseClassSingle in union"
           )
         }
 
@@ -2526,7 +2479,7 @@ final class CodecSpec extends BaseSpec {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
             unsafeSchema[SealedTraitCaseClassSingle],
-            "Missing alternative vulcan.examples.CaseClassInSealedTraitCaseClassSingle in union"
+            "Missing alternative CaseClassInSealedTraitCaseClassSingle in union"
           )
         }
 
