@@ -52,11 +52,11 @@ package object generic {
               case container: GenericContainer =>
                 headCodec.schema.flatMap {
                   headSchema =>
-                    val name = container.getSchema.getFullName
-                    if (headSchema.getFullName == name) {
+                    val name = container.getSchema.getName
+                    if (headSchema.getName == name) {
                       val subschema =
                         schema.getTypes.asScala
-                          .find(_.getFullName == name)
+                          .find(_.getName == name)
                           .toRight(AvroError.decodeMissingUnionSchema(name, Some("Coproduct")))
 
                       subschema
@@ -75,9 +75,9 @@ package object generic {
 
                 headCodec.schema
                   .traverse { headSchema =>
-                    val headName = headSchema.getFullName
+                    val headName = headSchema.getName
                     schemaTypes
-                      .find(_.getFullName == headName)
+                      .find(_.getName == headName)
                       .flatMap { schema =>
                         headCodec
                           .decode(other, schema)
@@ -189,23 +189,18 @@ package object generic {
                 value match {
                   case record: IndexedRecord =>
                     val recordSchema = record.getSchema()
-                    if (recordSchema.getFullName() == typeName) {
-                      val recordFields = recordSchema.getFields()
+                    val recordFields = recordSchema.getFields()
 
-                      val fields =
-                        caseClass.parameters.toList.traverse { param =>
-                          val field = recordSchema.getField(param.label)
-                          if (field != null) {
-                            val value = record.get(recordFields.indexOf(field))
-                            param.typeclass.decode(value, field.schema())
-                          } else Left(AvroError.decodeMissingRecordField(param.label, typeName))
-                        }
+                    val fields =
+                      caseClass.parameters.toList.traverse { param =>
+                        val field = recordSchema.getField(param.label)
+                        if (field != null) {
+                          val value = record.get(recordFields.indexOf(field))
+                          param.typeclass.decode(value, field.schema())
+                        } else Left(AvroError.decodeMissingRecordField(param.label, typeName))
+                      }
 
-                      fields.map(caseClass.rawConstruct)
-                    } else
-                      Left(
-                        AvroError.decodeUnexpectedRecordName(recordSchema.getFullName(), typeName)
-                      )
+                    fields.map(caseClass.rawConstruct)
 
                   case other =>
                     Left(AvroError.decodeUnexpectedType(other, "IndexedRecord", typeName))
@@ -251,16 +246,16 @@ package object generic {
               value match {
                 case container: GenericContainer =>
                   val subtypeName =
-                    container.getSchema.getFullName
+                    container.getSchema.getName
 
                   val subtypeUnionSchema =
                     schema.getTypes.asScala
-                      .find(_.getFullName == subtypeName)
+                      .find(_.getName == subtypeName)
                       .toRight(AvroError.decodeMissingUnionSchema(subtypeName, Some(typeName)))
 
                   def subtypeMatching =
                     sealedTrait.subtypes
-                      .find(_.typeclass.schema.exists(_.getFullName == subtypeName))
+                      .find(_.typeclass.schema.exists(_.getName == subtypeName))
                       .toRight(AvroError.decodeMissingUnionAlternative(subtypeName, Some(typeName)))
 
                   subtypeUnionSchema.flatMap { subtypeSchema =>
@@ -277,9 +272,9 @@ package object generic {
                     .collectFirstSome { subtype =>
                       subtype.typeclass.schema
                         .traverse { subtypeSchema =>
-                          val subtypeName = subtypeSchema.getFullName
+                          val subtypeName = subtypeSchema.getName
                           schemaTypes
-                            .find(_.getFullName == subtypeName)
+                            .find(_.getName == subtypeName)
                             .flatMap { schema =>
                               subtype.typeclass
                                 .decode(other, schema)
