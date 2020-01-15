@@ -140,11 +140,11 @@ final object AvroError {
     }
 
   private[vulcan] final def decodeUnexpectedRecordName(
-    recordFullName: String,
+    recordName: String,
     decodingTypeName: String
   ): AvroError =
     AvroError {
-      s"Got record writer schema with name $recordFullName, expected name $decodingTypeName"
+      s"Got record writer schema with name $recordName, expected name $decodingTypeName"
     }
 
   private[vulcan] final def decodeUnexpectedSchemaType(
