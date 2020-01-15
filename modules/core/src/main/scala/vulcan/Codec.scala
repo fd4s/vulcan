@@ -663,14 +663,14 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromBinary[A](bytes: Array[Byte])(implicit codec: Codec[A]): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
-      AvroError.catchNonFatal {
-        val bais = new ByteArrayInputStream(bytes)
-        val decoder = DecoderFactory.get.binaryDecoder(bais, null)
-        val value = new GenericDatumReader[Any](schema).read(null, decoder)
-        codec.decode(value, schema)
-      }
+  final def fromBinary[A](bytes: Array[Byte], writerSchema: Schema)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
+    AvroError.catchNonFatal {
+      val bais = new ByteArrayInputStream(bytes)
+      val decoder = DecoderFactory.get.binaryDecoder(bais, null)
+      val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
+      codec.decode(value, writerSchema)
     }
 
   /**
@@ -679,14 +679,14 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
-      AvroError.catchNonFatal {
-        val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
-        val decoder = DecoderFactory.get.jsonDecoder(schema, bais)
-        val value = new GenericDatumReader[Any](schema).read(null, decoder)
-        codec.decode(value, schema)
-      }
+  final def fromJson[A](json: String, writerSchema: Schema)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
+    AvroError.catchNonFatal {
+      val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
+      val decoder = DecoderFactory.get.jsonDecoder(writerSchema, bais)
+      val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
+      codec.decode(value, writerSchema)
     }
 
   /**

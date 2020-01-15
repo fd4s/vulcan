@@ -763,12 +763,19 @@ final class CodecSpec extends BaseSpec {
 
     describe("fromJson") {
       it("should decode from avro json format") {
-        assert(Codec.fromJson[Int]("1") == Right(1))
+        assert(Codec.fromJson[Int]("1", unsafeSchema[Int]) == Right(1))
       }
 
       it("should error if the json does not match the type") {
-        val result = Codec.fromJson[Int]("badValue")
+        val result = Codec.fromJson[Int]("badValue", unsafeSchema[String])
         assert(result.isLeft)
+        assert(result.swap.exists(_.message.contains("org.apache.avro.AvroTypeException: Expected string. Got VALUE_NUMBER_INT")))
+      }
+
+      it("should error if the schema does not match the type") {
+        val result = Codec.fromJson[Int]("1", unsafeSchema[String])
+        assert(result.isLeft)
+        println(result)
         assert(result.swap.exists(_.message.contains("Unrecognized token 'badValue'")))
       }
     }
