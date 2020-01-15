@@ -11,7 +11,7 @@ Vulcan provides Avro schemas, encoders, and decoders between Scala types and typ
 
 - Derivation of schemas, encoders, and decoders for `case class`es and `sealed trait`s.
 
-Documentation is kept up-to-date with new releases, currently documenting v@LATEST_VERSION@ on Scala @DOCS_SCALA_MINOR_VERSION@.
+Documentation is kept up-to-date, currently documenting v@LATEST_VERSION@ on Scala @DOCS_SCALA_MINOR_VERSION@.
 
 ## Getting Started
 
@@ -69,8 +69,8 @@ Stable release artifacts are signed with the [`7AD5 92B5 B105 24E3`](https://key
 
 ### Compatibility
 
-Backwards binary-compatibility for the library is guaranteed between patch versions.<br>
-For example, `@LATEST_MINOR_VERSION@.x` is backwards binary-compatible with `@LATEST_MINOR_VERSION@.y` for any `x > y`.
+Backwards binary-compatibility for the library is guaranteed between minor and patch versions.<br>
+Version `@LATEST_MAJOR_VERSION@.a.b` is backwards binary-compatible with `@LATEST_MAJOR_VERSION@.c.d` for any `a > c` or `a = c` and `b > d`.
 
 Please note binary-compatibility is not guaranteed between milestone releases.
 

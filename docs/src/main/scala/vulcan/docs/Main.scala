@@ -13,6 +13,11 @@ object Main {
     s"$major.$minor"
   }
 
+  def majorVersion(version: String): String = {
+    val Array(major, _, _) = version.split('.')
+    major
+  }
+
   def minorVersionsString(versions: Seq[String]): String = {
     val minorVersions = versions.map(minorVersion)
     if (minorVersions.size <= 2) minorVersions.mkString(" and ")
@@ -37,7 +42,7 @@ object Main {
           "REFINED_CROSS_SCALA_VERSIONS" -> minorVersionsString(refinedCrossScalaVersions),
           "LATEST_VERSION" -> latestVersion,
           "LATEST_SNAPSHOT_VERSION" -> latestSnapshotVersion,
-          "LATEST_MINOR_VERSION" -> minorVersion(latestVersion),
+          "LATEST_MAJOR_VERSION" -> majorVersion(latestVersion),
           "DOCS_SCALA_MINOR_VERSION" -> scalaMinorVersion,
           "SCALA_PUBLISH_VERSIONS" -> minorVersionsString(crossScalaVersions),
           "API_BASE_URL" -> s"/vulcan/api/vulcan",
