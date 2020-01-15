@@ -191,10 +191,14 @@ final object Codec {
       ByteBuffer.wrap(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case Schema.Type.BYTES =>
+          case Schema.Type.BYTES | Schema.Type.STRING =>
             value match {
               case buffer: ByteBuffer =>
                 Right(buffer.array())
+              case utf8: Utf8 =>
+                Right(utf8.getBytes)
+              case string: String =>
+                Right(string.getBytes(StandardCharsets.UTF_8))
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "Array[Byte]"))
             }
@@ -413,10 +417,16 @@ final object Codec {
       java.lang.Double.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case Schema.Type.DOUBLE =>
+          case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
             value match {
               case double: java.lang.Double =>
                 Right(double)
+              case float: java.lang.Float =>
+                Right(float.toDouble)
+              case int: java.lang.Integer =>
+                Right(int.toDouble)
+              case long: java.lang.Long =>
+                Right(long.toDouble)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Double", "Double"))
             }
@@ -622,10 +632,14 @@ final object Codec {
       java.lang.Float.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case Schema.Type.FLOAT =>
+          case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
             value match {
               case float: java.lang.Float =>
                 Right(float)
+              case int: java.lang.Integer =>
+                Right(int.toFloat)
+              case long: java.lang.Long =>
+                Right(long.toFloat)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Float", "Float"))
             }
@@ -649,14 +663,14 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromBinary[A](bytes: Array[Byte])(implicit codec: Codec[A]): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
-      AvroError.catchNonFatal {
-        val bais = new ByteArrayInputStream(bytes)
-        val decoder = DecoderFactory.get.binaryDecoder(bais, null)
-        val value = new GenericDatumReader[Any](schema).read(null, decoder)
-        codec.decode(value, schema)
-      }
+  final def fromBinary[A](bytes: Array[Byte], writerSchema: Schema)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
+    AvroError.catchNonFatal {
+      val bais = new ByteArrayInputStream(bytes)
+      val decoder = DecoderFactory.get.binaryDecoder(bais, null)
+      val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
+      codec.decode(value, writerSchema)
     }
 
   /**
@@ -665,14 +679,14 @@ final object Codec {
     *
     * @group Utilities
     */
-  final def fromJson[A](json: String)(implicit codec: Codec[A]): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
-      AvroError.catchNonFatal {
-        val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
-        val decoder = DecoderFactory.get.jsonDecoder(schema, bais)
-        val value = new GenericDatumReader[Any](schema).read(null, decoder)
-        codec.decode(value, schema)
-      }
+  final def fromJson[A](json: String, writerSchema: Schema)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
+    AvroError.catchNonFatal {
+      val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
+      val decoder = DecoderFactory.get.jsonDecoder(writerSchema, bais)
+      val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
+      codec.decode(value, writerSchema)
     }
 
   /**
@@ -844,10 +858,12 @@ final object Codec {
       java.lang.Long.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case Schema.Type.LONG =>
+          case Schema.Type.LONG | Schema.Type.INT =>
             value match {
               case long: java.lang.Long =>
                 Right(long)
+              case int: java.lang.Integer =>
+                Right(int.toLong)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Long", "Long"))
             }
@@ -1347,12 +1363,14 @@ final object Codec {
       new Utf8(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case Schema.Type.STRING =>
+          case Schema.Type.STRING | Schema.Type.BYTES =>
             value match {
               case string: String =>
                 Right(string)
               case utf8: Utf8 =>
                 Right(utf8.toString())
+              case bytes: ByteBuffer =>
+                AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
               case other =>
                 Left {
                   AvroError

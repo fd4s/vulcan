@@ -3,9 +3,11 @@ package vulcan
 import cats.data._
 import cats.implicits._
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
-import org.apache.avro.{Conversions, Schema, SchemaBuilder, LogicalTypes}
+
+import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
@@ -151,11 +153,11 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error on non-bytes schema") {
+        it("should error on schema other than bytes or string") {
           assertDecodeError[Array[Byte]](
             unsafeEncode[Array[Byte]](Array(1)),
-            unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Array[Byte], expected schema type BYTES"
+            unsafeSchema[Int],
+            "Got unexpected schema type INT while decoding Array[Byte], expected schema type BYTES"
           )
         }
 
@@ -167,7 +169,14 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should decode as bytes") {
+        it("should decode string as bytes") {
+          assertDecodeIs[Array[Byte]](
+            unsafeEncode("foo"),
+            Right("foo".getBytes(StandardCharsets.UTF_8))
+          )
+        }
+
+        it("should decode bytes as bytes") {
           assertDecodeIs[Array[Byte]](
             unsafeEncode[Array[Byte]](Array(1)),
             Right(Array[Byte](1))
@@ -453,23 +462,47 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not double") {
+        it("should error if schema is not double or promotable to double") {
           assertDecodeError[Double](
             unsafeEncode(123d),
-            unsafeSchema[Long],
-            "Got unexpected schema type LONG while decoding Double, expected schema type DOUBLE"
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Double, expected schema type DOUBLE"
           )
         }
 
-        it("should error if value is not double") {
+        it("should error if value is not double or promotable to double") {
           assertDecodeError[Double](
-            unsafeEncode(10L),
+            unsafeEncode("foo"),
             unsafeSchema[Double],
-            "Got unexpected type java.lang.Long while decoding Double, expected type Double"
+            "Got unexpected type org.apache.avro.util.Utf8 while decoding Double, expected type Double"
           )
         }
 
-        it("should decode as Double") {
+        it("should decode Float as Double") {
+          assertDecodeIs[Double](
+            unsafeEncode(123f),
+            Right(123d),
+            Some(unsafeSchema[Float])
+          )
+        }
+
+        it("should decode Int as Double") {
+          assertDecodeIs[Double](
+            unsafeEncode(123),
+            Right(123d),
+            Some(unsafeSchema[Int])
+          )
+        }
+
+        it("should decode Long as Double") {
+          assertDecodeIs[Double](
+            unsafeEncode(123L),
+            Right(123d),
+            Some(unsafeSchema[Long])
+          )
+        }
+
+        it("should decode Double as Double") {
           val value = 123d
           assertDecodeIs[Double](
             unsafeEncode(value),
@@ -686,23 +719,39 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not float") {
+        it("should error if schema is not float or promotable to float") {
           assertDecodeError[Float](
             unsafeEncode(123f),
-            unsafeSchema[Long],
-            "Got unexpected schema type LONG while decoding Float, expected schema type FLOAT"
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Float, expected schema type FLOAT"
           )
         }
 
-        it("should error if value is not float") {
+        it("should error if value is not float or promotable to float") {
           assertDecodeError[Float](
-            unsafeEncode(10L),
+            unsafeEncode("foo"),
             unsafeSchema[Float],
-            "Got unexpected type java.lang.Long while decoding Float, expected type Float"
+            "Got unexpected type org.apache.avro.util.Utf8 while decoding Float, expected type Float"
           )
         }
 
-        it("should decode as Float") {
+        it("should decode Int as Float") {
+          assertDecodeIs[Float](
+            unsafeEncode(123),
+            Right(123f),
+            Some(unsafeSchema[Int])
+          )
+        }
+
+        it("should decode Long as Float") {
+          assertDecodeIs[Float](
+            unsafeEncode(123L),
+            Right(123f),
+            Some(unsafeSchema[Long])
+          )
+        }
+
+        it("should decode Float as Float") {
           val value = 123f
           assertDecodeIs[Float](
             unsafeEncode(value),
@@ -714,13 +763,19 @@ final class CodecSpec extends BaseSpec {
 
     describe("fromJson") {
       it("should decode from avro json format") {
-        assert(Codec.fromJson[Int]("1") == Right(1))
+        assert(Codec.fromJson[Int]("1", unsafeSchema[Int]) == Right(1))
       }
 
       it("should error if the json does not match the type") {
-        val result = Codec.fromJson[Int]("badValue")
+        val result = Codec.fromJson[Int]("badValue", unsafeSchema[String])
         assert(result.isLeft)
         assert(result.swap.exists(_.message.contains("Unrecognized token 'badValue'")))
+      }
+
+      it("should error if the schema does not match the type") {
+        val result = Codec.fromJson[Int]("1", unsafeSchema[String])
+        assert(result.isLeft)
+        assert(result.swap.exists(_.message.contains("org.apache.avro.AvroTypeException: Expected string. Got VALUE_NUMBER_INT")))
       }
     }
 
@@ -1012,23 +1067,31 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not long") {
+        it("should error if schema is not int or long") {
           assertDecodeError[Long](
             unsafeEncode(123L),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Long, expected schema type LONG"
+            unsafeSchema[String],
+            "Got unexpected schema type STRING while decoding Long, expected schema type LONG"
           )
         }
 
-        it("should error if value is not long") {
+        it("should error if value is not int or long") {
           assertDecodeError[Long](
-            unsafeEncode(10),
+            unsafeEncode(123.0),
             unsafeSchema[Long],
-            "Got unexpected type java.lang.Integer while decoding Long, expected type Long"
+            "Got unexpected type java.lang.Double while decoding Long, expected type Long"
           )
         }
 
-        it("should decode utf8 as string") {
+        it("should decode int as long") {
+          assertDecodeIs[Long](
+            unsafeEncode(123),
+            Right(123L),
+            Some(unsafeSchema[Int])
+          )
+        }
+
+        it("should decode long as long") {
           val value = 123L
           assertDecodeIs[Long](
             unsafeEncode(value),
@@ -2410,7 +2473,7 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not string") {
+        it("should error if schema is not string or bytes") {
           assertDecodeError[String](
             unsafeEncode("abc"),
             unsafeSchema[Int],
@@ -2418,7 +2481,7 @@ final class CodecSpec extends BaseSpec {
           )
         }
 
-        it("should error if value is not utf8 or string") {
+        it("should error if value is not utf8, string, or bytes") {
           assertDecodeError[String](
             unsafeEncode(10),
             unsafeSchema[String],
@@ -2439,6 +2502,15 @@ final class CodecSpec extends BaseSpec {
           assertDecodeIs[String](
             value,
             Right(value)
+          )
+        }
+
+        it("should decode bytes as string") {
+          val value = ByteBuffer.wrap("abc".getBytes(StandardCharsets.UTF_8))
+          assertDecodeIs[String](
+            value,
+            Right("abc"),
+            Some(SchemaBuilder.builder().bytesType())
           )
         }
       }

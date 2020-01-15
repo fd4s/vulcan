@@ -249,7 +249,7 @@ final class RoundtripSpec extends BaseSpec {
     val binary = Codec.toBinary(a)
     assert(binary.isRight)
 
-    val decoded = Codec.fromBinary[A](binary.value)
+    val decoded = codec.schema.flatMap(Codec.fromBinary[A](binary.value, _))
     withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
       assert(decoded === Right(a))
     }
@@ -262,7 +262,7 @@ final class RoundtripSpec extends BaseSpec {
     val json = Codec.toJson(a)
     assert(json.isRight)
 
-    val decoded = Codec.fromJson[A](json.value)
+    val decoded = codec.schema.flatMap(Codec.fromJson[A](json.value, _))
     withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
       assert(decoded === Right(a))
     }
