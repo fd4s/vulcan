@@ -106,7 +106,7 @@ lazy val dependencySettings = Seq(
   libraryDependencies ++= Seq(
     "org.apache.avro" % "avro" % avroVersion,
     "org.typelevel" %% "cats-free" % catsVersion,
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
   ),
   libraryDependencies ++= Seq(
     "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC4",
