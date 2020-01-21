@@ -30,7 +30,13 @@ lazy val core = project
   .settings(
     moduleName := "vulcan",
     name := moduleName.value,
-    dependencySettings,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "org.apache.avro" % "avro" % avroVersion,
+        "org.typelevel" %% "cats-free" % catsVersion,
+        "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+      )
+    ),
     publishSettings,
     mimaSettings,
     scalaSettings,
@@ -103,11 +109,6 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
-  libraryDependencies ++= Seq(
-    "org.apache.avro" % "avro" % avroVersion,
-    "org.typelevel" %% "cats-free" % catsVersion,
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-  ),
   libraryDependencies ++= Seq(
     "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC4",
     "org.typelevel" %% "cats-testkit" % catsVersion,
