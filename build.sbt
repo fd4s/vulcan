@@ -113,7 +113,19 @@ lazy val dependencySettings = Seq(
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full)
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full),
+  pomPostProcess := { (node: xml.Node) =>
+    new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
+      def scopedDependency(e: xml.Elem): Boolean =
+        e.label == "dependency" && e.child.exists(_.label == "scope")
+
+      override def transform(node: xml.Node): xml.NodeSeq =
+        node match {
+          case e: xml.Elem if scopedDependency(e) => Nil
+          case _                                  => Seq(node)
+        }
+    }).transform(node).head
+  }
 )
 
 lazy val mdocSettings = Seq(
