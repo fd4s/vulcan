@@ -6,7 +6,7 @@ val enumeratumVersion = "1.5.15"
 
 val magnoliaVersion = "0.12.6"
 
-val refinedVersion = "0.9.10"
+val refinedVersion = "0.9.12"
 
 val shapelessVersion = "2.3.3"
 
