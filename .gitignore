@@ -4,3 +4,4 @@
 /website/variables.js
 /website/yarn.lock
 target/
+.idea/

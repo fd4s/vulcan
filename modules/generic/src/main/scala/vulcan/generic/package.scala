@@ -13,6 +13,7 @@ import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import shapeless.ops.coproduct.{Inject, Selector}
 import vulcan.internal.converters.collection._
+import vulcan.internal.schema.adaptForSchema
 
 package object generic {
   implicit final val cnilCodec: Codec[CNil] =
@@ -129,14 +130,23 @@ package object generic {
           AvroError.catchNonFatal {
             val fields =
               caseClass.parameters.toList.traverse { param =>
-                param.typeclass.schema.map { schema =>
-                  new Schema.Field(
-                    param.label,
-                    schema,
-                    param.annotations.collectFirst {
-                      case AvroDoc(doc) => doc
-                    }.orNull
-                  )
+                val defaultValue: Either[AvroError, Option[Any]] =
+                  param.default.traverse(param.typeclass.encode(_))
+                (param.typeclass.schema, defaultValue).mapN {
+                  case (schema, default) =>
+                    new Schema.Field(
+                      param.label,
+                      schema,
+                      param.annotations.collectFirst {
+                        case AvroDoc(doc) => doc
+                      }.orNull,
+                      adaptForSchema {
+                        default.map {
+                          case null  => Schema.Field.NULL_DEFAULT_VALUE
+                          case other => other
+                        }.orNull
+                      }
+                    )
                 }
               }
 

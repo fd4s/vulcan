@@ -2,7 +2,7 @@ package vulcan.generic
 
 import cats.implicits._
 import org.apache.avro.{Schema, SchemaBuilder}
-import org.apache.avro.generic.GenericData
+import org.apache.avro.generic.{GenericData, GenericRecordBuilder}
 import org.scalatest.Assertion
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -202,6 +202,12 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             }
           }
 
+          it("should use default constructor parameters for default values") {
+            assertSchemaIs[CaseClassDefaultFields](
+              """{"type":"record","name":"CaseClassDefaultFields","namespace":"vulcan.examples","fields":[{"name":"name","type":"string","default":"Pikachu"},{"name":"age","type":["null","int"],"default":null}]}"""
+            )
+          }
+
           it("should capture errors on invalid names") {
             assertSchemaError[CaseClassFieldInvalidName] {
               """org.apache.avro.SchemaParseException: Illegal initial character: -value"""
@@ -235,6 +241,18 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
                 val record = new GenericData.Record(unsafeSchema[CaseClassTwoFields])
                 record.put(0, unsafeEncode("the-name"))
                 record.put(1, unsafeEncode(0))
+                record
+              }
+            )
+          }
+
+          it("should encode as record using default values") {
+            assertEncodeIs[CaseClassDefaultFields](
+              CaseClassDefaultFields(age = Some(7)),
+              Right {
+                val record = new GenericData.Record(unsafeSchema[CaseClassDefaultFields])
+                record.put(0, unsafeEncode("Pikachu"))
+                record.put(1, unsafeEncode(7))
                 record
               }
             )
