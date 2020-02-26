@@ -1116,13 +1116,13 @@ final object Codec {
     doc: Option[String] = None,
     aliases: Seq[String] = Seq.empty,
     props: Props = Props.empty
-  )(f: FieldBuilder[A] => FreeApplicative[Field[A, ?], A]): Codec[A] = {
+  )(f: FieldBuilder[A] => FreeApplicative[Field[A, *], A]): Codec[A] = {
     val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
     val free = f(FieldBuilder.instance)
     val schema = AvroError.catchNonFatal {
       val fields =
         free.analyze {
-          λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]] { field =>
+          λ[Field[A, *] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]] { field =>
             field.codec.schema.flatMap { schema =>
               field.props.toChain
                 .flatMap { props =>
@@ -1187,7 +1187,7 @@ final object Codec {
         schema.flatMap { schema =>
           val fields =
             free.analyze {
-              λ[Field[A, ?] ~> λ[a => Either[AvroError, Chain[(String, Any)]]]] { field =>
+              λ[Field[A, *] ~> λ[a => Either[AvroError, Chain[(String, Any)]]]] { field =>
                 field.codec.encode(field.access(a)).map(result => Chain.one((field.name, result)))
               }
             }
@@ -1209,7 +1209,7 @@ final object Codec {
                 val recordFields = recordSchema.getFields()
 
                 free.foldMap {
-                  λ[Field[A, ?] ~> Either[AvroError, ?]] { field =>
+                  λ[Field[A, *] ~> Either[AvroError, *]] { field =>
                     val schemaField = recordSchema.getField(field.name)
                     if (schemaField != null) {
                       val value = record.get(recordFields.indexOf(schemaField))
@@ -1737,7 +1737,7 @@ final object Codec {
       order: Option[Schema.Field.Order] = None,
       aliases: Seq[String] = Seq.empty,
       props: Props = Props.empty
-    )(implicit codec: Codec[B]): FreeApplicative[Field[A, ?], B]
+    )(implicit codec: Codec[B]): FreeApplicative[Field[A, *], B]
   }
 
   private[vulcan] final object FieldBuilder {
@@ -1751,7 +1751,7 @@ final object Codec {
           order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
-        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, ?], B] =
+        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, *], B] =
           FreeApplicative.lift {
             Field(
               name = name,
