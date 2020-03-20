@@ -759,7 +759,12 @@ final class CodecSpec extends BaseSpec {
       it("should error if the schema does not match the type") {
         val result = Codec.fromJson[Int]("1", unsafeSchema[String])
         assert(result.isLeft)
-        assert(result.swap.exists(_.message.contains("org.apache.avro.AvroTypeException: Expected string. Got VALUE_NUMBER_INT")))
+        assert(
+          result.swap.exists(
+            _.message
+              .contains("org.apache.avro.AvroTypeException: Expected string. Got VALUE_NUMBER_INT")
+          )
+        )
       }
     }
 
@@ -1547,6 +1552,71 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(Option.empty[Int]),
             Right(None)
           )
+        }
+      }
+    }
+
+    describe("option.union") {
+      sealed trait FirstOrSecond
+
+      final case class First(value: Int) extends FirstOrSecond
+      object First {
+        implicit val firstCodec: Codec[First] =
+          Codec[Int].imap(apply)(_.value)
+      }
+
+      final case class Second(value: Double) extends FirstOrSecond
+      object Second {
+        implicit val secondCodec: Codec[Second] =
+          Codec[Double].imap(apply)(_.value)
+      }
+
+      implicit val codec: Codec[Option[FirstOrSecond]] =
+        Codec.union(alt => alt[None.type] |+| alt[Some[First]] |+| alt[Some[Second]])
+
+      describe("schema") {
+        it("should be encoded as union") {
+          assertSchemaIs[Option[FirstOrSecond]] {
+            """["null","int","double"]"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode none as null") {
+          assert(codec.encode(None) == Right(null))
+        }
+
+        it("should encode first as int") {
+          forAll { n: Int =>
+            assert(codec.encode(Some(First(n))) == Right(n))
+          }
+        }
+
+        it("should encode second as double") {
+          forAll { n: Double =>
+            assert(codec.encode(Some(Second(n))) == Right(n))
+          }
+        }
+      }
+
+      describe("decode") {
+        it("should decode null as none") {
+          assert(codec.decode(null, unsafeSchema[Option[FirstOrSecond]]) == Right(None))
+        }
+
+        it("should decode int as first") {
+          forAll { n: Int =>
+            assert(codec.decode(n, unsafeSchema[Option[FirstOrSecond]]) == Right(Some(First(n))))
+          }
+        }
+
+        it("should decode double as second") {
+          forAll { n: Double =>
+            assert(
+              codec.decode(n, unsafeSchema[Option[FirstOrSecond]]) == Right(Some(Second(n)))
+            )
+          }
         }
       }
     }
