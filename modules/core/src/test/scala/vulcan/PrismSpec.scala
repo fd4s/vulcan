@@ -35,12 +35,37 @@ final class PrismSpec extends BaseSpec {
       }
     }
 
+    describe("identity") {
+      it("roundtrip") {
+        def check[S, A](a: A, prism: Prism[S, A]): Assertion =
+          assert(prism.getOption(prism.reverseGet(a)) === Some(a))
+
+        forAll { n: Int =>
+          check(n, Prism.identity[Int])
+        }
+      }
+    }
+
     describe("instance") {
       it("toString") {
         assert {
           Prism[SealedTraitCaseClass, FirstInSealedTraitCaseClass]
             .toString()
             .startsWith("Prism$")
+        }
+      }
+    }
+
+    describe("none") {
+      it("none") {
+        assert(Prism[Option[Int], None.type].getOption(None) == Some(None))
+      }
+
+      it("some") {
+        forAll { n: Int =>
+          assert {
+            Prism[Option[Int], None.type].getOption(Some(n)) == None
+          }
         }
       }
     }
@@ -62,6 +87,40 @@ final class PrismSpec extends BaseSpec {
 
         forAll { third: ThirdInSealedTraitCaseClass =>
           assert { prism.getOption(third) === None }
+        }
+      }
+    }
+
+    describe("some") {
+      it("none") {
+        assert(Prism[Option[Int], Some[Int]].getOption(None) == None)
+      }
+
+      it("some") {
+        forAll { n: Int =>
+          assert(Prism[Option[Int], Some[Int]].getOption(Some(n)) == Some(Some(n)))
+        }
+      }
+
+      it("some.coproduct") {
+        sealed trait FirstOrSecond
+        final case class First(a: Int) extends FirstOrSecond
+        final case class Second(b: Double) extends FirstOrSecond
+
+        assert(Prism[Option[FirstOrSecond], Some[First]].getOption(None) == None)
+
+        forAll { n: Double =>
+          assert {
+            Prism[Option[FirstOrSecond], Some[First]]
+              .getOption(Some(Second(n))) == None
+          }
+        }
+
+        forAll { n: Int =>
+          assert {
+            Prism[Option[FirstOrSecond], Some[First]]
+              .getOption(Some(First(n))) == Some(Some(First(n)))
+          }
         }
       }
     }

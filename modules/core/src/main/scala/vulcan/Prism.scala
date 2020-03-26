@@ -24,7 +24,7 @@ sealed abstract class Prism[S, A] {
   def reverseGet: A => S
 }
 
-final object Prism {
+final object Prism extends PrismLowPriority {
 
   /**
     * Returns the [[Prism]] for the specified types.
@@ -33,25 +33,10 @@ final object Prism {
     prism
 
   /**
-    * Returns a new [[Prism]] for the specified supertype
-    * and subtype.
-    *
-    * Relies on class tags. Since the function is implicit,
-    * [[Prism]]s are available implicitly for any supertype
-    * and subtype relationships.
+    * Returns a new [[Prism]] for the specified type.
     */
-  implicit final def derive[S, A <: S](
-    implicit tag: ClassTag[A]
-  ): Prism[S, A] = {
-    val getOption = (s: S) =>
-      if (tag.runtimeClass.isInstance(s))
-        Some(s.asInstanceOf[A])
-      else None
-
-    val reverseGet = (a: A) => (a: S)
-
-    Prism.instance(getOption)(reverseGet)
-  }
+  implicit final def identity[A]: Prism[A, A] =
+    Prism.instance[A, A](Some(_))(a => a)
 
   /**
     * Returns a new [[Prism]] instance using the specified
@@ -74,9 +59,51 @@ final object Prism {
   }
 
   /**
+    * Returns a new [[Prism]] from `Option` to `None`.
+    */
+  implicit final def none[A]: Prism[Option[A], None.type] =
+    Prism.instance[Option[A], None.type] {
+      case None    => Some(None)
+      case Some(_) => None
+    }(none => none)
+
+  /**
     * Returns a new [[Prism]] instance using the specified
     * `get` partial function and `reverseGet` function.
     */
   final def partial[S, A](get: PartialFunction[S, A])(reverseGet: A => S): Prism[S, A] =
     Prism.instance(get.lift)(reverseGet)
+
+  /**
+    * Returns a new [[Prism]] from `Option` to `Some`.
+    */
+  implicit final def some[S, A](implicit prism: Prism[S, A]): Prism[Option[S], Some[A]] =
+    Prism.instance[Option[S], Some[A]] {
+      case None    => None
+      case Some(s) => prism.getOption(s).map(Some(_))
+    }(_.map(prism.reverseGet))
+}
+
+private[vulcan] sealed abstract class PrismLowPriority {
+
+  /**
+    * Returns a new [[Prism]] for the specified supertype
+    * and subtype.
+    *
+    * Relies on class tags. Since the function is implicit,
+    * [[Prism]]s are available implicitly for any supertype
+    * and subtype relationships.
+    */
+  implicit final def derive[S, A <: S](
+    implicit tag: ClassTag[A]
+  ): Prism[S, A] = {
+    val getOption = (s: S) =>
+      if (tag.runtimeClass.isInstance(s))
+        Some(s.asInstanceOf[A])
+      else None
+
+    val reverseGet = (a: A) => (a: S)
+
+    Prism.instance(getOption)(reverseGet)
+  }
 }
