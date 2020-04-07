@@ -4,7 +4,7 @@ val catsVersion = "2.1.1"
 
 val enumeratumVersion = "1.5.15"
 
-val magnoliaVersion = "0.12.8"
+val magnoliaVersion = "0.14.1"
 
 val refinedVersion = "0.9.13"
 
