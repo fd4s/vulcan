@@ -512,6 +512,56 @@ final class CodecSpec extends BaseSpec {
       }
     }
 
+    describe("either") {
+      describe("schema") {
+        it("should be encoded as union") {
+          assertSchemaIs[Either[Int, Double]] {
+            """["int","double"]"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode left using left schema") {
+          assertEncodeIs[Either[Int, Double]](
+            Left(1),
+            Right(1)
+          )
+        }
+
+        it("should encode right using right schema") {
+          assertEncodeIs[Either[Int, Double]](
+            Right(1d),
+            Right(1d)
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema type not in union") {
+          assertDecodeError[Either[Int, Double]](
+            unsafeEncode[Either[Int, Double]](Right(1d)),
+            unsafeSchema[String],
+            "Exhausted alternatives for type java.lang.Double"
+          )
+        }
+
+        it("should decode left value as left") {
+          assertDecodeIs[Either[Int, Double]](
+            unsafeEncode[Either[Int, Double]](Left(1)),
+            Right(Left(1))
+          )
+        }
+
+        it("should decode right value as right") {
+          assertDecodeIs[Either[Int, Double]](
+            unsafeEncode[Either[Int, Double]](Right(1d)),
+            Right(Right(1d))
+          )
+        }
+      }
+    }
+
     describe("encode") {
       it("should encode using codec for type") {
         forAll { n: Int =>

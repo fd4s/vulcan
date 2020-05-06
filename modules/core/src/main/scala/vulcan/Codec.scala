@@ -445,6 +445,15 @@ final object Codec {
     )
 
   /**
+    * @group General
+    */
+  implicit final def either[A, B](
+    implicit codecA: Codec[A],
+    codecB: Codec[B]
+  ): Codec[Either[A, B]] =
+    Codec.union(alt => alt[Left[A, B]] |+| alt[Right[A, B]])
+
+  /**
     * Returns the result of encoding the specified value.
     *
     * @group Utilities
@@ -779,6 +788,12 @@ final object Codec {
         }
       }
     )
+
+  /**
+    * @group General
+    */
+  implicit final def left[A, B](implicit codec: Codec[A]): Codec[Left[A, B]] =
+    codec.imap(Left[A, B](_))(_.value)
 
   /**
     * @group Collection
@@ -1239,6 +1254,12 @@ final object Codec {
       }
     )
   }
+
+  /**
+    * @group General
+    */
+  implicit final def right[A, B](implicit codec: Codec[B]): Codec[Right[A, B]] =
+    codec.imap(Right[A, B](_))(_.value)
 
   /**
     * @group Collection
