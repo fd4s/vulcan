@@ -59,6 +59,15 @@ final object Prism extends PrismLowPriority {
   }
 
   /**
+    * Returns a new [[Prism]] from `Either[A, B]` to `Left[A, B]`.
+    */
+  implicit final def left[A, B]: Prism[Either[A, B], Left[A, B]] =
+    Prism.instance[Either[A, B], Left[A, B]] {
+      case left @ Left(_) => Some(left)
+      case Right(_)       => None
+    }(left => left)
+
+  /**
     * Returns a new [[Prism]] from `Option` to `None`.
     */
   implicit final def none[A]: Prism[Option[A], None.type] =
@@ -73,6 +82,15 @@ final object Prism extends PrismLowPriority {
     */
   final def partial[S, A](get: PartialFunction[S, A])(reverseGet: A => S): Prism[S, A] =
     Prism.instance(get.lift)(reverseGet)
+
+  /**
+    * Returns a new [[Prism]] from `Either[A, B]` to `Right[A, B]`.
+    */
+  implicit final def right[A, B]: Prism[Either[A, B], Right[A, B]] =
+    Prism.instance[Either[A, B], Right[A, B]] {
+      case Left(_)          => None
+      case right @ Right(_) => Some(right)
+    }(right => right)
 
   /**
     * Returns a new [[Prism]] from `Option` to `Some`.
