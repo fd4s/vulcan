@@ -94,12 +94,21 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
       }
 
       describe("decode") {
-        it("should error if schema is not union") {
+        it("should error if schema is not in union") {
           type A = Int :+: String :+: CNil
           assertDecodeError[A](
             unsafeEncode(Coproduct[A](123)),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Coproduct, expected schema type UNION"
+            "Exhausted alternatives for type java.lang.Integer while decoding Coproduct"
+          )
+        }
+
+        it("should decode if schema is part of union") {
+          type A = Int :+: String :+: CNil
+          assertDecodeIs[A](
+            unsafeEncode(Coproduct[A](123)),
+            Right(Coproduct[A](123)),
+            Some(unsafeSchema[Int])
           )
         }
 
@@ -338,11 +347,19 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         }
 
         describe("decode") {
-          it("should error if schema is not union") {
+          it("should error if schema is not in union") {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseClass](CaseClassInSealedTrait(0)),
               unsafeSchema[String],
-              "Got unexpected schema type STRING while decoding vulcan.examples.SealedTraitCaseClass, expected schema type UNION"
+              "Missing schema CaseClassInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
+            )
+          }
+
+          it("should decode if schema is part of union") {
+            assertDecodeIs[SealedTraitCaseClass](
+              unsafeEncode[SealedTraitCaseClass](CaseClassInSealedTrait(0)),
+              Right(CaseClassInSealedTrait(0)),
+              Some(unsafeSchema[CaseClassInSealedTrait])
             )
           }
 
@@ -401,9 +418,17 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
 
   def assertDecodeIs[A](
     value: Any,
-    decoded: Either[AvroError, A]
+    decoded: Either[AvroError, A],
+    schema: Option[Schema] = None
   )(implicit codec: Codec[A]): Assertion =
-    assert(unsafeDecode[A](value) === decoded.value)
+    assert {
+      val decode =
+        schema
+          .map(codec.decode(value, _).value)
+          .getOrElse(unsafeDecode[A](value))
+
+      decode === decoded.value
+    }
 
   def assertSchemaError[A](
     expectedErrorMessage: String

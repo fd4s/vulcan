@@ -1445,64 +1445,54 @@ final object Codec {
             Left(AvroError.encodeExhaustedAlternatives(a, None))
           },
       (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.UNION =>
-            value match {
-              case container: GenericContainer =>
-                val altName =
-                  container.getSchema.getName
+        val schemaTypes =
+          schema.getType() match {
+            case Schema.Type.UNION => schema.getTypes.asScala
+            case _                 => Seq(schema)
+          }
 
-                val altUnionSchema =
-                  schema.getTypes.asScala
-                    .find(_.getName == altName)
-                    .toRight(AvroError.decodeMissingUnionSchema(altName, None))
+        value match {
+          case container: GenericContainer =>
+            val altName =
+              container.getSchema.getName
 
-                def altMatching =
-                  alts
-                    .find(_.codec.schema.exists(_.getName == altName))
-                    .toRight(AvroError.decodeMissingUnionAlternative(altName, None))
+            val altUnionSchema =
+              schemaTypes
+                .find(_.getName == altName)
+                .toRight(AvroError.decodeMissingUnionSchema(altName, None))
 
-                altUnionSchema.flatMap { altSchema =>
-                  altMatching.flatMap { alt =>
-                    alt.codec
-                      .decode(container, altSchema)
-                      .map(alt.prism.reverseGet)
-                  }
-                }
+            def altMatching =
+              alts
+                .find(_.codec.schema.exists(_.getName == altName))
+                .toRight(AvroError.decodeMissingUnionAlternative(altName, None))
 
-              case other =>
-                val schemaTypes =
-                  schema.getTypes.asScala
+            altUnionSchema.flatMap { altSchema =>
+              altMatching.flatMap { alt =>
+                alt.codec
+                  .decode(container, altSchema)
+                  .map(alt.prism.reverseGet)
+              }
+            }
 
-                alts
-                  .collectFirstSome { alt =>
-                    alt.codec.schema
-                      .traverse { altSchema =>
-                        val altName = altSchema.getName
-                        schemaTypes
-                          .find(_.getName == altName)
-                          .flatMap { schema =>
-                            alt.codec
-                              .decode(other, schema)
-                              .map(alt.prism.reverseGet)
-                              .toOption
-                          }
+          case other =>
+            alts
+              .collectFirstSome { alt =>
+                alt.codec.schema
+                  .traverse { altSchema =>
+                    val altName = altSchema.getName
+                    schemaTypes
+                      .find(_.getName == altName)
+                      .flatMap { schema =>
+                        alt.codec
+                          .decode(other, schema)
+                          .map(alt.prism.reverseGet)
+                          .toOption
                       }
                   }
-                  .getOrElse {
-                    Left(AvroError.decodeExhaustedAlternatives(other, None))
-                  }
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "union",
-                  schemaType,
-                  Schema.Type.UNION
-                )
-            }
+              }
+              .getOrElse {
+                Left(AvroError.decodeExhaustedAlternatives(other, None))
+              }
         }
       }
     )
