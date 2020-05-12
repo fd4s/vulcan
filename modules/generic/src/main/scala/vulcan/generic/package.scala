@@ -46,61 +46,51 @@ package object generic {
         tailCodec.value.encode
       ),
       (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.UNION =>
-            value match {
-              case container: GenericContainer =>
-                headCodec.schema.flatMap {
-                  headSchema =>
-                    val name = container.getSchema.getName
-                    if (headSchema.getName == name) {
-                      val subschema =
-                        schema.getTypes.asScala
-                          .find(_.getName == name)
-                          .toRight(AvroError.decodeMissingUnionSchema(name, Some("Coproduct")))
+        val schemaTypes =
+          schema.getType() match {
+            case Schema.Type.UNION => schema.getTypes.asScala
+            case _                 => Seq(schema)
+          }
 
-                      subschema
-                        .flatMap(headCodec.decode(container, _))
-                        .map(Inl(_))
-                    } else {
-                      tailCodec.value
-                        .decode(container, schema)
-                        .map(Inr(_))
-                    }
-                }
-
-              case other =>
-                val schemaTypes =
-                  schema.getTypes.asScala
-
-                headCodec.schema
-                  .traverse { headSchema =>
-                    val headName = headSchema.getName
+        value match {
+          case container: GenericContainer =>
+            headCodec.schema.flatMap {
+              headSchema =>
+                val name = container.getSchema.getName
+                if (headSchema.getName == name) {
+                  val subschema =
                     schemaTypes
-                      .find(_.getName == headName)
-                      .flatMap { schema =>
-                        headCodec
-                          .decode(other, schema)
-                          .map(Inl(_))
-                          .toOption
-                      }
-                  }
-                  .getOrElse {
-                    tailCodec.value
-                      .decode(other, schema)
-                      .map(Inr(_))
-                  }
+                      .find(_.getName == name)
+                      .toRight(AvroError.decodeMissingUnionSchema(name, Some("Coproduct")))
+
+                  subschema
+                    .flatMap(headCodec.decode(container, _))
+                    .map(Inl(_))
+                } else {
+                  tailCodec.value
+                    .decode(container, schema)
+                    .map(Inr(_))
+                }
             }
 
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Coproduct",
-                  schemaType,
-                  Schema.Type.UNION
-                )
-            }
+          case other =>
+            headCodec.schema
+              .traverse { headSchema =>
+                val headName = headSchema.getName
+                schemaTypes
+                  .find(_.getName == headName)
+                  .flatMap { schema =>
+                    headCodec
+                      .decode(other, schema)
+                      .map(Inl(_))
+                      .toOption
+                  }
+              }
+              .getOrElse {
+                tailCodec.value
+                  .decode(other, schema)
+                  .map(Inr(_))
+              }
         }
       }
     )
@@ -241,61 +231,51 @@ package object generic {
             subtype.typeclass.encode(subtype.cast(a))
           },
         (value, schema) => {
-          schema.getType() match {
-            case Schema.Type.UNION =>
-              value match {
-                case container: GenericContainer =>
-                  val subtypeName =
-                    container.getSchema.getName
+          val schemaTypes =
+            schema.getType() match {
+              case Schema.Type.UNION => schema.getTypes.asScala
+              case _                 => Seq(schema)
+            }
 
-                  val subtypeUnionSchema =
-                    schema.getTypes.asScala
-                      .find(_.getName == subtypeName)
-                      .toRight(AvroError.decodeMissingUnionSchema(subtypeName, Some(typeName)))
+          value match {
+            case container: GenericContainer =>
+              val subtypeName =
+                container.getSchema.getName
 
-                  def subtypeMatching =
-                    sealedTrait.subtypes
-                      .find(_.typeclass.schema.exists(_.getName == subtypeName))
-                      .toRight(AvroError.decodeMissingUnionAlternative(subtypeName, Some(typeName)))
+              val subtypeUnionSchema =
+                schemaTypes
+                  .find(_.getName == subtypeName)
+                  .toRight(AvroError.decodeMissingUnionSchema(subtypeName, Some(typeName)))
 
-                  subtypeUnionSchema.flatMap { subtypeSchema =>
-                    subtypeMatching.flatMap { subtype =>
-                      subtype.typeclass.decode(container, subtypeSchema)
-                    }
-                  }
+              def subtypeMatching =
+                sealedTrait.subtypes
+                  .find(_.typeclass.schema.exists(_.getName == subtypeName))
+                  .toRight(AvroError.decodeMissingUnionAlternative(subtypeName, Some(typeName)))
 
-                case other =>
-                  val schemaTypes =
-                    schema.getTypes.asScala
+              subtypeUnionSchema.flatMap { subtypeSchema =>
+                subtypeMatching.flatMap { subtype =>
+                  subtype.typeclass.decode(container, subtypeSchema)
+                }
+              }
 
-                  sealedTrait.subtypes.toList
-                    .collectFirstSome { subtype =>
-                      subtype.typeclass.schema
-                        .traverse { subtypeSchema =>
-                          val subtypeName = subtypeSchema.getName
-                          schemaTypes
-                            .find(_.getName == subtypeName)
-                            .flatMap { schema =>
-                              subtype.typeclass
-                                .decode(other, schema)
-                                .toOption
-                            }
+            case other =>
+              sealedTrait.subtypes.toList
+                .collectFirstSome { subtype =>
+                  subtype.typeclass.schema
+                    .traverse { subtypeSchema =>
+                      val subtypeName = subtypeSchema.getName
+                      schemaTypes
+                        .find(_.getName == subtypeName)
+                        .flatMap { schema =>
+                          subtype.typeclass
+                            .decode(other, schema)
+                            .toOption
                         }
                     }
-                    .getOrElse {
-                      Left(AvroError.decodeExhaustedAlternatives(other, Some(typeName)))
-                    }
-              }
-
-            case schemaType =>
-              Left {
-                AvroError
-                  .decodeUnexpectedSchemaType(
-                    typeName,
-                    schemaType,
-                    Schema.Type.UNION
-                  )
-              }
+                }
+                .getOrElse {
+                  Left(AvroError.decodeExhaustedAlternatives(other, Some(typeName)))
+                }
           }
         }
       )

@@ -1473,11 +1473,19 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not union") {
+        it("should error if schema is not in union") {
           assertDecodeError[Option[Int]](
             unsafeEncode(Option(1)),
-            unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding union, expected schema type UNION"
+            unsafeSchema[String],
+            "Exhausted alternatives for type java.lang.Integer"
+          )
+        }
+
+        it("should decode if schema is part of union") {
+          assertDecodeIs[Option[Int]](
+            unsafeEncode(Option(1)),
+            Right(Some(1)),
+            Some(unsafeSchema[Int])
           )
         }
 
@@ -2585,11 +2593,19 @@ final class CodecSpec extends BaseSpec {
       }
 
       describe("decode") {
-        it("should error if schema is not union") {
+        it("should error if schema is not in union") {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding union, expected schema type UNION"
+            "Missing schema FirstInSealedTraitCaseClass in union"
+          )
+        }
+
+        it("should decode if schema is part of union") {
+          assertDecodeIs[SealedTraitCaseClass](
+            unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
+            Right(FirstInSealedTraitCaseClass(0)),
+            Some(unsafeSchema[FirstInSealedTraitCaseClass])
           )
         }
 
