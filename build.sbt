@@ -4,7 +4,7 @@ val catsVersion = "2.1.1"
 
 val enumeratumVersion = "1.6.1"
 
-val magnoliaVersion = "0.12.8"
+val magnoliaVersion = "0.16.0"
 
 val refinedVersion = "0.9.14"
 
@@ -66,7 +66,8 @@ lazy val generic = project
     dependencySettings ++ Seq(
       libraryDependencies ++= Seq(
         "com.propensive" %% "magnolia" % magnoliaVersion,
-        "com.chuusai" %% "shapeless" % shapelessVersion
+        "com.chuusai" %% "shapeless" % shapelessVersion,
+        "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
       )
     ),
     publishSettings,
