@@ -8,5 +8,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: olafurpg/setup-scala@v7
-    - run: git fetch --unshallow
+    - run: git fetch --tags
     - run: sbt validate
