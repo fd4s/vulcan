@@ -201,11 +201,11 @@
 <span class="hljs-comment">// res7: Codec[PosInt] = Codec("int")</span>
 
 <span class="hljs-type">Codec</span>.encode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">1</span>)
-<span class="hljs-comment">// res8: Either[vulcan.AvroError, Any] = Right(1)</span>
+<span class="hljs-comment">// res8: Either[vulcan.AvroError, Any] = Right(value = 1)</span>
 
 <span class="hljs-type">Codec</span>.decode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">0</span>)
 <span class="hljs-comment">// res9: Either[vulcan.AvroError, PosInt] = Left(</span>
-<span class="hljs-comment">//   AvroError(Predicate failed: (0 &gt; 0).)</span>
+<span class="hljs-comment">//   value = AvroError(Predicate failed: (0 &gt; 0).)</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
 </span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/vulcan/docs/codecs"><span class="arrow-prev">← </span><span>Codecs</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#enumeratum">Enumeratum</a></li><li><a href="#generic">Generic</a></li><li><a href="#refined">Refined</a></li></ul></nav></div><footer class="nav-footer" id="footer"><hr class="separator"/><section class="copyright">Copyright © 2019-2020 OVO Energy Limited.<br/>Icon designed by <a href="https://www.flaticon.com/authors/kiranshastry" rel="noopener">Kiranshastry</a> from Flaticon.</section></footer></div></body></html>
