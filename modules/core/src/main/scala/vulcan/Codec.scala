@@ -15,16 +15,20 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
+
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
+
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
 import vulcan.internal.schema.adaptForSchema
 import vulcan.internal.tags._
+
+import scala.util.Try
 
 /**
   * Provides a schema, along with encoding and decoding functions
@@ -70,6 +74,17 @@ sealed abstract class Codec[A] {
       b => encode(g(b)),
       (a, schema) => decode(a, schema).flatMap(f)
     )
+
+  /**
+    * Returns a new [[Codec]] which uses this [[Codec]]
+    * for encoding and decoding, mapping back-and-forth
+    * between types `A` and `B`.
+    *
+    * Similar to [[Codec#imap]], except the mapping from
+    * `A` to `B` might be unsuccessful.
+    */
+  final def imapTry[B](f: A => Try[B])(g: B => A): Codec[B] =
+    imapError(f(_).toEither.leftMap(AvroError.fromThrowable))(g)
 }
 
 /**

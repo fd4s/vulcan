@@ -15,6 +15,8 @@ import org.scalatest.Assertion
 import vulcan.examples._
 import vulcan.internal.converters.collection._
 
+import scala.util.{Failure, Success, Try}
+
 final class CodecSpec extends BaseSpec {
   describe("Codec") {
     describe("boolean") {
@@ -936,6 +938,56 @@ final class CodecSpec extends BaseSpec {
             unsafeEncode(0),
             unsafeSchema[PosInt],
             "0 is not positive"
+          )
+        }
+      }
+    }
+
+    describe("imapTry") {
+      sealed abstract class PosInt(val value: Int) {
+        override def equals(any: Any): Boolean =
+          any.isInstanceOf[PosInt] && any.asInstanceOf[PosInt].value == value
+      }
+
+      object PosInt {
+        def apply(value: Int): Try[PosInt] =
+          if (value > 0) Success(new PosInt(value) {})
+          else Failure(new RuntimeException(s"$value is not positive"))
+
+        implicit val posIntCodec: Codec[PosInt] =
+          Codec[Int].imapTry(apply)(_.value)
+      }
+
+      describe("schema") {
+        it("should use the schema of the underlying codec") {
+          assertSchemaIs[PosInt] {
+            """"int""""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode using the underlying codec") {
+          assertEncodeIs[PosInt](
+            PosInt(1).get,
+            Right(unsafeEncode(1))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should succeed for valid values") {
+          assertDecodeIs[PosInt](
+            unsafeEncode(1),
+            PosInt(1).toEither.leftMap(AvroError.fromThrowable)
+          )
+        }
+
+        it("should error for invalid values") {
+          assertDecodeError[PosInt](
+            unsafeEncode(0),
+            unsafeSchema[PosInt],
+            "java.lang.RuntimeException: 0 is not positive"
           )
         }
       }
