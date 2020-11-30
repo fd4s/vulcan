@@ -24,7 +24,7 @@ sealed abstract class Prism[S, A] {
   def reverseGet: A => S
 }
 
-final object Prism extends PrismLowPriority {
+object Prism extends PrismLowPriority {
 
   /**
     * Returns the [[Prism]] for the specified types.

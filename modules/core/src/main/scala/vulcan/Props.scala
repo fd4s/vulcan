@@ -37,7 +37,7 @@ sealed abstract class Props {
   def toChain: Either[AvroError, Chain[(String, Any)]]
 }
 
-final object Props {
+object Props {
   private[this] final class NonEmptyProps(
     props: NonEmptyChain[(String, Either[AvroError, Any])]
   ) extends Props {
@@ -62,7 +62,7 @@ final object Props {
       }
   }
 
-  private[this] final object EmptyProps extends Props {
+  private[this] object EmptyProps extends Props {
     override final def add[A](name: String, value: A)(implicit codec: Codec[A]): Props =
       Props.one(name, value)
 

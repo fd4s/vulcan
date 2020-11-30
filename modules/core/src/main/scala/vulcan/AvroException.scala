@@ -12,7 +12,7 @@ package vulcan
   */
 sealed abstract class AvroException(message: String) extends RuntimeException(message)
 
-private[vulcan] final object AvroException {
+private[vulcan] object AvroException {
   final def apply(message: String): AvroException =
     new AvroException(message) {
       override final def toString: String =

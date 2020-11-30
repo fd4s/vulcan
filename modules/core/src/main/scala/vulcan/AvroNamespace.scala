@@ -25,7 +25,7 @@ final class AvroNamespace(final val namespace: String) extends StaticAnnotation 
     s"AvroNamespace($namespace)"
 }
 
-private[vulcan] final object AvroNamespace {
+private[vulcan] object AvroNamespace {
   final def unapply(avroNamespace: AvroNamespace): Some[String] =
     Some(avroNamespace.namespace)
 }

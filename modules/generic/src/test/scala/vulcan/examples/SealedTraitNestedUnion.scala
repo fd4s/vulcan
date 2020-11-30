@@ -12,7 +12,7 @@ object SealedTraitNestedUnion {
 
 final case class NestedUnionInSealedTrait(value: Option[Int]) extends SealedTraitNestedUnion
 
-final object NestedUnionInSealedTrait {
+object NestedUnionInSealedTrait {
   implicit final val codec: Codec[NestedUnionInSealedTrait] =
     Codec.option[Int].imap(apply)(_.value)
 }

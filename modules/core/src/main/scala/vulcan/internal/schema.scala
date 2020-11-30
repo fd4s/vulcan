@@ -10,13 +10,13 @@ import java.nio.ByteBuffer
 import org.apache.avro.generic.{GenericEnumSymbol, GenericFixed, IndexedRecord}
 import vulcan.internal.converters.collection._
 
-private[vulcan] final object schema {
+private[vulcan] object schema {
   final def adaptForSchema(encoded: Any): Any =
     encoded match {
       case bytes: ByteBuffer =>
         bytes.array()
-      case enum: GenericEnumSymbol[_] =>
-        enum.toString()
+      case genericEnum: GenericEnumSymbol[_] =>
+        genericEnum.toString()
       case fixed: GenericFixed =>
         fixed.bytes()
       case record: IndexedRecord =>
