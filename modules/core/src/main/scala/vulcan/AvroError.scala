@@ -25,7 +25,7 @@ sealed abstract class AvroError {
   def throwable: Throwable
 }
 
-final object AvroError {
+object AvroError {
   final def apply(message: => String): AvroError = {
     val _message = () => message
 

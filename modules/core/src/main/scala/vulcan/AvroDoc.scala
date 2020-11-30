@@ -28,7 +28,7 @@ final class AvroDoc(final val doc: String) extends StaticAnnotation {
     s"AvroDoc($doc)"
 }
 
-private[vulcan] final object AvroDoc {
+private[vulcan] object AvroDoc {
   final def unapply(avroDoc: AvroDoc): Some[String] =
     Some(avroDoc.doc)
 }

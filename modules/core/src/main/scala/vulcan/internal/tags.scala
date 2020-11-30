@@ -8,7 +8,7 @@ package vulcan.internal
 
 import scala.reflect.runtime.universe.WeakTypeTag
 
-private[vulcan] final object tags {
+private[vulcan] object tags {
   final def docFrom[A](tag: WeakTypeTag[A]): Option[String] =
     tag.tpe.typeSymbol.annotations.collectFirst {
       case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroDoc" =>

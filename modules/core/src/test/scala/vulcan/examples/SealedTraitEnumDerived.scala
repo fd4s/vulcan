@@ -7,7 +7,7 @@ import vulcan.{AvroError, AvroNamespace, Codec}
 @AvroNamespace("com.example")
 sealed trait SealedTraitEnumDerived
 
-final object SealedTraitEnumDerived {
+object SealedTraitEnumDerived {
   implicit final val arbitrary: Arbitrary[SealedTraitEnumDerived] =
     Arbitrary(Gen.oneOf(FirstInSealedTraitEnumDerived, SecondInSealedTraitEnumDerived))
 

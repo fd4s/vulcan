@@ -6,7 +6,7 @@ import vulcan.{AvroError, Codec, Props}
 
 sealed trait SealedTraitEnum
 
-final object SealedTraitEnum {
+object SealedTraitEnum {
   implicit final val arbitrary: Arbitrary[SealedTraitEnum] =
     Arbitrary(Gen.oneOf(FirstInSealedTraitEnum, SecondInSealedTraitEnum))
 

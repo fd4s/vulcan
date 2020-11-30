@@ -120,7 +120,7 @@ sealed abstract class Codec[A] {
   * @groupprio Utilities 7
   * @groupdesc Utilities Miscellaneous utility functions.
   */
-final object Codec {
+object Codec {
 
   /**
     * Returns the [[Codec]] for the specified type.
@@ -393,7 +393,7 @@ final object Codec {
     encode: A => String,
     decode: String => Either[AvroError, A]
   )(implicit tag: WeakTypeTag[A]): Codec[A] =
-    Codec.enum(
+    Codec.`enum`(
       name = nameFrom(tag),
       symbols = symbols,
       encode = encode,
@@ -481,7 +481,7 @@ final object Codec {
     *
     * @group Create
     */
-  final def enum[A](
+  final def `enum`[A](
     name: String,
     namespace: String,
     symbols: Seq[String],
@@ -527,9 +527,9 @@ final object Codec {
         schema.getType() match {
           case Schema.Type.ENUM =>
             value match {
-              case enum: GenericEnumSymbol[_] =>
+              case genericEnum: GenericEnumSymbol[_] =>
                 val symbols = schema.getEnumSymbols().asScala.toList
-                val symbol = enum.toString()
+                val symbol = genericEnum.toString()
 
                 if (symbols.contains(symbol))
                   decode(symbol)
@@ -1152,40 +1152,41 @@ final object Codec {
     val schema = AvroError.catchNonFatal {
       val fields =
         free.analyze {
-          λ[Field[A, *] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]] { field =>
-            field.codec.schema.flatMap { schema =>
-              field.props.toChain
-                .flatMap { props =>
-                  field.default
-                    .traverse(field.codec.encode(_))
-                    .map { default =>
-                      Chain.one {
-                        val schemaField =
-                          new Schema.Field(
-                            field.name,
-                            schema,
-                            field.doc.orNull,
-                            adaptForSchema {
-                              default.map {
-                                case null  => Schema.Field.NULL_DEFAULT_VALUE
-                                case other => other
-                              }.orNull
-                            },
-                            field.order.getOrElse(Schema.Field.Order.ASCENDING)
-                          )
+          new (Field[A, *] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]) {
+            def apply[B](field: Field[A, B]) =
+              field.codec.schema.flatMap { schema =>
+                field.props.toChain
+                  .flatMap { props =>
+                    field.default
+                      .traverse(field.codec.encode(_))
+                      .map { default =>
+                        Chain.one {
+                          val schemaField =
+                            new Schema.Field(
+                              field.name,
+                              schema,
+                              field.doc.orNull,
+                              adaptForSchema {
+                                default.map {
+                                  case null  => Schema.Field.NULL_DEFAULT_VALUE
+                                  case other => other
+                                }.orNull
+                              },
+                              field.order.getOrElse(Schema.Field.Order.ASCENDING)
+                            )
 
-                        field.aliases.foreach(schemaField.addAlias)
+                          field.aliases.foreach(schemaField.addAlias)
 
-                        props.foldLeft(()) {
-                          case ((), (name, value)) =>
-                            schemaField.addProp(name, value)
+                          props.foldLeft(()) {
+                            case ((), (name, value)) =>
+                              schemaField.addProp(name, value)
+                          }
+
+                          schemaField
                         }
-
-                        schemaField
                       }
-                    }
-                }
-            }
+                  }
+              }
           }
         }
 
@@ -1217,8 +1218,9 @@ final object Codec {
         schema.flatMap { schema =>
           val fields =
             free.analyze {
-              λ[Field[A, *] ~> λ[a => Either[AvroError, Chain[(String, Any)]]]] { field =>
-                field.codec.encode(field.access(a)).map(result => Chain.one((field.name, result)))
+              new (Field[A, *] ~> λ[a => Either[AvroError, Chain[(String, Any)]]]) {
+                def apply[B](field: Field[A, B]) =
+                  field.codec.encode(field.access(a)).map(result => Chain.one((field.name, result)))
               }
             }
 
@@ -1239,14 +1241,16 @@ final object Codec {
                 val recordFields = recordSchema.getFields()
 
                 free.foldMap {
-                  λ[Field[A, *] ~> Either[AvroError, *]] { field =>
-                    val schemaField = recordSchema.getField(field.name)
-                    if (schemaField != null) {
-                      val value = record.get(recordFields.indexOf(schemaField))
-                      field.codec.decode(value, schemaField.schema())
-                    } else {
-                      field.default.toRight {
-                        AvroError.decodeMissingRecordField(field.name, typeName)
+                  new (Field[A, *] ~> Either[AvroError, *]) {
+                    def apply[B](field: Field[A, B]) = {
+                      val schemaField = recordSchema.getField(field.name)
+                      if (schemaField != null) {
+                        val value = record.get(recordFields.indexOf(schemaField))
+                        field.codec.decode(value, schemaField.schema())
+                      } else {
+                        field.default.toRight {
+                          AvroError.decodeMissingRecordField(field.name, typeName)
+                        }
                       }
                     }
                   }
@@ -1653,7 +1657,7 @@ final object Codec {
     def prism: Prism[A, B]
   }
 
-  private[vulcan] final object Alt {
+  private[vulcan] object Alt {
     final def apply[A, B](
       codec: Codec[B],
       prism: Prism[A, B]
@@ -1680,7 +1684,7 @@ final object Codec {
     ): Chain[Alt[A]]
   }
 
-  private[vulcan] final object AltBuilder {
+  private[vulcan] object AltBuilder {
     private[this] final val Instance: AltBuilder[Any] =
       new AltBuilder[Any] {
         override final def apply[B](
@@ -1718,7 +1722,7 @@ final object Codec {
     def props: Props
   }
 
-  private[vulcan] final object Field {
+  private[vulcan] object Field {
     final def apply[A, B](
       name: String,
       access: A => B,
@@ -1766,7 +1770,7 @@ final object Codec {
     )(implicit codec: Codec[B]): FreeApplicative[Field[A, *], B]
   }
 
-  private[vulcan] final object FieldBuilder {
+  private[vulcan] object FieldBuilder {
     private[this] final val Instance: FieldBuilder[Any] =
       new FieldBuilder[Any] {
         override final def apply[B](

@@ -1891,8 +1891,10 @@ final class CodecSpec extends BaseSpec {
                   .map(Test(_))
               }
 
+            val expectedDefault = "\u0080\u007f"
+
             assertSchemaIs[Test] {
-              """{"type":"record","name":"Test","fields":[{"name":"value","type":"bytes","default":"\u0080\u007f"}]}"""
+              s"""{"type":"record","name":"Test","fields":[{"name":"value","type":"bytes","default":"$expectedDefault"}]}"""
             }
           }
 
@@ -2031,8 +2033,10 @@ final class CodecSpec extends BaseSpec {
                   .map(Test(_))
               }
 
+            val expectedDefault = "\u007f"
+
             assertSchemaIs[Test] {
-              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"fixed","name":"Inner","size":1},"default":"\u007f"}]}"""
+              s"""{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"fixed","name":"Inner","size":1},"default":"$expectedDefault"}]}"""
             }
           }
         }
@@ -2117,8 +2121,10 @@ final class CodecSpec extends BaseSpec {
                   .map(Test(_))
               }
 
+            val expectedCustom = "\u007f"
+
             assertSchemaIs[Test] {
-              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"\u007f"}]}"""
+              s"""{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"$expectedCustom"}]}"""
             }
           }
 
@@ -2242,8 +2248,10 @@ final class CodecSpec extends BaseSpec {
                 ).map(Test(_))
               }
 
+            val expectedCustom = "\u007f"
+
             assertSchemaIs[Test] {
-              """{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"\u007f"}]}"""
+              s"""{"type":"record","name":"Test","fields":[{"name":"value","type":"int","custom":"$expectedCustom"}]}"""
             }
           }
         }
