@@ -29,6 +29,6 @@ object SealedTraitEnumDerived {
     )
 }
 
-final case object FirstInSealedTraitEnumDerived extends SealedTraitEnumDerived
+case object FirstInSealedTraitEnumDerived extends SealedTraitEnumDerived
 
-final case object SecondInSealedTraitEnumDerived extends SealedTraitEnumDerived
+case object SecondInSealedTraitEnumDerived extends SealedTraitEnumDerived

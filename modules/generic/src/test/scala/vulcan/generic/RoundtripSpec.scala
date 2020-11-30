@@ -56,7 +56,7 @@ final class RoundtripSpec extends AnyFunSpec with ScalaCheckPropertyChecks with 
     arbitrary: Arbitrary[A],
     eq: Eq[A]
   ): Assertion = {
-    forAll { a: A =>
+    forAll { (a: A) =>
       roundtrip(a)
       binaryRoundtrip(a)
     }

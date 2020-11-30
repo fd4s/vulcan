@@ -35,6 +35,6 @@ object FixedBoolean {
     Arbitrary(Gen.const(FalseFixedBoolean))
 }
 
-final case object TrueFixedBoolean extends FixedBoolean
+case object TrueFixedBoolean extends FixedBoolean
 
-final case object FalseFixedBoolean extends FixedBoolean
+case object FalseFixedBoolean extends FixedBoolean
