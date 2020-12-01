@@ -1,9 +1,5 @@
 package vulcan
 
-import cats.implicits._
-
-import org.apache.avro.Schema
-import org.scalatest.Assertion
 import vulcan.examples._
 
 final class DerivationSpec extends BaseSpec with RoundtripHelpers with CodecSpecHelpers {
