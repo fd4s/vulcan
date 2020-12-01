@@ -118,14 +118,7 @@ lazy val dependencySettings = Seq(
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test),
-  libraryDependencies ++= (if (isDotty.value) Nil
-                           else
-                             Seq(
-                               compilerPlugin(
-                                 ("org.typelevel" %% "kind-projector" % "0.11.1")
-                                   .cross(CrossVersion.full)
-                               )
-                             )),
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.2" cross CrossVersion.full),
   pomPostProcess := { (node: xml.Node) =>
     new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
       def scopedDependency(e: xml.Elem): Boolean =
