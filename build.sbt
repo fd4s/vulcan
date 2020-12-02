@@ -37,7 +37,10 @@ lazy val core = project
         "org.apache.avro" % "avro" % avroVersion,
         "org.typelevel" %% "cats-free" % catsVersion
       ) ++ (if (isDotty.value) Nil
-            else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided))
+            else
+              Seq(
+                "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+              ))
     ),
     publishSettings,
     mimaSettings,
@@ -113,12 +116,19 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
-  libraryDependencies ++= Seq(
+  libraryDependencies ++= (Seq(
     "org.typelevel" %% "discipline-scalatest" % "2.1.0",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
-  ).map(_ % Test),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.2" cross CrossVersion.full),
+  ).map(_ % Test) ++ (if (isDotty.value) Nil
+                      else
+                        Seq(
+                          "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.1" % Test,
+                          compilerPlugin(
+                            ("org.typelevel" %% "kind-projector" % "0.11.1")
+                              .cross(CrossVersion.full)
+                          )
+                        ))),
   pomPostProcess := { (node: xml.Node) =>
     new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
       def scopedDependency(e: xml.Elem): Boolean =
