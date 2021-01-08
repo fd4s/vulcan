@@ -1,6 +1,6 @@
 val avroVersion = "1.10.0"
 
-val catsVersion = "2.3.0"
+val catsVersion = "2.3.1"
 
 val enumeratumVersion = "1.6.1"
 
@@ -10,11 +10,11 @@ val refinedVersion = "0.9.18"
 
 val shapelessVersion = "2.3.3"
 
-val scala212 = "2.12.10"
+val scala212 = "2.12.12"
 
 val scala213 = "2.13.4"
 
-val scala3 = "3.0.0-M1"
+val scala3 = "3.0.0-M3"
 
 lazy val vulcan = project
   .in(file("."))
@@ -117,7 +117,7 @@ lazy val docs = project
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= (Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.0",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.1",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test) ++ (if (isDotty.value) Nil
