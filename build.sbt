@@ -6,7 +6,7 @@ val enumeratumVersion = "1.6.1"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.19"
+val refinedVersion = "0.9.20"
 
 val shapelessVersion = "2.3.3"
 
@@ -97,6 +97,7 @@ lazy val refined = project
     publishSettings,
     mimaSettings,
     scalaSettings,
+    crossScalaVersions := Seq(scala212, scala213, scala3),
     testSettings
   )
   .dependsOn(core)
