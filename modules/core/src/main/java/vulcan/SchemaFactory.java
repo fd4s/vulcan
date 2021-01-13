@@ -20,7 +20,7 @@ class SchemaFactory {
 
   public static Schema enumeration(String namespace, String[] symbols) {
     return SchemaBuilder
-      .enumeration("vulcan.examples.SealedTraitEnum")
+      .enumeration(namespace)
       .symbols(symbols);
   }
 }
