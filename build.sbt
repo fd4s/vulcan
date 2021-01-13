@@ -388,9 +388,7 @@ addCommandsAlias(
   "validate",
   List(
     "+clean",
-    //"+coverage",
     "+test",
-    //"+coverageReport",
     "+mimaReportBinaryIssues",
     "+scalafmtCheck",
     "scalafmtSbtCheck",
