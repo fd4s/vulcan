@@ -10,7 +10,7 @@ final class PrismSpec extends BaseSpec {
         def check[S, A](s: S, prism: Prism[S, A]): Assertion =
           assert(prism.getOption(s).fold(s)(prism.reverseGet) === s)
 
-        forAll { s: SealedTraitCaseClass =>
+        forAll { (s: SealedTraitCaseClass) =>
           check(s, Prism[SealedTraitCaseClass, FirstInSealedTraitCaseClass])
           check(s, Prism[SealedTraitCaseClass, SecondInSealedTraitCaseClass])
           check(s, Prism[SealedTraitCaseClass, ThirdInSealedTraitCaseClass])
@@ -21,15 +21,15 @@ final class PrismSpec extends BaseSpec {
         def check[S, A](a: A, prism: Prism[S, A]): Assertion =
           assert(prism.getOption(prism.reverseGet(a)) === Some(a))
 
-        forAll { first: FirstInSealedTraitCaseClass =>
+        forAll { (first: FirstInSealedTraitCaseClass) =>
           check(first, Prism[SealedTraitCaseClass, FirstInSealedTraitCaseClass])
         }
 
-        forAll { second: SecondInSealedTraitCaseClass =>
+        forAll { (second: SecondInSealedTraitCaseClass) =>
           check(second, Prism[SealedTraitCaseClass, SecondInSealedTraitCaseClass])
         }
 
-        forAll { third: ThirdInSealedTraitCaseClass =>
+        forAll { (third: ThirdInSealedTraitCaseClass) =>
           check(third, Prism[SealedTraitCaseClass, ThirdInSealedTraitCaseClass])
         }
       }
@@ -40,7 +40,7 @@ final class PrismSpec extends BaseSpec {
         def check[S, A](a: A, prism: Prism[S, A]): Assertion =
           assert(prism.getOption(prism.reverseGet(a)) === Some(a))
 
-        forAll { n: Int =>
+        forAll { (n: Int) =>
           check(n, Prism.identity[Int])
         }
       }
@@ -62,7 +62,7 @@ final class PrismSpec extends BaseSpec {
       }
 
       it("some") {
-        forAll { n: Int =>
+        forAll { (n: Int) =>
           assert {
             Prism[Option[Int], None.type].getOption(Some(n)) == None
           }
@@ -77,15 +77,15 @@ final class PrismSpec extends BaseSpec {
             case first @ FirstInSealedTraitCaseClass(_) => first
           }(identity)
 
-        forAll { first: FirstInSealedTraitCaseClass =>
+        forAll { (first: FirstInSealedTraitCaseClass) =>
           assert { prism.getOption(first) === Some(first) }
         }
 
-        forAll { second: SecondInSealedTraitCaseClass =>
+        forAll { (second: SecondInSealedTraitCaseClass) =>
           assert { prism.getOption(second) === None }
         }
 
-        forAll { third: ThirdInSealedTraitCaseClass =>
+        forAll { (third: ThirdInSealedTraitCaseClass) =>
           assert { prism.getOption(third) === None }
         }
       }
@@ -97,7 +97,7 @@ final class PrismSpec extends BaseSpec {
       }
 
       it("some") {
-        forAll { n: Int =>
+        forAll { (n: Int) =>
           assert(Prism[Option[Int], Some[Int]].getOption(Some(n)) == Some(Some(n)))
         }
       }
@@ -109,14 +109,14 @@ final class PrismSpec extends BaseSpec {
 
         assert(Prism[Option[FirstOrSecond], Some[First]].getOption(None) == None)
 
-        forAll { n: Double =>
+        forAll { (n: Double) =>
           assert {
             Prism[Option[FirstOrSecond], Some[First]]
               .getOption(Some(Second(n))) == None
           }
         }
 
-        forAll { n: Int =>
+        forAll { (n: Int) =>
           assert {
             Prism[Option[FirstOrSecond], Some[First]]
               .getOption(Some(First(n))) == Some(Some(First(n)))

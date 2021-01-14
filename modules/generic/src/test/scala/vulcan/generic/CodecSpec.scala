@@ -11,6 +11,9 @@ import vulcan._
 import vulcan.examples._
 import vulcan.internal.converters.collection._
 
+import scala.annotation.nowarn
+
+@nowarn("msg=Block result was adapted via implicit conversion")
 final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("Codec") {
     describe("cnil") {

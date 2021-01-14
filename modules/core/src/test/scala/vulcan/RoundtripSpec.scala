@@ -10,8 +10,7 @@ import org.scalatest.Assertion
 import scala.collection.immutable.SortedSet
 import vulcan.examples._
 import java.util.UUID
-
-final class RoundtripSpec extends BaseSpec {
+final class RoundtripSpec extends BaseSpec with RoundtripHelpers {
   describe("BigDecimal") {
     it("roundtrip") {
       implicit val bigDecimalCodec: Codec[BigDecimal] =
@@ -60,12 +59,6 @@ final class RoundtripSpec extends BaseSpec {
   }
 
   describe("Char") { it("roundtrip") { roundtrip[Char] } }
-
-  describe("derived.enum") {
-    it("SealedTraitEnumDerived") { roundtrip[SealedTraitEnumDerived] }
-  }
-
-  describe("deriveFixed") { it("roundtrip") { roundtrip[FixedNamespace] } }
 
   describe("Double") { it("roundtrip") { roundtrip[Double] } }
 
@@ -213,13 +206,17 @@ final class RoundtripSpec extends BaseSpec {
   describe("Unit") { it("roundtrip") { roundtrip[Unit] } }
 
   describe("Vector") { it("roundtrip") { roundtrip[Vector[Int]] } }
+}
+
+trait RoundtripHelpers {
+  self: BaseSpec =>
 
   def roundtrip[A](
     implicit codec: Codec[A],
     arbitrary: Arbitrary[A],
     eq: Eq[A]
   ): Assertion = {
-    forAll { a: A =>
+    forAll { (a: A) =>
       roundtrip(a)
       binaryRoundtrip(a)
       jsonRoundtrip(a)

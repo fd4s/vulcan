@@ -14,7 +14,7 @@ object SealedTraitEnum {
     Eq.fromUniversalEquals
 
   implicit final val codec: Codec[SealedTraitEnum] =
-    Codec.enum(
+    Codec.enumeration(
       name = "SealedTraitEnum",
       namespace = "vulcan.examples",
       symbols = List("first", "second"),
@@ -34,6 +34,6 @@ object SealedTraitEnum {
     )
 }
 
-final case object FirstInSealedTraitEnum extends SealedTraitEnum
+case object FirstInSealedTraitEnum extends SealedTraitEnum
 
-final case object SecondInSealedTraitEnum extends SealedTraitEnum
+case object SecondInSealedTraitEnum extends SealedTraitEnum

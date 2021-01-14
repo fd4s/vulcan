@@ -17,7 +17,7 @@ import vulcan.internal.converters.collection._
 
 import scala.util.{Failure, Success, Try}
 
-final class CodecSpec extends BaseSpec {
+final class CodecSpec extends BaseSpec with CodecSpecHelpers {
   describe("Codec") {
     describe("boolean") {
       describe("schema") {
@@ -126,7 +126,7 @@ final class CodecSpec extends BaseSpec {
         }
 
         it("should decode as byte") {
-          forAll { byte: Byte =>
+          forAll { (byte: Byte) =>
             assertDecodeIs[Byte](
               unsafeEncode(byte),
               Right(byte)
@@ -406,40 +406,8 @@ final class CodecSpec extends BaseSpec {
 
     describe("decode") {
       it("should decode using codec for type") {
-        forAll { n: Int =>
+        forAll { (n: Int) =>
           assert(Codec.decode[Int](n).value == n)
-        }
-      }
-    }
-
-    describe("deriveEnum") {
-      describe("schema") {
-        it("should derive name, namespace, doc") {
-          assertSchemaIs[CaseClassAvroDoc] {
-            """{"type":"enum","name":"CaseClassAvroDoc","namespace":"vulcan.examples","doc":"documentation","symbols":["first"]}"""
-          }
-        }
-
-        it("should use namespace annotation") {
-          assertSchemaIs[SealedTraitEnumDerived] {
-            """{"type":"enum","name":"SealedTraitEnumDerived","namespace":"com.example","symbols":["first","second"]}"""
-          }
-        }
-      }
-    }
-
-    describe("deriveFixed") {
-      describe("schema") {
-        it("should derive name, namespace, doc") {
-          assertSchemaIs[FixedAvroDoc] {
-            """{"type":"fixed","name":"FixedAvroDoc","namespace":"vulcan.examples","doc":"Some documentation","size":1}"""
-          }
-        }
-
-        it("should use namespace annotation") {
-          assertSchemaIs[FixedNamespace] {
-            """{"type":"fixed","name":"FixedNamespace","namespace":"vulcan.examples.overridden","doc":"Some documentation","size":1}"""
-          }
         }
       }
     }
@@ -566,7 +534,7 @@ final class CodecSpec extends BaseSpec {
 
     describe("encode") {
       it("should encode using codec for type") {
-        forAll { n: Int =>
+        forAll { (n: Int) =>
           assert(Codec.encode(n).value == n)
         }
       }
@@ -590,7 +558,7 @@ final class CodecSpec extends BaseSpec {
       describe("encode") {
         it("should error if returned string is not a schema symbol") {
           implicit val codec: Codec[SealedTraitEnum] =
-            Codec.enum(
+            Codec.enumeration(
               name = "SealedTraitEnum",
               namespace = "vulcan.examples",
               symbols = List("symbol"),
@@ -632,10 +600,7 @@ final class CodecSpec extends BaseSpec {
         it("should error if encoded value is not a schema symbol") {
           assertDecodeError[SealedTraitEnum](
             new GenericData.EnumSymbol(
-              SchemaBuilder
-                .builder()
-                .enumeration("vulcan.examples.SealedTraitEnum")
-                .symbols("symbol"),
+              SchemaFactory.enumeration("vulcan.examples.SealedTraitEnum", Array("symbol")),
               "symbol"
             ),
             unsafeSchema[SealedTraitEnum],
@@ -719,7 +684,7 @@ final class CodecSpec extends BaseSpec {
               .createFixed(
                 null,
                 Array(0.toByte, 1.toByte),
-                SchemaBuilder.builder().fixed("FixedBoolean").namespace("vulcan.examples").size(2)
+                SchemaFactory.fixed("FixedBoolean", "vulcan.examples", Array(), null, 2)
               ),
             unsafeSchema[FixedBoolean],
             "Got 2 bytes while decoding vulcan.examples.FixedBoolean, expected fixed size 1"
@@ -1698,13 +1663,13 @@ final class CodecSpec extends BaseSpec {
         }
 
         it("should encode first as int") {
-          forAll { n: Int =>
+          forAll { (n: Int) =>
             assert(codec.encode(Some(First(n))) == Right(n))
           }
         }
 
         it("should encode second as double") {
-          forAll { n: Double =>
+          forAll { (n: Double) =>
             assert(codec.encode(Some(Second(n))) == Right(n))
           }
         }
@@ -1716,13 +1681,13 @@ final class CodecSpec extends BaseSpec {
         }
 
         it("should decode int as first") {
-          forAll { n: Int =>
+          forAll { (n: Int) =>
             assert(codec.decode(n, unsafeSchema[Option[FirstOrSecond]]) == Right(Some(First(n))))
           }
         }
 
         it("should decode double as second") {
-          forAll { n: Double =>
+          forAll { (n: Double) =>
             assert(
               codec.decode(n, unsafeSchema[Option[FirstOrSecond]]) == Right(Some(Second(n)))
             )
@@ -1917,7 +1882,7 @@ final class CodecSpec extends BaseSpec {
             case object Second extends CustomEnum
 
             implicit val customEnumCodec: Codec[CustomEnum] =
-              Codec.enum(
+              Codec.enumeration(
                 name = "CustomEnum",
                 symbols = List("first", "second"),
                 encode = {
@@ -1960,7 +1925,7 @@ final class CodecSpec extends BaseSpec {
             case object Second extends CustomEnum
 
             implicit val customEnumCodec: Codec[CustomEnum] =
-              Codec.enum(
+              Codec.enumeration(
                 name = "CustomEnum",
                 symbols = List("first", "second"),
                 encode = {
@@ -2169,7 +2134,7 @@ final class CodecSpec extends BaseSpec {
             case object Second extends CustomEnum
 
             implicit val customEnumCodec: Codec[CustomEnum] =
-              Codec.enum(
+              Codec.enumeration(
                 name = "CustomEnum",
                 symbols = List("first", "second"),
                 encode = {
@@ -2584,7 +2549,7 @@ final class CodecSpec extends BaseSpec {
         }
 
         it("should decode as short") {
-          forAll { short: Short =>
+          forAll { (short: Short) =>
             assertDecodeIs[Short](
               unsafeEncode(short),
               Right(short)
@@ -2912,7 +2877,9 @@ final class CodecSpec extends BaseSpec {
       }
     }
   }
-
+}
+trait CodecSpecHelpers {
+  self: BaseSpec =>
   def unsafeSchema[A](implicit codec: Codec[A]): Schema =
     codec.schema.value
 

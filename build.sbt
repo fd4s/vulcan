@@ -6,13 +6,15 @@ val enumeratumVersion = "1.6.1"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.19"
+val refinedVersion = "0.9.20"
 
 val shapelessVersion = "2.3.3"
 
-val scala212 = "2.12.10"
+val scala212 = "2.12.12"
 
-val scala213 = "2.13.1"
+val scala213 = "2.13.4"
+
+val scala3 = "3.0.0-M3"
 
 lazy val vulcan = project
   .in(file("."))
@@ -33,13 +35,17 @@ lazy val core = project
     dependencySettings ++ Seq(
       libraryDependencies ++= Seq(
         "org.apache.avro" % "avro" % avroVersion,
-        "org.typelevel" %% "cats-free" % catsVersion,
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-      )
+        "org.typelevel" %% "cats-free" % catsVersion
+      ) ++ (if (isDotty.value) Nil
+            else
+              Seq(
+                "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+              ))
     ),
     publishSettings,
     mimaSettings,
     scalaSettings,
+    crossScalaVersions := Seq(scala212, scala213, scala3),
     testSettings
   )
 
@@ -91,6 +97,7 @@ lazy val refined = project
     publishSettings,
     mimaSettings,
     scalaSettings,
+    crossScalaVersions := Seq(scala212, scala213, scala3),
     testSettings
   )
   .dependsOn(core)
@@ -110,12 +117,19 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
-  libraryDependencies ++= Seq(
+  libraryDependencies ++= (Seq(
     "org.typelevel" %% "discipline-scalatest" % "2.1.1",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
-  ).map(_ % Test),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.2" cross CrossVersion.full),
+  ).map(_ % Test) ++ (if (isDotty.value) Nil
+                      else
+                        Seq(
+                          "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.1" % Test,
+                          compilerPlugin(
+                            ("org.typelevel" %% "kind-projector" % "0.11.1")
+                              .cross(CrossVersion.full)
+                          )
+                        ))),
   pomPostProcess := { (node: xml.Node) =>
     new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
       def scopedDependency(e: xml.Elem): Boolean =
@@ -234,7 +248,7 @@ lazy val publishSettings =
 
 lazy val mimaSettings = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value) {
+    if (publishArtifact.value && !isDotty.value) {
       Set(organization.value %% moduleName.value % (previousStableVersion in ThisBuild).value.get)
     } else Set()
   },
@@ -263,25 +277,55 @@ lazy val scalaSettings = Seq(
     "-encoding",
     "UTF-8",
     "-feature",
-    "-language:experimental.macros",
-    "-language:higherKinds",
     "-language:implicitConversions",
-    "-unchecked",
-    "-Xfatal-warnings",
-    "-Xlint",
-    "-Yno-adapted-args",
-    "-Ywarn-dead-code",
-    "-Ywarn-numeric-widen",
-    "-Ywarn-value-discard",
-    "-Ywarn-unused",
-    "-Ypartial-unification"
-  ).filter {
-    case ("-Yno-adapted-args" | "-Ypartial-unification") if scalaVersion.value.startsWith("2.13") =>
-      false
-    case _ => true
-  },
+    "-unchecked"
+  ) ++ (
+    if (scalaVersion.value.startsWith("2.13"))
+      Seq(
+        "-language:higherKinds",
+        "-Xlint",
+        "-Ywarn-dead-code",
+        "-Ywarn-numeric-widen",
+        "-Ywarn-value-discard",
+        "-Ywarn-unused",
+        "-Xfatal-warnings"
+      )
+    else if (scalaVersion.value.startsWith("2.12"))
+      Seq(
+        "-language:higherKinds",
+        "-Xlint",
+        "-Yno-adapted-args",
+        "-Ywarn-dead-code",
+        "-Ywarn-numeric-widen",
+        "-Ywarn-value-discard",
+        "-Ywarn-unused",
+        "-Ypartial-unification",
+        "-Xfatal-warnings"
+      )
+    else
+      Seq(
+        "-Ykind-projector",
+        "-source:3.0-migration",
+        "-Xignore-scala2-macros"
+      )
+  ),
   scalacOptions in (Compile, console) --= Seq("-Xlint", "-Ywarn-unused"),
-  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value
+  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
+  unmanagedSourceDirectories in Compile ++= {
+    val sourceDir = (sourceDirectory in Compile).value
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 12)) => Seq(sourceDir / "scala-2.12", sourceDir / "scala-2")
+      case Some((2, 13)) => Seq(sourceDir / "scala-2.13+", sourceDir / "scala-2")
+      case _             => Seq(sourceDir / "scala-2.13+", sourceDir / "scala-3")
+    }
+  },
+  unmanagedSourceDirectories in Test ++= {
+    val sourceDir = (sourceDirectory in Test).value
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq(sourceDir / "scala-2")
+      case _            => Nil
+    }
+  }
 )
 
 lazy val testSettings = Seq(
@@ -344,9 +388,7 @@ addCommandsAlias(
   "validate",
   List(
     "+clean",
-    "+coverage",
     "+test",
-    "+coverageReport",
     "+mimaReportBinaryIssues",
     "+scalafmtCheck",
     "scalafmtSbtCheck",

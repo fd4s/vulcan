@@ -9,7 +9,7 @@ import vulcan.Codec
 final class RefinedSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("Refined") {
     it("should succeed for values conforming to predicate") {
-      forAll { posInt: PosInt =>
+      forAll { (posInt: PosInt) =>
         val codec = Codec[PosInt]
         val schema = codec.schema.value
         val encoded = codec.encode(posInt).value
@@ -19,7 +19,7 @@ final class RefinedSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Ei
     }
 
     it("should fail for values not conforming to predicate") {
-      forAll { nonPosInt: NonPosInt =>
+      forAll { (nonPosInt: NonPosInt) =>
         val codec = Codec[PosInt]
         val schema = codec.schema.value
         val encoded = Codec[Int].encode(nonPosInt.value).value

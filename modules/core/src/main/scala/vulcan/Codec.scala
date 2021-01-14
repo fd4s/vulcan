@@ -23,10 +23,8 @@ import org.apache.avro.util.Utf8
 
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
-import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.converters.collection._
 import vulcan.internal.schema.adaptForSchema
-import vulcan.internal.tags._
 
 import scala.util.Try
 
@@ -120,7 +118,7 @@ sealed abstract class Codec[A] {
   * @groupprio Utilities 7
   * @groupdesc Utilities Miscellaneous utility functions.
   */
-object Codec {
+object Codec extends CodecCompanionCompat {
 
   /**
     * Returns the [[Codec]] for the specified type.
@@ -382,48 +380,6 @@ object Codec {
     codec.schema.flatMap(codec.decode(value, _))
 
   /**
-    * Returns an enum [[Codec]] for type `A`, deriving details
-    * like the name, namespace, and [[AvroDoc]] documentation
-    * from the type `A` using type tags.
-    *
-    * @group Derive
-    */
-  final def deriveEnum[A](
-    symbols: Seq[String],
-    encode: A => String,
-    decode: String => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec[A] =
-    Codec.`enum`(
-      name = nameFrom(tag),
-      symbols = symbols,
-      encode = encode,
-      decode = decode,
-      namespace = namespaceFrom(tag),
-      doc = docFrom(tag)
-    )
-
-  /**
-    * Returns a fixed [[Codec]] for type `A`, deriving details
-    * like the name, namespace, and [[AvroDoc]] documentation
-    * from the type `A` using type tags.
-    *
-    * @group Derive
-    */
-  final def deriveFixed[A](
-    size: Int,
-    encode: A => Array[Byte],
-    decode: Array[Byte] => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec[A] =
-    Codec.fixed(
-      name = nameFrom(tag),
-      size = size,
-      encode = encode,
-      decode = decode,
-      namespace = namespaceFrom(tag),
-      doc = docFrom(tag)
-    )
-
-  /**
     * @group General
     */
   implicit final val double: Codec[Double] =
@@ -481,7 +437,7 @@ object Codec {
     *
     * @group Create
     */
-  final def `enum`[A](
+  final def enumeration[A](
     name: String,
     namespace: String,
     symbols: Seq[String],
@@ -554,6 +510,19 @@ object Codec {
     )
   }
 
+  @deprecated("Use Codec.enumeration - enum is a keyword is Scala 3", "1.2.0")
+  final def enum[A](
+    name: String,
+    namespace: String,
+    symbols: Seq[String],
+    encode: A => String,
+    decode: String => Either[AvroError, A],
+    default: Option[A] = None,
+    doc: Option[String] = None,
+    aliases: Seq[String] = Seq.empty,
+    props: Props = Props.empty
+  ): Codec[A] = enumeration(name, namespace, symbols, encode, decode, default, doc, aliases, props)
+
   /**
     * Returns a new fixed [[Codec]] for type `A`.
     *
@@ -578,13 +547,7 @@ object Codec {
     val schema = AvroError.catchNonFatal {
       props.toChain.map { props =>
         val schema =
-          SchemaBuilder
-            .builder()
-            .fixed(name)
-            .namespace(namespace)
-            .aliases(aliases: _*)
-            .doc(doc.orNull)
-            .size(size)
+          SchemaFactory.fixed(name, namespace, aliases.toArray, doc.orNull, size)
 
         props.foldLeft(()) {
           case ((), (name, value)) =>

@@ -6,6 +6,7 @@
 
 package vulcan
 
+import scala.language.experimental.macros
 import cats.implicits._
 import magnolia._
 import org.apache.avro.generic._
