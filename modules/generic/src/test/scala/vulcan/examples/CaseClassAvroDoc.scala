@@ -1,6 +1,5 @@
 package vulcan.examples
 
-import vulcan.{AvroDoc, Codec}
 import vulcan.generic._
 
 @AvroDoc("documentation")

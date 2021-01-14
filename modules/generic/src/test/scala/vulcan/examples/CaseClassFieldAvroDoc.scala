@@ -1,6 +1,6 @@
 package vulcan.examples
 
-import vulcan.{AvroDoc, Codec}
+import vulcan.Codec
 import vulcan.generic._
 
 final case class CaseClassFieldAvroDoc(@AvroDoc("documentation") name: String)

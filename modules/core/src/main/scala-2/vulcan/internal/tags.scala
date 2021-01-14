@@ -11,7 +11,9 @@ import scala.reflect.runtime.universe.WeakTypeTag
 private[vulcan] object tags {
   final def docFrom[A](tag: WeakTypeTag[A]): Option[String] =
     tag.tpe.typeSymbol.annotations.collectFirst {
-      case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroDoc" =>
+      case annotation
+          if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroDoc" ||
+            annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroDoc" =>
         val doc = annotation.tree.children.last.toString
         doc.substring(1, doc.length - 1)
     }
@@ -22,7 +24,9 @@ private[vulcan] object tags {
   final def namespaceFrom[A](tag: WeakTypeTag[A]): String =
     tag.tpe.typeSymbol.annotations
       .collectFirst {
-        case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroNamespace" =>
+        case annotation
+            if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroNamespace" ||
+              annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroNamespace" =>
           val namespace = annotation.tree.children.last.toString
           namespace.substring(1, namespace.length - 1)
       }

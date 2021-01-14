@@ -3,7 +3,7 @@ package vulcan.examples
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Arbitrary.arbitrary
-import vulcan.{AvroNamespace, Codec}
+import vulcan.Codec
 import vulcan.generic._
 
 sealed trait SealedTraitCaseClassAvroNamespace
