@@ -114,41 +114,13 @@
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="enumerations"></a><a href="#enumerations" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Enumerations</h2>
 <p>Avro enumerations closely correspond to <code>sealed trait</code>s with <code>case object</code>s.</p>
-<p><code>Codec.deriveEnum</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for enumeration types.</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.{<span class="hljs-type">AvroDoc</span>, <span class="hljs-type">AvroNamespace</span>}
-
-<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
-<span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"A selection of different fruits"</span>)
-<span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">trait</span> <span class="hljs-title">Fruit</span></span>
+<p>We can use <code>Codec.enumeration​</code> to specify an encoding.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">trait</span> <span class="hljs-title">Fruit</span></span>
 <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Apple</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
 <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Banana</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
 <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Cherry</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
 
-<span class="hljs-type">Codec</span>.deriveEnum[<span class="hljs-type">Fruit</span>](
-  symbols = <span class="hljs-type">List</span>(<span class="hljs-string">"apple"</span>, <span class="hljs-string">"banana"</span>, <span class="hljs-string">"cherry"</span>),
-  encode = {
-    <span class="hljs-keyword">case</span> <span class="hljs-type">Apple</span>  =&gt; <span class="hljs-string">"apple"</span>
-    <span class="hljs-keyword">case</span> <span class="hljs-type">Banana</span> =&gt; <span class="hljs-string">"banana"</span>
-    <span class="hljs-keyword">case</span> <span class="hljs-type">Cherry</span> =&gt; <span class="hljs-string">"cherry"</span>
-  },
-  decode = {
-    <span class="hljs-keyword">case</span> <span class="hljs-string">"apple"</span>  =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Apple</span>)
-    <span class="hljs-keyword">case</span> <span class="hljs-string">"banana"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Banana</span>)
-    <span class="hljs-keyword">case</span> <span class="hljs-string">"cherry"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Cherry</span>)
-    <span class="hljs-keyword">case</span> other    =&gt; <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$other</span> is not a Fruit"</span>))
-  }
-)
-<span class="hljs-comment">// res7: Codec[Fruit] = Codec({</span>
-<span class="hljs-comment">//   "type" : "enum",</span>
-<span class="hljs-comment">//   "name" : "Fruit",</span>
-<span class="hljs-comment">//   "namespace" : "com.example",</span>
-<span class="hljs-comment">//   "doc" : "A selection of different fruits",</span>
-<span class="hljs-comment">//   "symbols" : [ "apple", "banana", "cherry" ]</span>
-<span class="hljs-comment">// })</span>
-</code></pre>
-<p>Annotations like <code>@AvroDoc</code> can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like <a href="/vulcan/docs/modules#enumeratum">Enumeratum</a> for enumerations, in which case we can easily use <code>Codec.deriveEnum</code> to derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s.</p>
-<p>If we need more precise control of how enumerations are encoded, we can use <code>Codec.enumeration​</code>.</p>
-<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.enumeration[<span class="hljs-type">Fruit</span>](
+<span class="hljs-type">Codec</span>.enumeration[<span class="hljs-type">Fruit</span>](
   name = <span class="hljs-string">"Fruit"</span>,
   namespace = <span class="hljs-string">"com.example"</span>,
   doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"A selection of different fruits"</span>),
@@ -166,7 +138,7 @@
   },
   <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">Banana</span>)
 )
-<span class="hljs-comment">// res8: Codec[Fruit] = Codec({</span>
+<span class="hljs-comment">// res7: Codec[Fruit] = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Fruit",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -175,12 +147,11 @@
 <span class="hljs-comment">//   "default" : "banana"</span>
 <span class="hljs-comment">// })</span>
 </code></pre>
+<p>Derivation for enumeration types can be partly automated using the <a href="/vulcan/docs/modules#generic">Generic</a> or <a href="/vulcan/docs/modules#enumeratum">Enumeratum</a> modules, although these will not support Scala 3 for the foreseeable future.</p>
 <h2><a class="anchor" aria-hidden="true" id="fixed"></a><a href="#fixed" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Fixed</h2>
 <p>Avro fixed types correspond to <code>Array[Byte]</code>s with a fixed size.</p>
-<p><code>Codec.deriveFixed</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for fixed types.</p>
-<pre><code class="hljs css language-scala"><span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
-<span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"Amount of pence as a single byte"</span>)
-<span class="hljs-keyword">sealed</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Pence</span>(<span class="hljs-params">value: <span class="hljs-type">Byte</span></span>)</span>
+<p>We can use <code>Codec.fixed</code> to define a codec.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">sealed</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Pence</span>(<span class="hljs-params">value: <span class="hljs-type">Byte</span></span>)</span>
 
 <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Pence</span> </span>{
   <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">apply</span></span>(value: <span class="hljs-type">Byte</span>): <span class="hljs-type">Either</span>[<span class="hljs-type">AvroError</span>, <span class="hljs-type">Pence</span>] =
@@ -188,22 +159,7 @@
     <span class="hljs-keyword">else</span> <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"Expected pence value, got <span class="hljs-subst">$value</span>"</span>))
 }
 
-<span class="hljs-type">Codec</span>.deriveFixed[<span class="hljs-type">Pence</span>](
-  size = <span class="hljs-number">1</span>,
-  encode = pence =&gt; <span class="hljs-type">Array</span>[<span class="hljs-type">Byte</span>](pence.value),
-  decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head)
-)
-<span class="hljs-comment">// res9: Codec[Pence] = Codec({</span>
-<span class="hljs-comment">//   "type" : "fixed",</span>
-<span class="hljs-comment">//   "name" : "Pence",</span>
-<span class="hljs-comment">//   "namespace" : "com.example",</span>
-<span class="hljs-comment">//   "doc" : "Amount of pence as a single byte",</span>
-<span class="hljs-comment">//   "size" : 1</span>
-<span class="hljs-comment">// })</span>
-</code></pre>
-<p>Annotations like <code>@AvroDoc</code> can be used to customize the derivation.</p>
-<p>If we need more precise control of how fixed types are encoded, we can use <code>Codec.fixed</code>.</p>
-<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.fixed[<span class="hljs-type">Pence</span>](
+<span class="hljs-type">Codec</span>.fixed[<span class="hljs-type">Pence</span>](
   name = <span class="hljs-string">"Pence"</span>,
   namespace = <span class="hljs-string">"com.example"</span>,
   size = <span class="hljs-number">1</span>,
@@ -211,7 +167,7 @@
   decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head),
   doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"Amount of pence as a single byte"</span>)
 )
-<span class="hljs-comment">// res10: Codec[Pence] = Codec({</span>
+<span class="hljs-comment">// res8: Codec[Pence] = Codec({</span>
 <span class="hljs-comment">//   "type" : "fixed",</span>
 <span class="hljs-comment">//   "name" : "Pence",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -238,7 +194,7 @@
     field(<span class="hljs-string">"age"</span>, _.age, <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">None</span>))
   ).mapN(<span class="hljs-type">Person</span>(_, _, _))
 }
-<span class="hljs-comment">// res11: Codec[Person] = Codec({</span>
+<span class="hljs-comment">// res9: Codec[Person] = Codec({</span>
 <span class="hljs-comment">//   "type" : "record",</span>
 <span class="hljs-comment">//   "name" : "Person",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -281,7 +237,7 @@
 <span class="hljs-type">Codec</span>.union[<span class="hljs-type">FirstOrSecond</span>] { alt =&gt;
   alt[<span class="hljs-type">First</span>] |+| alt[<span class="hljs-type">Second</span>]
 }
-<span class="hljs-comment">// res12: Codec[FirstOrSecond] = Codec([ "int", "string" ])</span>
+<span class="hljs-comment">// res10: Codec[FirstOrSecond] = Codec([ "int", "string" ])</span>
 </code></pre>
 <p>For generic derivation support, refer to the <a href="/vulcan/docs/modules#generic">generic module</a>.</p>
 </span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/vulcan/docs/overview"><span class="arrow-prev">← </span><span>Overview</span></a><a class="docs-next button" href="/vulcan/docs/modules"><span>Modules</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#decimals">Decimals</a></li><li><a href="#enumerations">Enumerations</a></li><li><a href="#fixed">Fixed</a></li><li><a href="#records">Records</a></li><li><a href="#unions">Unions</a></li></ul></nav></div><footer class="nav-footer" id="footer"><hr class="separator"/><section class="copyright">Copyright © 2019-2021 OVO Energy Limited.<br/>Icon designed by <a href="https://www.flaticon.com/authors/kiranshastry" rel="noopener">Kiranshastry</a> from Flaticon.</section></footer></div></body></html>

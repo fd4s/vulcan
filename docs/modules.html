@@ -60,7 +60,8 @@
 <p>For regular <code>Enum</code>s, also mix in <code>VulcanEnum</code> to derive a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> instance.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> enumeratum.{<span class="hljs-type">Enum</span>, <span class="hljs-type">EnumEntry</span>, <span class="hljs-type">VulcanEnum</span>}
 <span class="hljs-keyword">import</span> enumeratum.<span class="hljs-type">EnumEntry</span>.<span class="hljs-type">Lowercase</span>
-<span class="hljs-keyword">import</span> vulcan.{<span class="hljs-type">AvroDoc</span>, <span class="hljs-type">AvroNamespace</span>, <span class="hljs-type">Codec</span>}
+<span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">Codec</span>
+<span class="hljs-keyword">import</span> vulcan.generic.{<span class="hljs-type">AvroDoc</span>, <span class="hljs-type">AvroNamespace</span>}
 
 <span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
 <span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"The different card suits"</span>)
@@ -130,7 +131,7 @@
 <span class="hljs-comment">// res3: Codec[Day] = Codec("int")</span>
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="generic"></a><a href="#generic" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Generic</h2>
-<p>The <code>vulcan-generic</code> module provides generic derivation of <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s using <a href="https://github.com/propensive/magnolia">Magnolia</a>.</p>
+<p>The <code>vulcan-generic</code> module provides generic derivation of <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s using <a href="https://github.com/propensive/magnolia">Magnolia</a> for records and unions, and reflection for enumerations and fixed types.</p>
 <p>To derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for <code>case class</code>es or <code>sealed trait</code>s, we can use <code>Codec.derive</code>. Annotations like <code>@AvroDoc</code> and <code>@AvroNamespace</code> can be used to customize the documentation and namespace during derivation.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.generic._
 
@@ -190,6 +191,62 @@
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Int</span> :+: <span class="hljs-type">String</span> :+: <span class="hljs-type">CNil</span>]
 <span class="hljs-comment">// res6: Codec[Int :+: String :+: CNil] = Codec([ "int", "string" ])</span>
 </code></pre>
+<p><code>deriveEnum</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for enumeration types. Annotations like <code>@AvroDoc</code> can be used to customize the derivation.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">AvroError</span>
+<span class="hljs-keyword">import</span> vulcan.generic.{<span class="hljs-type">AvroDoc</span>, <span class="hljs-type">AvroNamespace</span>}
+
+<span class="hljs-meta">@AvroNamespace</span>(<span class="hljs-string">"com.example"</span>)
+<span class="hljs-meta">@AvroDoc</span>(<span class="hljs-string">"A selection of different fruits"</span>)
+<span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">trait</span> <span class="hljs-title">Fruit</span></span>
+<span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Apple</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
+<span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Banana</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
+<span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Cherry</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Fruit</span></span>
+
+deriveEnum[<span class="hljs-type">Fruit</span>](
+  symbols = <span class="hljs-type">List</span>(<span class="hljs-string">"apple"</span>, <span class="hljs-string">"banana"</span>, <span class="hljs-string">"cherry"</span>),
+  encode = {
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Apple</span>  =&gt; <span class="hljs-string">"apple"</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Banana</span> =&gt; <span class="hljs-string">"banana"</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-type">Cherry</span> =&gt; <span class="hljs-string">"cherry"</span>
+  },
+  decode = {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"apple"</span>  =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Apple</span>)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"banana"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Banana</span>)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"cherry"</span> =&gt; <span class="hljs-type">Right</span>(<span class="hljs-type">Cherry</span>)
+    <span class="hljs-keyword">case</span> other    =&gt; <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$other</span> is not a Fruit"</span>))
+  }
+)
+<span class="hljs-comment">// res7: Codec[Fruit] = Codec({</span>
+<span class="hljs-comment">//   "type" : "enum",</span>
+<span class="hljs-comment">//   "name" : "Fruit",</span>
+<span class="hljs-comment">//   "namespace" : "com.example",</span>
+<span class="hljs-comment">//   "doc" : "A selection of different fruits",</span>
+<span class="hljs-comment">//   "symbols" : [ "apple", "banana", "cherry" ]</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
+<p><code>deriveFixed</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for fixed types. Annotations like <code>@AvroDoc</code> can be used to customize the derivation.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">AvroError</span>
+
+<span class="hljs-keyword">sealed</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Pence</span>(<span class="hljs-params">value: <span class="hljs-type">Byte</span></span>)</span>
+
+<span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Pence</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">apply</span></span>(value: <span class="hljs-type">Byte</span>): <span class="hljs-type">Either</span>[<span class="hljs-type">AvroError</span>, <span class="hljs-type">Pence</span>] =
+    <span class="hljs-keyword">if</span>(<span class="hljs-number">0</span> &lt;= value &amp;&amp; value &lt; <span class="hljs-number">100</span>) <span class="hljs-type">Right</span>(<span class="hljs-keyword">new</span> <span class="hljs-type">Pence</span>(value) {})
+    <span class="hljs-keyword">else</span> <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"Expected pence value, got <span class="hljs-subst">$value</span>"</span>))
+}
+
+deriveFixed[<span class="hljs-type">Pence</span>](
+  size = <span class="hljs-number">1</span>,
+  encode = pence =&gt; <span class="hljs-type">Array</span>[<span class="hljs-type">Byte</span>](pence.value),
+  decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head)
+)
+<span class="hljs-comment">// res8: Codec[Pence] = Codec({</span>
+<span class="hljs-comment">//   "type" : "fixed",</span>
+<span class="hljs-comment">//   "name" : "Pence",</span>
+<span class="hljs-comment">//   "namespace" : "repl.MdocSession.App0",</span>
+<span class="hljs-comment">//   "size" : 1</span>
+<span class="hljs-comment">// })</span>
+</code></pre>
 <h2><a class="anchor" aria-hidden="true" id="refined"></a><a href="#refined" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Refined</h2>
 <p>The <code>vulcan-refined</code> module provides <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for <a href="https://github.com/fthomas/refined">refined</a> refinement types.</p>
 <p>Refinement types are encoded using their base type (e.g. <code>Int</code> for <code>PosInt</code>). When decoding, <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s check to ensure values conform to the predicate of the refinement type (e.g. <code>Positive</code> for <code>PosInt</code>), and raise an error for values which do not conform.</p>
@@ -198,13 +255,13 @@
 <span class="hljs-keyword">import</span> vulcan.refined._
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">PosInt</span>]
-<span class="hljs-comment">// res7: Codec[PosInt] = Codec("int")</span>
+<span class="hljs-comment">// res9: Codec[PosInt] = Codec("int")</span>
 
 <span class="hljs-type">Codec</span>.encode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">1</span>)
-<span class="hljs-comment">// res8: Either[vulcan.AvroError, Any] = Right(value = 1)</span>
+<span class="hljs-comment">// res10: Either[AvroError, Any] = Right(value = 1)</span>
 
 <span class="hljs-type">Codec</span>.decode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">0</span>)
-<span class="hljs-comment">// res9: Either[vulcan.AvroError, PosInt] = Left(</span>
+<span class="hljs-comment">// res11: Either[AvroError, PosInt] = Left(</span>
 <span class="hljs-comment">//   value = AvroError(Predicate failed: (0 &gt; 0).)</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
