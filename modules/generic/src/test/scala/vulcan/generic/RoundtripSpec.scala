@@ -12,9 +12,6 @@ import shapeless.{:+:, CNil, Coproduct}
 import vulcan._
 import vulcan.generic.examples._
 
-import scala.annotation.nowarn
-
-@nowarn("msg=Block result was adapted via implicit conversion")
 final class RoundtripSpec extends BaseSpec {
   describe("coproduct") {
     type Types = CaseClassField :+: Int :+: CaseClassAvroDoc :+: CNil

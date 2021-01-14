@@ -288,7 +288,9 @@ lazy val scalaSettings = Seq(
         "-Ywarn-numeric-widen",
         "-Ywarn-value-discard",
         "-Ywarn-unused",
-        "-Xfatal-warnings"
+        "-Xfatal-warnings",
+        "-Wconf:msg=Block result was adapted via implicit conversion" +
+          "&src=test/scala/vulcan/generic/.*:silent"
       )
     else if (scalaVersion.value.startsWith("2.12"))
       Seq(

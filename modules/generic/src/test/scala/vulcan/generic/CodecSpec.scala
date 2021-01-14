@@ -11,9 +11,6 @@ import vulcan._
 import vulcan.generic.examples._
 import vulcan.internal.converters.collection._
 
-import scala.annotation.nowarn
-
-@nowarn("msg=Block result was adapted via implicit conversion")
 final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("Codec") {
     describe("cnil") {
@@ -386,7 +383,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
               unsafeSchema[SealedTraitCaseObject],
-              "Missing alternative CaseObjectInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseClass"
+              "Missing alternative CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
             )
           }
 
