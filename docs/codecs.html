@@ -147,8 +147,8 @@
 <span class="hljs-comment">// })</span>
 </code></pre>
 <p>Annotations like <code>@AvroDoc</code> can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like <a href="/vulcan/docs/modules#enumeratum">Enumeratum</a> for enumerations, in which case we can easily use <code>Codec.deriveEnum</code> to derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s.</p>
-<p>If we need more precise control of how enumerations are encoded, we can use <code>Codec.enum</code>.</p>
-<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.enum[<span class="hljs-type">Fruit</span>](
+<p>If we need more precise control of how enumerations are encoded, we can use <code>Codec.enumeration​</code>.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.enumeration[<span class="hljs-type">Fruit</span>](
   name = <span class="hljs-string">"Fruit"</span>,
   namespace = <span class="hljs-string">"com.example"</span>,
   doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"A selection of different fruits"</span>),
