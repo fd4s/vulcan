@@ -14,9 +14,9 @@ import scala.annotation.StaticAnnotation
   *
   * The annotation can be used in the following situations.<br>
   * - Annotate a type for enum namespace when using
-  *   [[Codec.deriveEnum]].<br>
+  *   [[deriveEnum]].<br>
   * - Annotate a type for fixed namespace when using
-  *   [[Codec.deriveFixed]].<br>
+  *   [[deriveFixed]].<br>
   * - Annotate a `case class` for record namespace when
   *   using `Codec.derive` from the generic module.
   */

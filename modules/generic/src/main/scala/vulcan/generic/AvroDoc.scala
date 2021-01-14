@@ -14,9 +14,9 @@ import scala.annotation.StaticAnnotation
   *
   * The annotation can be used in the following situations.<br>
   * - Annotate a type for enum documentation when using
-  *   [[Codec.deriveEnum]].<br>
+  *   [[deriveEnum]].<br>
   * - Annotate a type for fixed documentation when using
-  *   [[Codec.deriveFixed]].<br>
+  *   [[deriveFixed]].<br>
   * - Annotate a `case class` for record documentation
   *   when using `Codec.derive` from the generic module.<br>
   * - Annotate a `case class` parameter for record field
