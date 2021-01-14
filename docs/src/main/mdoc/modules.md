@@ -14,7 +14,8 @@ For regular `Enum`s, also mix in `VulcanEnum` to derive a [`Codec`][codec] insta
 ```scala mdoc:reset-object
 import enumeratum.{Enum, EnumEntry, VulcanEnum}
 import enumeratum.EnumEntry.Lowercase
-import vulcan.{AvroDoc, AvroNamespace, Codec}
+import vulcan.Codec
+import vulcan.generic.{AvroDoc, AvroNamespace}
 
 @AvroNamespace("com.example")
 @AvroDoc("The different card suits")
@@ -78,7 +79,7 @@ Codec[Day]
 
 ## Generic
 
-The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s using [Magnolia](https://github.com/propensive/magnolia) for records and unions and reflection for enumerations.
+The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s using [Magnolia](https://github.com/propensive/magnolia) for records and unions, and reflection for enumerations and fixed types.
 
 To derive [`Codec`][codec]s for `case class`es or `sealed trait`s, we can use `Codec.derive`. Annotations like `@AvroDoc` and `@AvroNamespace` can be used to customize the documentation and namespace during derivation.
 
@@ -114,11 +115,12 @@ import shapeless.{:+:, CNil}
 Codec[Int :+: String :+: CNil]
 ```
 
-`Codec.deriveEnum` can be used to partly derive [`Codec`][codec]s for enumeration types. Annotations like `@AvroDoc` can be used to customize the derivation.
+`deriveEnum` can be used to partly derive [`Codec`][codec]s for enumeration types. Annotations like `@AvroDoc` can be used to customize the derivation.
 
 
 ```scala mdoc
-import vulcan.{AvroDoc, AvroNamespace}
+import vulcan.AvroError
+import vulcan.generic.{AvroDoc, AvroNamespace}
 
 @AvroNamespace("com.example")
 @AvroDoc("A selection of different fruits")
@@ -127,7 +129,7 @@ case object Apple extends Fruit
 case object Banana extends Fruit
 case object Cherry extends Fruit
 
-Codec.deriveEnum[Fruit](
+deriveEnum[Fruit](
   symbols = List("apple", "banana", "cherry"),
   encode = {
     case Apple  => "apple"
@@ -140,6 +142,26 @@ Codec.deriveEnum[Fruit](
     case "cherry" => Right(Cherry)
     case other    => Left(AvroError(s"$other is not a Fruit"))
   }
+)
+```
+
+`Codec.deriveFixed` can be used to partly derive [`Codec`][codec]s for fixed types. Annotations like `@AvroDoc` can be used to customize the derivation.
+
+```scala mdoc
+import vulcan.AvroError
+
+sealed abstract case class Pence(value: Byte)
+
+object Pence {
+  def apply(value: Byte): Either[AvroError, Pence] =
+    if(0 <= value && value < 100) Right(new Pence(value) {})
+    else Left(AvroError(s"Expected pence value, got $value"))
+}
+
+deriveFixed[Pence](
+  size = 1,
+  encode = pence => Array[Byte](pence.value),
+  decode = bytes => Pence(bytes.head)
 )
 ```
 

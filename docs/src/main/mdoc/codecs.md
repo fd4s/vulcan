@@ -70,6 +70,11 @@ Avro enumerations closely correspond to `sealed trait`s with `case object`s.
 We can use `Codec.enumeration​` to specify an encoding.
 
 ```scala mdoc
+sealed trait Fruit
+case object Apple extends Fruit
+case object Banana extends Fruit
+case object Cherry extends Fruit
+
 Codec.enumeration[Fruit](
   name = "Fruit",
   namespace = "com.example",
@@ -96,11 +101,9 @@ Derivation for enumeration types can be partly automated using the [Generic](mod
 
 Avro fixed types correspond to `Array[Byte]`s with a fixed size.
 
-`Codec.deriveFixed` can be used to partly derive [`Codec`][codec]s for fixed types.
+We can use `Codec.fixed` to define a codec.
 
 ```scala mdoc
-@AvroNamespace("com.example")
-@AvroDoc("Amount of pence as a single byte")
 sealed abstract case class Pence(value: Byte)
 
 object Pence {
@@ -109,18 +112,6 @@ object Pence {
     else Left(AvroError(s"Expected pence value, got $value"))
 }
 
-Codec.deriveFixed[Pence](
-  size = 1,
-  encode = pence => Array[Byte](pence.value),
-  decode = bytes => Pence(bytes.head)
-)
-```
-
-Annotations like `@AvroDoc` can be used to customize the derivation.
-
-If we need more precise control of how fixed types are encoded, we can use `Codec.fixed`.
-
-```scala mdoc
 Codec.fixed[Pence](
   name = "Pence",
   namespace = "com.example",
