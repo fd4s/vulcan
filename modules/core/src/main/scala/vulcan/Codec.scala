@@ -437,7 +437,7 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Create
     */
-  final def `enum`[A](
+  final def enumeration[A](
     name: String,
     namespace: String,
     symbols: Seq[String],
@@ -509,6 +509,19 @@ object Codec extends CodecCompanionCompat {
       }
     )
   }
+
+  @deprecated("Use Codec.enumeration - enum is a keyword is Scala 3", "1.2.0")
+  final def enum[A](
+    name: String,
+    namespace: String,
+    symbols: Seq[String],
+    encode: A => String,
+    decode: String => Either[AvroError, A],
+    default: Option[A] = None,
+    doc: Option[String] = None,
+    aliases: Seq[String] = Seq.empty,
+    props: Props = Props.empty
+  ): Codec[A] = enumeration(name, namespace, symbols, encode, decode, default, doc, aliases, props)
 
   /**
     * Returns a new fixed [[Codec]] for type `A`.

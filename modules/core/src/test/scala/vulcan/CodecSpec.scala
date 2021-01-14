@@ -558,7 +558,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       describe("encode") {
         it("should error if returned string is not a schema symbol") {
           implicit val codec: Codec[SealedTraitEnum] =
-            Codec.`enum`(
+            Codec.enumeration(
               name = "SealedTraitEnum",
               namespace = "vulcan.examples",
               symbols = List("symbol"),
@@ -1882,7 +1882,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             case object Second extends CustomEnum
 
             implicit val customEnumCodec: Codec[CustomEnum] =
-              Codec.`enum`(
+              Codec.enumeration(
                 name = "CustomEnum",
                 symbols = List("first", "second"),
                 encode = {
@@ -1925,7 +1925,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             case object Second extends CustomEnum
 
             implicit val customEnumCodec: Codec[CustomEnum] =
-              Codec.`enum`(
+              Codec.enumeration(
                 name = "CustomEnum",
                 symbols = List("first", "second"),
                 encode = {
@@ -2134,7 +2134,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             case object Second extends CustomEnum
 
             implicit val customEnumCodec: Codec[CustomEnum] =
-              Codec.`enum`(
+              Codec.enumeration(
                 name = "CustomEnum",
                 symbols = List("first", "second"),
                 encode = {

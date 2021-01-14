@@ -6,7 +6,7 @@ sealed trait `-SealedTraitEnumInvalidName`
 
 object `-SealedTraitEnumInvalidName` {
   implicit val codec: Codec[`-SealedTraitEnumInvalidName`] =
-    Codec.`enum`(
+    Codec.enumeration(
       "-SealedTraitEnumInvalidName",
       symbols = Seq("value"),
       encode = _ => "value",

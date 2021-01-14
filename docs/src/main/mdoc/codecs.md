@@ -97,10 +97,10 @@ Codec.deriveEnum[Fruit](
 
 Annotations like `@AvroDoc` can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like [Enumeratum](modules.md#enumeratum) for enumerations, in which case we can easily use `Codec.deriveEnum` to derive [`Codec`][codec]s.
 
-If we need more precise control of how enumerations are encoded, we can use ``Codec.`enum`​``.
+If we need more precise control of how enumerations are encoded, we can use ``Codec.enumeration​``.
 
 ```scala mdoc
-Codec.`enum`[Fruit](
+Codec.enumeration[Fruit](
   name = "Fruit",
   namespace = "com.example",
   doc = Some("A selection of different fruits"),
