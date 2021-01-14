@@ -67,37 +67,7 @@ Codec.decimal(precision = 10, scale = 2)
 
 Avro enumerations closely correspond to `sealed trait`s with `case object`s.
 
-`Codec.deriveEnum` can be used to partly derive [`Codec`][codec]s for enumeration types.
-
-```scala mdoc
-import vulcan.{AvroDoc, AvroNamespace}
-
-@AvroNamespace("com.example")
-@AvroDoc("A selection of different fruits")
-sealed trait Fruit
-case object Apple extends Fruit
-case object Banana extends Fruit
-case object Cherry extends Fruit
-
-Codec.deriveEnum[Fruit](
-  symbols = List("apple", "banana", "cherry"),
-  encode = {
-    case Apple  => "apple"
-    case Banana => "banana"
-    case Cherry => "cherry"
-  },
-  decode = {
-    case "apple"  => Right(Apple)
-    case "banana" => Right(Banana)
-    case "cherry" => Right(Cherry)
-    case other    => Left(AvroError(s"$other is not a Fruit"))
-  }
-)
-```
-
-Annotations like `@AvroDoc` can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like [Enumeratum](modules.md#enumeratum) for enumerations, in which case we can easily use `Codec.deriveEnum` to derive [`Codec`][codec]s.
-
-If we need more precise control of how enumerations are encoded, we can use ``Codec.enumeration​``.
+We can use `Codec.enumeration​` to specify an encoding.
 
 ```scala mdoc
 Codec.enumeration[Fruit](
@@ -119,6 +89,8 @@ Codec.enumeration[Fruit](
   default = Some(Banana)
 )
 ```
+
+Derivation for enumeration types can be partly automated using the [Generic](modules.md#generic) or [Enumeratum](modules.md#enumeratum) modules, although these will not support Scala 3 for the foreseeable future.
 
 ## Fixed
 

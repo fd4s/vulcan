@@ -62,7 +62,7 @@ lazy val enumeratum = project
     scalaSettings,
     testSettings
   )
-  .dependsOn(core)
+  .dependsOn(core, generic)
 
 lazy val generic = project
   .in(file("modules/generic"))
