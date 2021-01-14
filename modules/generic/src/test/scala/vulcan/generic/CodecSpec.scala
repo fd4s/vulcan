@@ -383,7 +383,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
               unsafeSchema[SealedTraitCaseObject],
-              "Missing alternative CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
+              "Missing alternative CaseObjectInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseClass"
             )
           }
 
