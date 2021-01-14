@@ -145,7 +145,7 @@ deriveEnum[Fruit](
 )
 ```
 
-`Codec.deriveFixed` can be used to partly derive [`Codec`][codec]s for fixed types. Annotations like `@AvroDoc` can be used to customize the derivation.
+`deriveFixed` can be used to partly derive [`Codec`][codec]s for fixed types. Annotations like `@AvroDoc` can be used to customize the derivation.
 
 ```scala mdoc
 import vulcan.AvroError
