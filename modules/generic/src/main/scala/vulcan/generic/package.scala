@@ -7,6 +7,7 @@
 package vulcan
 
 import scala.language.experimental.macros
+import scala.reflect.runtime.universe.WeakTypeTag
 import cats.implicits._
 import magnolia._
 import org.apache.avro.generic._
@@ -14,6 +15,7 @@ import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import shapeless.ops.coproduct.{Inject, Selector}
 import vulcan.internal.converters.collection._
+import vulcan.internal.tags._
 
 package object generic {
   implicit final val cnilCodec: Codec[CNil] =
@@ -284,4 +286,46 @@ package object generic {
 
     final type Typeclass[A] = Codec[A]
   }
+
+  /**
+    * Returns an enum `Codec` for type `A`, deriving details
+    * like the name, namespace, and [[AvroDoc]] documentation
+    * from the type `A` using type tags.
+    *
+    * @group Derive
+    */
+  final def deriveEnum[A](
+    symbols: Seq[String],
+    encode: A => String,
+    decode: String => Either[AvroError, A]
+  )(implicit tag: WeakTypeTag[A]): Codec[A] =
+    Codec.enumeration(
+      name = nameFrom(tag),
+      symbols = symbols,
+      encode = encode,
+      decode = decode,
+      namespace = namespaceFrom(tag),
+      doc = docFrom(tag)
+    )
+
+  /**
+    * Returns a fixed `Codec` for type `A`, deriving details
+    * like the name, namespace, and [[AvroDoc]] documentation
+    * from the type `A` using type tags.
+    *
+    * @group Derive
+    */
+  final def deriveFixed[A](
+    size: Int,
+    encode: A => Array[Byte],
+    decode: Array[Byte] => Either[AvroError, A]
+  )(implicit tag: WeakTypeTag[A]): Codec[A] =
+    Codec.fixed(
+      name = nameFrom(tag),
+      size = size,
+      encode = encode,
+      decode = decode,
+      namespace = namespaceFrom(tag),
+      doc = docFrom(tag)
+    )
 }

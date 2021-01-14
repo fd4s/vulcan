@@ -10,7 +10,7 @@ val refinedVersion = "0.9.20"
 
 val shapelessVersion = "2.3.3"
 
-val scala212 = "2.12.12"
+val scala212 = "2.12.13"
 
 val scala213 = "2.13.4"
 
@@ -62,7 +62,7 @@ lazy val enumeratum = project
     scalaSettings,
     testSettings
   )
-  .dependsOn(core)
+  .dependsOn(core, generic)
 
 lazy val generic = project
   .in(file("modules/generic"))
@@ -81,7 +81,7 @@ lazy val generic = project
     scalaSettings,
     testSettings
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val refined = project
   .in(file("modules/refined"))
@@ -126,7 +126,7 @@ lazy val dependencySettings = Seq(
                         Seq(
                           "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2" % Test,
                           compilerPlugin(
-                            ("org.typelevel" %% "kind-projector" % "0.11.1")
+                            ("org.typelevel" %% "kind-projector" % "0.11.2")
                               .cross(CrossVersion.full)
                           )
                         ))),
@@ -288,7 +288,8 @@ lazy val scalaSettings = Seq(
         "-Ywarn-numeric-widen",
         "-Ywarn-value-discard",
         "-Ywarn-unused",
-        "-Xfatal-warnings"
+        "-Xfatal-warnings",
+        "-Wconf:msg=Block&src=test/scala/vulcan/generic/.*:silent"
       )
     else if (scalaVersion.value.startsWith("2.12"))
       Seq(

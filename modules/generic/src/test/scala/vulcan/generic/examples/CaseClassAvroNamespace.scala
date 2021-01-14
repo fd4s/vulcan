@@ -1,9 +1,9 @@
-package vulcan.examples
+package vulcan.generic.examples
 
 import cats.Eq
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
-import vulcan.{AvroNamespace, Codec}
+import vulcan.Codec
 import vulcan.generic._
 
 @AvroNamespace("com.example")

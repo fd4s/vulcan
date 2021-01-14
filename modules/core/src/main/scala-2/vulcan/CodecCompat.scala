@@ -11,13 +11,11 @@ import vulcan.internal.tags._
 
 private[vulcan] trait CodecCompanionCompat {
 
-  /**
-    * Returns an enum [[Codec]] for type `A`, deriving details
-    * like the name, namespace, and [[AvroDoc]] documentation
-    * from the type `A` using type tags.
-    *
-    * @group Derive
-    */
+  @deprecated(
+    "Use vulcan.generic.deriveEnum in the vulcan-generic module, " +
+      "or define the codec explicitly using Codec.enumeration",
+    "1.2.0"
+  )
   final def deriveEnum[A](
     symbols: Seq[String],
     encode: A => String,
@@ -32,13 +30,11 @@ private[vulcan] trait CodecCompanionCompat {
       doc = docFrom(tag)
     )
 
-  /**
-    * Returns a fixed [[Codec]] for type `A`, deriving details
-    * like the name, namespace, and [[AvroDoc]] documentation
-    * from the type `A` using type tags.
-    *
-    * @group Derive
-    */
+  @deprecated(
+    "Use vulcan.generic.deriveFixed in the vulcan-generic module, " +
+      "or define the codec explicitly using Codec.enumeration",
+    "1.2.0"
+  )
   final def deriveFixed[A](
     size: Int,
     encode: A => Array[Byte],

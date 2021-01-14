@@ -67,39 +67,14 @@ Codec.decimal(precision = 10, scale = 2)
 
 Avro enumerations closely correspond to `sealed trait`s with `case object`s.
 
-`Codec.deriveEnum` can be used to partly derive [`Codec`][codec]s for enumeration types.
+We can use `Codec.enumeration​` to specify an encoding.
 
 ```scala mdoc
-import vulcan.{AvroDoc, AvroNamespace}
-
-@AvroNamespace("com.example")
-@AvroDoc("A selection of different fruits")
 sealed trait Fruit
 case object Apple extends Fruit
 case object Banana extends Fruit
 case object Cherry extends Fruit
 
-Codec.deriveEnum[Fruit](
-  symbols = List("apple", "banana", "cherry"),
-  encode = {
-    case Apple  => "apple"
-    case Banana => "banana"
-    case Cherry => "cherry"
-  },
-  decode = {
-    case "apple"  => Right(Apple)
-    case "banana" => Right(Banana)
-    case "cherry" => Right(Cherry)
-    case other    => Left(AvroError(s"$other is not a Fruit"))
-  }
-)
-```
-
-Annotations like `@AvroDoc` can be used to customize the derivation. There is no full derivation for enums, as it's highly recommended to use a library like [Enumeratum](modules.md#enumeratum) for enumerations, in which case we can easily use `Codec.deriveEnum` to derive [`Codec`][codec]s.
-
-If we need more precise control of how enumerations are encoded, we can use ``Codec.enumeration​``.
-
-```scala mdoc
 Codec.enumeration[Fruit](
   name = "Fruit",
   namespace = "com.example",
@@ -120,15 +95,15 @@ Codec.enumeration[Fruit](
 )
 ```
 
+Derivation for enumeration types can be partly automated using the [Generic](modules.md#generic) or [Enumeratum](modules.md#enumeratum) modules, although these will not support Scala 3 for the foreseeable future.
+
 ## Fixed
 
 Avro fixed types correspond to `Array[Byte]`s with a fixed size.
 
-`Codec.deriveFixed` can be used to partly derive [`Codec`][codec]s for fixed types.
+We can use `Codec.fixed` to define a codec.
 
 ```scala mdoc
-@AvroNamespace("com.example")
-@AvroDoc("Amount of pence as a single byte")
 sealed abstract case class Pence(value: Byte)
 
 object Pence {
@@ -137,18 +112,6 @@ object Pence {
     else Left(AvroError(s"Expected pence value, got $value"))
 }
 
-Codec.deriveFixed[Pence](
-  size = 1,
-  encode = pence => Array[Byte](pence.value),
-  decode = bytes => Pence(bytes.head)
-)
-```
-
-Annotations like `@AvroDoc` can be used to customize the derivation.
-
-If we need more precise control of how fixed types are encoded, we can use `Codec.fixed`.
-
-```scala mdoc
 Codec.fixed[Pence](
   name = "Pence",
   namespace = "com.example",

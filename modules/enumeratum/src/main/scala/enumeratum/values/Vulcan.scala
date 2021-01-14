@@ -8,6 +8,7 @@ package enumeratum.values
 
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.{AvroError, Codec}
+import vulcan.generic.deriveEnum
 
 object Vulcan {
   def codec[ValueType, EntryType <: ValueEnumEntry[ValueType]](
@@ -31,7 +32,7 @@ object Vulcan {
     lazy val entries = enum.values.map(_.value).mkString(", ")
     val notFound = (value: String) => AvroError(s"$value is not a member of $typeName ($entries)")
 
-    Codec.deriveEnum(
+    deriveEnum(
       symbols = enum.values.map(_.value),
       encode = _.value,
       decode = value => enum.withValueOpt(value).toRight(notFound(value))

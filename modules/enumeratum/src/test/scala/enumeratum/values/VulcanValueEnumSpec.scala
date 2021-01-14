@@ -4,7 +4,8 @@ import enumeratum.EitherValues
 import org.scalacheck.Gen
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import vulcan._
+import vulcan.Codec
+import vulcan.generic.{AvroDoc, AvroNamespace}
 
 final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("ByteVulcanEnum") {

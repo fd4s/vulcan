@@ -1,4 +1,4 @@
-package vulcan.examples
+package vulcan.generic.examples
 
 import vulcan.Codec
 

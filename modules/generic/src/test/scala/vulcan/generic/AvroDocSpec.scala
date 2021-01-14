@@ -1,8 +1,6 @@
-package vulcan
+package vulcan.generic
 
-import scala.annotation.nowarn
-
-@nowarn("msg=deprecated")
+import vulcan.BaseSpec
 final class AvroDocSpec extends BaseSpec {
   describe("AvroDoc") {
     it("should provide documentation via doc") {
