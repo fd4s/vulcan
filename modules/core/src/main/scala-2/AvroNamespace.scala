@@ -20,7 +20,7 @@ import scala.annotation.StaticAnnotation
   * - Annotate a `case class` for record namespace when
   *   using `Codec.derive` from the generic module.
   */
-@deprecated("Use vulcan.generic.AvroNamespace from the vulcan-generic module", "1.2.0")
+@deprecated("Use vulcan.generic.AvroNamespace from the vulcan-generic module", "1.3.0")
 final class AvroNamespace(final val namespace: String) extends StaticAnnotation {
   override final def toString: String =
     s"AvroNamespace($namespace)"

@@ -510,7 +510,7 @@ object Codec extends CodecCompanionCompat {
     )
   }
 
-  @deprecated("Use Codec.enumeration - enum is a keyword is Scala 3", "1.2.0")
+  @deprecated("Use Codec.enumeration - enum is a keyword in Scala 3", "1.3.0")
   final def `enum`[A](
     name: String,
     namespace: String,

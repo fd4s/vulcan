@@ -14,7 +14,7 @@ private[vulcan] trait CodecCompanionCompat {
   @deprecated(
     "Use vulcan.generic.deriveEnum in the vulcan-generic module, " +
       "or define the codec explicitly using Codec.enumeration",
-    "1.2.0"
+    "1.3.0"
   )
   final def deriveEnum[A](
     symbols: Seq[String],
@@ -33,7 +33,7 @@ private[vulcan] trait CodecCompanionCompat {
   @deprecated(
     "Use vulcan.generic.deriveFixed in the vulcan-generic module, " +
       "or define the codec explicitly using Codec.enumeration",
-    "1.2.0"
+    "1.3.0"
   )
   final def deriveFixed[A](
     size: Int,
