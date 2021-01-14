@@ -23,7 +23,7 @@ import scala.annotation.StaticAnnotation
   *   documentation when using `Codec.derive` from the
   *   generic module.
   */
-@deprecated("Use vulcan.generic.AvroDoc from the vulcan-generic module", "1.2.0")
+@deprecated("Use vulcan.generic.AvroDoc from the vulcan-generic module", "1.3.0")
 final class AvroDoc(final val doc: String) extends StaticAnnotation {
   override final def toString: String =
     s"AvroDoc($doc)"
