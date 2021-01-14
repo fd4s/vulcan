@@ -1,6 +1,9 @@
-package vulcan
+package vulcan.generic
 
 import vulcan.examples._
+import vulcan.BaseSpec
+import vulcan.RoundtripHelpers
+import vulcan.CodecSpecHelpers
 
 final class DerivationSpec extends BaseSpec with RoundtripHelpers with CodecSpecHelpers {
   describe("Codec") {

@@ -7,6 +7,7 @@
 package vulcan
 
 import scala.language.experimental.macros
+import scala.reflect.runtime.universe.WeakTypeTag
 import cats.implicits._
 import magnolia._
 import org.apache.avro.generic._
@@ -14,6 +15,7 @@ import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import shapeless.ops.coproduct.{Inject, Selector}
 import vulcan.internal.converters.collection._
+import vulcan.internal.tags._
 
 package object generic {
   implicit final val cnilCodec: Codec[CNil] =

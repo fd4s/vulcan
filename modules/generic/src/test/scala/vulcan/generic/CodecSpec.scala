@@ -8,7 +8,7 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import shapeless.{:+:, CNil, Coproduct}
 import vulcan._
-import vulcan.examples._
+import vulcan.generic.examples._
 import vulcan.internal.converters.collection._
 
 import scala.annotation.nowarn
@@ -198,19 +198,19 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
 
           it("should use parameter schema for record field") {
             assertSchemaIs[CaseClassField] {
-              """{"type":"record","name":"CaseClassField","namespace":"vulcan.examples","fields":[{"name":"value","type":"int"}]}"""
+              """{"type":"record","name":"CaseClassField","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":"int"}]}"""
             }
           }
 
           it("should support annotation for record field documentation") {
             assertSchemaIs[CaseClassFieldAvroDoc] {
-              """{"type":"record","name":"CaseClassFieldAvroDoc","namespace":"vulcan.examples","fields":[{"name":"name","type":"string","doc":"documentation"}]}"""
+              """{"type":"record","name":"CaseClassFieldAvroDoc","namespace":"vulcan.generic.examples","fields":[{"name":"name","type":"string","doc":"documentation"}]}"""
             }
           }
 
           it("should support annotation for record documentation") {
             assertSchemaIs[CaseClassAvroDoc] {
-              """{"type":"record","name":"CaseClassAvroDoc","namespace":"vulcan.examples","doc":"documentation","fields":[{"name":"value","type":["null","string"]}]}"""
+              """{"type":"record","name":"CaseClassAvroDoc","namespace":"vulcan.generic.examples","doc":"documentation","fields":[{"name":"value","type":["null","string"]}]}"""
             }
           }
 
@@ -265,7 +265,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[CaseClassField](
               unsafeEncode(CaseClassField(123)),
               unsafeSchema[String],
-              "Got unexpected schema type STRING while decoding vulcan.examples.CaseClassField, expected schema type RECORD"
+              "Got unexpected schema type STRING while decoding vulcan.generic.examples.CaseClassField, expected schema type RECORD"
             )
           }
 
@@ -273,7 +273,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[CaseClassField](
               unsafeEncode(123),
               unsafeSchema[CaseClassField],
-              "Got unexpected type java.lang.Integer while decoding vulcan.examples.CaseClassField, expected type IndexedRecord"
+              "Got unexpected type java.lang.Integer while decoding vulcan.generic.examples.CaseClassField, expected type IndexedRecord"
             )
           }
 
@@ -281,7 +281,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[CaseClassField](
               {
                 val schema =
-                  Schema.createRecord("CaseClassField", null, "vulcan.examples", false)
+                  Schema.createRecord("CaseClassField", null, "vulcan.generic.examples", false)
 
                 schema.setFields(
                   List(
@@ -298,7 +298,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
                 record
               },
               unsafeSchema[CaseClassField],
-              "Record writer schema is missing field 'value' while decoding vulcan.examples.CaseClassField"
+              "Record writer schema is missing field 'value' while decoding vulcan.generic.examples.CaseClassField"
             )
           }
 
@@ -315,13 +315,13 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         describe("schema") {
           it("should encode case classes as records") {
             assertSchemaIs[SealedTraitCaseClass] {
-              """[{"type":"record","name":"CaseClassInSealedTrait","namespace":"vulcan.examples","fields":[{"name":"value","type":"int"}]}]"""
+              """[{"type":"record","name":"CaseClassInSealedTrait","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":"int"}]}]"""
             }
           }
 
           it("should encode case objects as empty records") {
             assertSchemaIs[SealedTraitCaseObject] {
-              """[{"type":"record","name":"CaseObjectInSealedTrait","namespace":"vulcan.examples","fields":[]}]"""
+              """[{"type":"record","name":"CaseObjectInSealedTrait","namespace":"vulcan.generic.examples","fields":[]}]"""
             }
           }
 
@@ -336,7 +336,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if value is not an alternative") {
             assertEncodeError[SealedTraitCaseClassIncomplete](
               SecondInSealedTraitCaseClassIncomplete(0),
-              "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete"
+              "Exhausted alternatives for type vulcan.generic.examples.SecondInSealedTraitCaseClassIncomplete"
             )
           }
 
@@ -354,7 +354,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseClass](CaseClassInSealedTrait(0)),
               unsafeSchema[String],
-              "Missing schema CaseClassInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
+              "Missing schema CaseClassInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseClass"
             )
           }
 
@@ -370,7 +370,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode(123),
               unsafeSchema[SealedTraitCaseClass],
-              "Exhausted alternatives for type java.lang.Integer while decoding vulcan.examples.SealedTraitCaseClass"
+              "Exhausted alternatives for type java.lang.Integer while decoding vulcan.generic.examples.SealedTraitCaseClass"
             )
           }
 
@@ -378,7 +378,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[SealedTraitCaseObject](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
               unsafeSchema[SealedTraitCaseClass],
-              "Missing schema CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseObject"
+              "Missing schema CaseObjectInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseObject"
             )
           }
 
@@ -386,7 +386,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
               unsafeSchema[SealedTraitCaseObject],
-              "Missing alternative CaseObjectInSealedTrait in union for type vulcan.examples.SealedTraitCaseClass"
+              "Missing alternative CaseObjectInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseClass"
             )
           }
 

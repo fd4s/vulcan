@@ -8,16 +8,14 @@ import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.Assertion
-import org.scalatest.funspec.AnyFunSpec
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import shapeless.{:+:, CNil, Coproduct}
 import vulcan._
-import vulcan.examples._
+import vulcan.generic.examples._
 
 import scala.annotation.nowarn
 
 @nowarn("msg=Block result was adapted via implicit conversion")
-final class RoundtripSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
+final class RoundtripSpec extends BaseSpec {
   describe("coproduct") {
     type Types = CaseClassField :+: Int :+: CaseClassAvroDoc :+: CNil
 

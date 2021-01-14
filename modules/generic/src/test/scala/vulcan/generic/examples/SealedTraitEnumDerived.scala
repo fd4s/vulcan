@@ -1,9 +1,9 @@
-package vulcan.examples
+package vulcan.generic.examples
 
-import scala.annotation.nowarn
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}
 import vulcan.{AvroError, AvroNamespace, Codec}
+import vulcan.generic.deriveEnum
 
 @AvroNamespace("com.example")
 sealed trait SealedTraitEnumDerived
@@ -15,9 +15,8 @@ object SealedTraitEnumDerived {
   implicit final val eq: Eq[SealedTraitEnumDerived] =
     Eq.fromUniversalEquals
 
-  @nowarn("msg=deprecated")
   implicit final val codec: Codec[SealedTraitEnumDerived] =
-    Codec.deriveEnum(
+    deriveEnum(
       symbols = List("first", "second"),
       encode = {
         case FirstInSealedTraitEnumDerived  => "first"

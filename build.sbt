@@ -81,7 +81,7 @@ lazy val generic = project
     scalaSettings,
     testSettings
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val refined = project
   .in(file("modules/refined"))
