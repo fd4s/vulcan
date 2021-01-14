@@ -7,8 +7,8 @@ import vulcan.{AvroDoc, AvroNamespace, Codec}
 
 @AvroDoc("Some documentation")
 @AvroNamespace("vulcan.examples.overridden")
+@nowarn("msg=deprecated")
 final case class FixedNamespace(bytes: Array[Byte])
-
 object FixedNamespace {
   @nowarn("msg=deprecated")
   implicit val codec: Codec[FixedNamespace] =

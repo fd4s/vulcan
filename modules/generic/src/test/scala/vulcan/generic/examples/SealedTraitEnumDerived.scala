@@ -2,8 +2,8 @@ package vulcan.generic.examples
 
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}
-import vulcan.{AvroError, AvroNamespace, Codec}
-import vulcan.generic.deriveEnum
+import vulcan.{AvroError, Codec}
+import vulcan.generic._
 
 @AvroNamespace("com.example")
 sealed trait SealedTraitEnumDerived

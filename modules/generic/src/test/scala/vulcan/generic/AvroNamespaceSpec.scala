@@ -1,5 +1,6 @@
-package vulcan
+package vulcan.generic
 
+import vulcan.BaseSpec
 final class AvroNamespaceSpec extends BaseSpec {
   describe("AvroNamespace") {
     it("should provide the namespace via namespace") {

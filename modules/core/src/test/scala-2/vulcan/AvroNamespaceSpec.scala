@@ -1,5 +1,7 @@
 package vulcan
 
+import scala.annotation.nowarn
+@nowarn("msg=deprecated")
 final class AvroNamespaceSpec extends BaseSpec {
   describe("AvroNamespace") {
     it("should provide the namespace via namespace") {

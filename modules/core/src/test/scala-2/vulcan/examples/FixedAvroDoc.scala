@@ -4,6 +4,7 @@ import scala.annotation.nowarn
 import vulcan.{AvroDoc, Codec}
 
 @AvroDoc("Some documentation")
+@nowarn("msg=deprecated")
 final case class FixedAvroDoc(bytes: Array[Byte])
 
 object FixedAvroDoc {

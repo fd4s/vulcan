@@ -6,6 +6,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import vulcan.{AvroError, AvroNamespace, Codec}
 
 @AvroNamespace("com.example")
+@nowarn("msg=deprecated")
 sealed trait SealedTraitEnumDerived
 
 object SealedTraitEnumDerived {
