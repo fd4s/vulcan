@@ -1,6 +1,6 @@
 val avroVersion = "1.10.1"
 
-val catsVersion = "2.3.0"
+val catsVersion = "2.3.1"
 
 val enumeratumVersion = "1.6.1"
 
@@ -111,7 +111,7 @@ lazy val docs = project
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.0",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.1",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test),
