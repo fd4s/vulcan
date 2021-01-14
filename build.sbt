@@ -10,7 +10,7 @@ val refinedVersion = "0.9.20"
 
 val shapelessVersion = "2.3.3"
 
-val scala212 = "2.12.12"
+val scala212 = "2.12.13"
 
 val scala213 = "2.13.4"
 
@@ -126,7 +126,7 @@ lazy val dependencySettings = Seq(
                         Seq(
                           "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.1" % Test,
                           compilerPlugin(
-                            ("org.typelevel" %% "kind-projector" % "0.11.1")
+                            ("org.typelevel" %% "kind-projector" % "0.11.2")
                               .cross(CrossVersion.full)
                           )
                         ))),
