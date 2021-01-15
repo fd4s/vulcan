@@ -11,7 +11,7 @@ Vulcan provides Avro schemas, encoders, and decoders between Scala types and typ
 
 - Derivation of schemas, encoders, and decoders for `case class`es and `sealed trait`s.
 
-Documentation is kept up-to-date, currently documenting v@LATEST_VERSION@ on Scala @DOCS_SCALA_MINOR_VERSION@.
+Documentation is kept up-to-date, currently documenting v@LATEST_VERSION@ on Scala @DOCS_SCALA_VERSION@.
 
 ## Getting Started
 

@@ -36,16 +36,16 @@ lazy val core = project
       libraryDependencies ++= Seq(
         "org.apache.avro" % "avro" % avroVersion,
         "org.typelevel" %% "cats-free" % catsVersion
-      ) ++ (if (isDotty.value) Nil
-            else
-              Seq(
-                "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-              ))
+      ) ++ {
+        if (isDotty.value) Nil
+        else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+      }
     ),
     publishSettings,
     mimaSettings,
-    scalaSettings,
-    crossScalaVersions := Seq(scala212, scala213, scala3),
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
     testSettings
   )
 
@@ -96,8 +96,9 @@ lazy val refined = project
     ),
     publishSettings,
     mimaSettings,
-    scalaSettings,
-    crossScalaVersions := Seq(scala212, scala213, scala3),
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
     testSettings
   )
   .dependsOn(core)
@@ -121,15 +122,14 @@ lazy val dependencySettings = Seq(
     "org.typelevel" %% "discipline-scalatest" % "2.1.1",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
-  ).map(_ % Test) ++ (if (isDotty.value) Nil
-                      else
-                        Seq(
-                          "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2" % Test,
-                          compilerPlugin(
-                            ("org.typelevel" %% "kind-projector" % "0.11.2")
-                              .cross(CrossVersion.full)
-                          )
-                        ))),
+  ).map(_ % Test) ++ {
+    if (isDotty.value) Nil
+    else
+      Seq(
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2" % Test,
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.2").cross(CrossVersion.full))
+      )
+  }),
   pomPostProcess := { (node: xml.Node) =>
     new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
       def scopedDependency(e: xml.Elem): Boolean =
@@ -272,44 +272,58 @@ lazy val noPublishSettings =
 lazy val scalaSettings = Seq(
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala212, scala213),
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding",
-    "UTF-8",
-    "-feature",
-    "-language:implicitConversions",
-    "-unchecked"
-  ) ++ (
-    if (scalaVersion.value.startsWith("2.13"))
+  scalacOptions ++= {
+    val commonScalacOptions =
       Seq(
-        "-language:higherKinds",
-        "-Xlint",
-        "-Ywarn-dead-code",
-        "-Ywarn-numeric-widen",
-        "-Ywarn-value-discard",
-        "-Ywarn-unused",
+        "-deprecation",
+        "-encoding",
+        "UTF-8",
+        "-feature",
+        "-unchecked",
         "-Xfatal-warnings",
-        "-Wconf:msg=Block&src=test/scala/vulcan/generic/.*:silent"
+        "-language:implicitConversions"
       )
-    else if (scalaVersion.value.startsWith("2.12"))
-      Seq(
-        "-language:higherKinds",
-        "-Xlint",
-        "-Yno-adapted-args",
-        "-Ywarn-dead-code",
-        "-Ywarn-numeric-widen",
-        "-Ywarn-value-discard",
-        "-Ywarn-unused",
-        "-Ypartial-unification",
-        "-Xfatal-warnings"
-      )
-    else
-      Seq(
-        "-Ykind-projector",
-        "-source:3.0-migration",
-        "-Xignore-scala2-macros"
-      )
-  ),
+
+    val scala2ScalacOptions =
+      if (scalaVersion.value.startsWith("2.")) {
+        Seq(
+          "-language:higherKinds",
+          "-Xlint",
+          "-Ywarn-dead-code",
+          "-Ywarn-numeric-widen",
+          "-Ywarn-value-discard",
+          "-Ywarn-unused"
+        )
+      } else Seq()
+
+    val scala212ScalacOptions =
+      if (scalaVersion.value.startsWith("2.12")) {
+        Seq(
+          "-Yno-adapted-args",
+          "-Ypartial-unification"
+        )
+      } else Seq()
+
+    val scala213ScalacOptions =
+      if (scalaVersion.value.startsWith("2.13")) {
+        Seq("-Wconf:msg=Block&src=test/scala/vulcan/generic/.*:silent")
+      } else Seq()
+
+    val scala3ScalacOptions =
+      if (isDotty.value) {
+        Seq(
+          "-Ykind-projector",
+          "-source:3.0-migration",
+          "-Xignore-scala2-macros"
+        )
+      } else Seq()
+
+    commonScalacOptions ++
+      scala2ScalacOptions ++
+      scala212ScalacOptions ++
+      scala213ScalacOptions ++
+      scala3ScalacOptions
+  },
   scalacOptions in (Compile, console) --= Seq("-Xlint", "-Ywarn-unused"),
   scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
   unmanagedSourceDirectories in Compile += {
@@ -327,10 +341,13 @@ lazy val testSettings = Seq(
   testOptions in Test += Tests.Argument("-oDF")
 )
 
-def minorVersion(version: String): String = {
-  val (major, minor) =
-    CrossVersion.partialVersion(version).get
-  s"$major.$minor"
+def scalaVersionOf(version: String): String = {
+  if (version.contains("-")) version
+  else {
+    val (major, minor) =
+      CrossVersion.partialVersion(version).get
+    s"$major.$minor"
+  }
 }
 
 val latestVersion = settingKey[String]("Latest stable released version")
@@ -356,9 +373,9 @@ updateSiteVariables in ThisBuild := {
       "coreModuleName" -> (moduleName in core).value,
       "latestVersion" -> (latestVersion in ThisBuild).value,
       "scalaPublishVersions" -> {
-        val minorVersions = (crossScalaVersions in core).value.map(minorVersion)
-        if (minorVersions.size <= 2) minorVersions.mkString(" and ")
-        else minorVersions.init.mkString(", ") ++ " and " ++ minorVersions.last
+        val scalaVersions = (crossScalaVersions in core).value.map(scalaVersionOf)
+        if (scalaVersions.size <= 2) scalaVersions.mkString(" and ")
+        else scalaVersions.init.mkString(", ") ++ " and " ++ scalaVersions.last
       }
     )
 

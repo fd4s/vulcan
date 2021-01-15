@@ -8,24 +8,30 @@ object Main {
   def sourceDirectoryPath(rest: String*): Path =
     FileSystems.getDefault.getPath(sourceDirectory.getAbsolutePath, rest: _*)
 
-  def minorVersion(version: String): String = {
-    val Array(major, minor, _) = version.split('.')
-    s"$major.$minor"
-  }
-
   def majorVersion(version: String): String = {
-    val Array(major, _, _) = version.split('.')
+    val parts = version.split('.')
+    val major = parts(0)
     major
   }
 
-  def minorVersionsString(versions: Seq[String]): String = {
-    val minorVersions = versions.map(minorVersion)
-    if (minorVersions.size <= 2) minorVersions.mkString(" and ")
-    else minorVersions.init.mkString(", ") ++ " and " ++ minorVersions.last
+  def scalaVersionOf(version: String): String = {
+    if (version.contains("-")) version
+    else {
+      val parts = version.split('.')
+      val (major, minor) = (parts(0), parts(1))
+      s"$major.$minor"
+    }
+  }
+
+  def scalaVersionsString(versions: Seq[String]): String = {
+    val scalaVersions = versions.map(scalaVersionOf)
+    if (scalaVersions.size <= 2) scalaVersions.mkString(" and ")
+    else scalaVersions.init.mkString(", ") ++ " and " ++ scalaVersions.last
   }
 
   def main(args: Array[String]): Unit = {
-    val scalaMinorVersion = minorVersion(scalaVersion)
+    val scalaDocsVersion =
+      scalaVersionOf(scalaVersion)
 
     val settings = mdoc
       .MainSettings()
@@ -33,18 +39,18 @@ object Main {
         Map(
           "ORGANIZATION" -> organization,
           "CORE_MODULE_NAME" -> coreModuleName,
-          "CORE_CROSS_SCALA_VERSIONS" -> minorVersionsString(coreCrossScalaVersions),
+          "CORE_CROSS_SCALA_VERSIONS" -> scalaVersionsString(coreCrossScalaVersions),
           "ENUMERATUM_MODULE_NAME" -> enumeratumModuleName,
-          "ENUMERATUM_CROSS_SCALA_VERSIONS" -> minorVersionsString(enumeratumCrossScalaVersions),
+          "ENUMERATUM_CROSS_SCALA_VERSIONS" -> scalaVersionsString(enumeratumCrossScalaVersions),
           "GENERIC_MODULE_NAME" -> genericModuleName,
-          "GENERIC_CROSS_SCALA_VERSIONS" -> minorVersionsString(genericCrossScalaVersions),
+          "GENERIC_CROSS_SCALA_VERSIONS" -> scalaVersionsString(genericCrossScalaVersions),
           "REFINED_MODULE_NAME" -> refinedModuleName,
-          "REFINED_CROSS_SCALA_VERSIONS" -> minorVersionsString(refinedCrossScalaVersions),
+          "REFINED_CROSS_SCALA_VERSIONS" -> scalaVersionsString(refinedCrossScalaVersions),
           "LATEST_VERSION" -> latestVersion,
           "LATEST_SNAPSHOT_VERSION" -> latestSnapshotVersion,
           "LATEST_MAJOR_VERSION" -> majorVersion(latestVersion),
-          "DOCS_SCALA_MINOR_VERSION" -> scalaMinorVersion,
-          "SCALA_PUBLISH_VERSIONS" -> minorVersionsString(crossScalaVersions),
+          "DOCS_SCALA_VERSION" -> scalaDocsVersion,
+          "SCALA_PUBLISH_VERSIONS" -> scalaVersionsString(crossScalaVersions),
           "API_BASE_URL" -> s"/vulcan/api/vulcan",
           "AVRO_VERSION" -> avroVersion,
           "CATS_VERSION" -> catsVersion,

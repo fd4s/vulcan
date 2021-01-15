@@ -14,9 +14,9 @@ class HomeSplash extends React.Component {
     const { baseUrl, docsUrl } = siteConfig;
     const docsPart = `${docsUrl ? `${docsUrl}/` : ""}`;
     const langPart = `${language ? `${language}/` : ""}`;
-    const docUrl = doc => `${baseUrl}${docsPart}${langPart}${doc}`;
+    const docUrl = (doc) => `${baseUrl}${docsPart}${langPart}${doc}`;
 
-    const SplashContainer = props => (
+    const SplashContainer = (props) => (
       <div className="homeContainer">
         <div className="homeSplashFade">
           <div className="wrapper homeWrapper">{props.children}</div>
@@ -34,7 +34,7 @@ class HomeSplash extends React.Component {
       </h2>
     );
 
-    const PromoSection = props => (
+    const PromoSection = (props) => (
       <div className="section promoSection">
         <div className="promoRow">
           <div className="pluginRowBlock">{props.children}</div>
@@ -42,7 +42,7 @@ class HomeSplash extends React.Component {
       </div>
     );
 
-    const Button = props => (
+    const Button = (props) => (
       <div className="pluginWrapper buttonWrapper">
         <a className="button" href={props.href} target={props.target}>
           {props.children}
@@ -73,14 +73,14 @@ class Index extends React.Component {
       coreModuleName,
       latestVersion,
       organization,
-      scalaPublishVersions
+      scalaPublishVersions,
     } = variables;
 
     const latestVersionBadge = latestVersion
       .replace("-", "--")
       .replace("_", "__");
 
-    const Block = props => (
+    const Block = (props) => (
       <Container
         padding={["bottom", "top"]}
         id={props.id}
@@ -94,7 +94,7 @@ class Index extends React.Component {
       </Container>
     );
 
-    const index = `[![GitHub Actions](https://img.shields.io/github/workflow/status/fd4s/vulcan/ci)](https://github.com/fd4s/vulcan/actions) [![Codecov](https://img.shields.io/codecov/c/github/fd4s/vulcan.svg)](https://codecov.io/gh/fd4s/vulcan) [![Gitter](https://img.shields.io/gitter/room/fd4s/vulcan.svg?colorB=36bc97)](https://gitter.im/fd4s/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/fd4s/vulcan)
+    const index = `[![GitHub Actions](https://img.shields.io/github/workflow/status/fd4s/vulcan/ci)](https://github.com/fd4s/vulcan/actions) [![Gitter](https://img.shields.io/gitter/room/fd4s/vulcan.svg?colorB=36bc97)](https://gitter.im/fd4s/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/fd4s/vulcan)
 
 Functional Avro encodings for Scala using the official Apache Avro library.<br>
 Project is under active development. Feedback and contributions welcome.
