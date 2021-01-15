@@ -6,6 +6,9 @@ on:
     branches: ["*"]
 jobs:
   validate:
+    strategy:
+      matrix:
+        scala: [3.0.0-M3, 2.13.4, 2.12.13]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -13,4 +16,6 @@ jobs:
           fetch-depth: 0
       - uses: olafurpg/setup-scala@v10
       - uses: coursier/cache-action@v5
-      - run: sbt validate
+      - run: sbt ++{{ matrix.scala }} validate
+      - if: matrix.scala == '2.13.4'
+        run: sbt "++{{ matrix.scala }} docs/run"
