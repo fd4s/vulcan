@@ -1,18 +1,16 @@
-package vulcan.examples
+package vulcan.generic.examples
 
-import scala.annotation.nowarn
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}
-import vulcan.{AvroDoc, AvroNamespace, Codec}
+import vulcan._
+import vulcan.generic._
 
 @AvroDoc("Some documentation")
 @AvroNamespace("vulcan.examples.overridden")
-@nowarn("msg=deprecated")
 final case class FixedNamespace(bytes: Array[Byte])
 object FixedNamespace {
-  @nowarn("msg=deprecated")
   implicit val codec: Codec[FixedNamespace] =
-    Codec.deriveFixed(
+    deriveFixed(
       size = 1,
       encode = _.bytes,
       decode = bytes => Right(FixedNamespace(bytes))

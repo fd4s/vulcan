@@ -312,19 +312,11 @@ lazy val scalaSettings = Seq(
   ),
   scalacOptions in (Compile, console) --= Seq("-Xlint", "-Ywarn-unused"),
   scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
-  unmanagedSourceDirectories in Compile ++= {
+  unmanagedSourceDirectories in Compile += {
     val sourceDir = (sourceDirectory in Compile).value
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 12)) => Seq(sourceDir / "scala-2.12", sourceDir / "scala-2")
-      case Some((2, 13)) => Seq(sourceDir / "scala-2.13+", sourceDir / "scala-2")
-      case _             => Seq(sourceDir / "scala-2.13+", sourceDir / "scala-3")
-    }
-  },
-  unmanagedSourceDirectories in Test ++= {
-    val sourceDir = (sourceDirectory in Test).value
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, _)) => Seq(sourceDir / "scala-2")
-      case _            => Nil
+      case Some((2, 12)) => sourceDir / "scala-2.12"
+      case _             => sourceDir / "scala-2.13+"
     }
   }
 )

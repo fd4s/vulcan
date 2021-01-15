@@ -15,9 +15,10 @@ import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import shapeless.ops.coproduct.{Inject, Selector}
 import vulcan.internal.converters.collection._
-import vulcan.internal.tags._
 
 package object generic {
+  import vulcan.generic.internal.tags._
+
   implicit final val cnilCodec: Codec[CNil] =
     Codec.instance(
       Right(Schema.createUnion()),
