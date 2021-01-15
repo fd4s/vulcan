@@ -95,7 +95,7 @@ Codec.enumeration[Fruit](
 )
 ```
 
-Derivation for enumeration types can be partly automated using the [Generic](modules.md#generic) or [Enumeratum](modules.md#enumeratum) modules, although these will not support Scala 3 for the foreseeable future.
+Derivation for enumeration types can be partly automated using the [generic](modules.md#generic) or [enumeratum](modules.md#enumeratum) modules, although these will not support Scala 3 for the foreseeable future.
 
 ## Fixed
 
