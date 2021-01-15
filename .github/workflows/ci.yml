@@ -2,8 +2,6 @@ name: ci
 on:
   push:
     branches: ["*"]
-  pull_request:
-    branches: ["*"]
 jobs:
   validate:
     strategy:
@@ -18,4 +16,4 @@ jobs:
       - uses: coursier/cache-action@v5
       - run: sbt ++{{ matrix.scala }} validate
       - if: matrix.scala == '2.13.4'
-        run: sbt "++{{ matrix.scala }} docs/run"
+        run: sbt "++${{ matrix.scala }} docs/run"
