@@ -1,6 +1,6 @@
 package vulcan.generic
 
-import vulcan.examples._
+import vulcan.generic.examples._
 import vulcan.BaseSpec
 import vulcan.RoundtripHelpers
 import vulcan.CodecSpecHelpers
@@ -10,8 +10,8 @@ final class DerivationSpec extends BaseSpec with RoundtripHelpers with CodecSpec
     describe("deriveEnum") {
       describe("schema") {
         it("should derive name, namespace, doc") {
-          assertSchemaIs[CaseClassAvroDoc] {
-            """{"type":"enum","name":"CaseClassAvroDoc","namespace":"vulcan.examples","doc":"documentation","symbols":["first"]}"""
+          assertSchemaIs[CaseClassEnumAvroDoc] {
+            """{"type":"enum","name":"CaseClassEnumAvroDoc","namespace":"vulcan.generic.examples","doc":"documentation","symbols":["first"]}"""
           }
         }
 
@@ -29,13 +29,13 @@ final class DerivationSpec extends BaseSpec with RoundtripHelpers with CodecSpec
       describe("schema") {
         it("should derive name, namespace, doc") {
           assertSchemaIs[FixedAvroDoc] {
-            """{"type":"fixed","name":"FixedAvroDoc","namespace":"vulcan.examples","doc":"Some documentation","size":1}"""
+            """{"type":"fixed","name":"FixedAvroDoc","namespace":"vulcan.generic.examples","doc":"Some documentation","size":1}"""
           }
         }
 
         it("should use namespace annotation") {
           assertSchemaIs[FixedNamespace] {
-            """{"type":"fixed","name":"FixedNamespace","namespace":"vulcan.examples.overridden","doc":"Some documentation","size":1}"""
+            """{"type":"fixed","name":"FixedNamespace","namespace":"vulcan.generic.examples.overridden","doc":"Some documentation","size":1}"""
           }
         }
       }
