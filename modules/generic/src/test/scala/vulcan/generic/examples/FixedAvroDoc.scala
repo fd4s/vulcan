@@ -1,6 +1,6 @@
 package vulcan.generic.examples
 
-import vulcan._
+import vulcan.Codec
 import vulcan.generic._
 
 @AvroDoc("Some documentation")

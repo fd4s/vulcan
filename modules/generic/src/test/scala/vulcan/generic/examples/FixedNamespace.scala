@@ -2,7 +2,7 @@ package vulcan.generic.examples
 
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}
-import vulcan._
+import vulcan.Codec
 import vulcan.generic._
 
 @AvroDoc("Some documentation")
