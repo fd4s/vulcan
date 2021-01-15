@@ -1,6 +1,6 @@
 package vulcan.generic
 
-import vulcan.examples._
+import vulcan.generic.examples._
 import vulcan.BaseSpec
 import vulcan.RoundtripHelpers
 import vulcan.CodecSpecHelpers
