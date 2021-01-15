@@ -11,8 +11,7 @@ import scala.reflect.runtime.universe.WeakTypeTag
 private[generic] object tags {
   final def docFrom[A](tag: WeakTypeTag[A]): Option[String] =
     tag.tpe.typeSymbol.annotations.collectFirst {
-      case annotation if
-            annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroDoc" =>
+      case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroDoc" =>
         val doc = annotation.tree.children.last.toString
         doc.substring(1, doc.length - 1)
     }
