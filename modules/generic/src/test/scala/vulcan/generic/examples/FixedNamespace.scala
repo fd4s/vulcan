@@ -6,7 +6,7 @@ import vulcan.Codec
 import vulcan.generic._
 
 @AvroDoc("Some documentation")
-@AvroNamespace("vulcan.examples.overridden")
+@AvroNamespace("vulcan.generic.examples.overridden")
 final case class FixedNamespace(bytes: Array[Byte])
 object FixedNamespace {
   implicit val codec: Codec[FixedNamespace] =
