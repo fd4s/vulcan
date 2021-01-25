@@ -25,7 +25,7 @@ lazy val vulcan = project
     console := (console in (core, Compile)).value,
     console in Test := (console in (core, Test)).value
   )
-  .aggregate(core, refined)
+  .aggregate(core, enumeratum, generic, refined)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -49,39 +49,39 @@ lazy val core = project
     testSettings
   )
 
-// lazy val enumeratum = project
-//   .in(file("modules/enumeratum"))
-//   .settings(
-//     moduleName := "vulcan-enumeratum",
-//     name := moduleName.value,
-//     dependencySettings ++ Seq(
-//       libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
-//     ),
-//     publishSettings,
-//     mimaSettings,
-//     scalaSettings,
-//     testSettings
-//   )
-//   .dependsOn(core, generic)
+lazy val enumeratum = project
+  .in(file("modules/enumeratum"))
+  .settings(
+    moduleName := "vulcan-enumeratum",
+    name := moduleName.value,
+    dependencySettings ++ Seq(
+      libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
+    ),
+    publishSettings,
+    mimaSettings,
+    scalaSettings,
+    testSettings
+  )
+  .dependsOn(core, generic)
 
-// lazy val generic = project
-//   .in(file("modules/generic"))
-//   .settings(
-//     moduleName := "vulcan-generic",
-//     name := moduleName.value,
-//     dependencySettings ++ Seq(
-//       libraryDependencies ++= Seq(
-//         "com.propensive" %% "magnolia" % magnoliaVersion,
-//         "com.chuusai" %% "shapeless" % shapelessVersion,
-//         "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-//       )
-//     ),
-//     publishSettings,
-//     mimaSettings,
-//     scalaSettings,
-//     testSettings
-//   )
-//   .dependsOn(core % "compile->compile;test->test")
+lazy val generic = project
+  .in(file("modules/generic"))
+  .settings(
+    moduleName := "vulcan-generic",
+    name := moduleName.value,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "com.propensive" %% "magnolia" % magnoliaVersion,
+        "com.chuusai" %% "shapeless" % shapelessVersion,
+        "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+      )
+    ),
+    publishSettings,
+    mimaSettings,
+    scalaSettings,
+    testSettings
+  )
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val refined = project
   .in(file("modules/refined"))
@@ -114,7 +114,7 @@ lazy val docs = project
     mdocSettings,
     buildInfoSettings
   )
-  .dependsOn(core, refined)
+  .dependsOn(core, enumeratum, generic, refined)
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
@@ -148,7 +148,7 @@ lazy val mdocSettings = Seq(
   mdoc := run.in(Compile).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
   crossScalaVersions := Seq(scalaVersion.value),
-  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, refined),
+  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, enumeratum, generic, refined),
   target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
   cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
   docusaurusCreateSite := docusaurusCreateSite
@@ -188,18 +188,18 @@ lazy val buildInfoSettings = Seq(
     BuildInfoKey.map(crossScalaVersions in core) {
       case (k, v) => "core" ++ k.capitalize -> v
     },
-    // BuildInfoKey.map(moduleName in enumeratum) {
-    //   case (k, v) => "enumeratum" ++ k.capitalize -> v
-    // },
-    // BuildInfoKey.map(crossScalaVersions in enumeratum) {
-    //   case (k, v) => "enumeratum" ++ k.capitalize -> v
-    // },
-    // BuildInfoKey.map(moduleName in generic) {
-    //   case (k, v) => "generic" ++ k.capitalize -> v
-    // },
-    // BuildInfoKey.map(crossScalaVersions in generic) {
-    //   case (k, v) => "generic" ++ k.capitalize -> v
-    // },
+    BuildInfoKey.map(moduleName in enumeratum) {
+      case (k, v) => "enumeratum" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(crossScalaVersions in enumeratum) {
+      case (k, v) => "enumeratum" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(moduleName in generic) {
+      case (k, v) => "generic" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(crossScalaVersions in generic) {
+      case (k, v) => "generic" ++ k.capitalize -> v
+    },
     BuildInfoKey.map(moduleName in refined) {
       case (k, v) => "refined" ++ k.capitalize -> v
     },
@@ -270,7 +270,7 @@ lazy val noPublishSettings =
   )
 
 lazy val scalaSettings = Seq(
-  scalaVersion := scala3,
+  scalaVersion := scala213,
   crossScalaVersions := Seq(scala212, scala213),
   scalacOptions ++= {
     val commonScalacOptions =
