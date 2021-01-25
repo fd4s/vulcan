@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 
-import org.apache.avro.{Conversions, LogicalTypes, Schema => JSchema, SchemaBuilder}
+import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
@@ -38,13 +38,13 @@ import scala.util.Try
 sealed abstract class Codec[A] {
 
   /** The schema or an error if the schema could not be generated. */
-  def schema: Either[AvroError, JSchema]
+  def schema: Either[AvroError, Schema]
 
   /** Attempts to encode the specified value using the provided schema. */
   def encode(a: A): Either[AvroError, Any]
 
   /** Attempts to decode the specified value using the provided schema. */
-  def decode(value: Any, schema: JSchema): Either[AvroError, A]
+  def decode(value: Avro, schema: Schema): Either[AvroError, A]
 
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
@@ -137,9 +137,9 @@ object Codec extends CodecCompanionCompat {
       java.lang.Boolean.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.BOOLEAN =>
+          case Schema.Type.BOOLEAN =>
             value match {
-              case boolean: java.lang.Boolean =>
+              case Avro.Boolean(boolean) =>
                 Right(boolean)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Boolean", "Boolean"))
@@ -151,7 +151,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Boolean",
                   schemaType,
-                  JSchema.Type.BOOLEAN
+                  Schema.Type.BOOLEAN
                 )
             }
         }
@@ -169,9 +169,9 @@ object Codec extends CodecCompanionCompat {
         val max: Int = Byte.MaxValue.toInt
         (value, schema) => {
           schema.getType() match {
-            case JSchema.Type.INT =>
+            case Schema.Type.INT =>
               value match {
-                case integer: java.lang.Integer =>
+                case Avro.Int(integer) =>
                   if (min <= integer && integer <= max)
                     Right(integer.toByte)
                   else Left(AvroError.unexpectedByte(integer))
@@ -187,7 +187,7 @@ object Codec extends CodecCompanionCompat {
                   .decodeUnexpectedSchemaType(
                     "Byte",
                     schemaType,
-                    JSchema.Type.INT
+                    Schema.Type.INT
                   )
               }
           }
@@ -204,13 +204,9 @@ object Codec extends CodecCompanionCompat {
       ByteBuffer.wrap(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.BYTES | JSchema.Type.STRING =>
+          case Schema.Type.BYTES | Schema.Type.STRING =>
             value match {
-              case buffer: ByteBuffer =>
-                Right(buffer.array())
-              case utf8: Utf8 =>
-                Right(utf8.getBytes)
-              case string: String =>
+              case Avro.String(string) =>
                 Right(string.getBytes(StandardCharsets.UTF_8))
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "Array[Byte]"))
@@ -221,7 +217,7 @@ object Codec extends CodecCompanionCompat {
               AvroError.decodeUnexpectedSchemaType(
                 "Array[Byte]",
                 schemaType,
-                JSchema.Type.BYTES
+                Schema.Type.BYTES
               )
             }
         }
@@ -233,18 +229,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def chain[A](implicit codec: Codec[A]): Codec[Chain[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList
-                  .traverse(codec.decode(_, elementType))
-                  .map(Chain.fromSeq)
-
+              case Avro.Array(elements) =>
+                elements.traverse(codec.decode(_, elementType)).map(Chain.fromSeq)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Collection", "Chain"))
             }
@@ -255,7 +248,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Chain",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -271,7 +264,7 @@ object Codec extends CodecCompanionCompat {
       char => Right(new Utf8(char.toString)),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.STRING =>
+          case Schema.Type.STRING =>
             value match {
               case utf8: Utf8 =>
                 val string = utf8.toString
@@ -288,7 +281,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Char",
                   schemaType,
-                  JSchema.Type.STRING
+                  Schema.Type.STRING
                 )
             }
         }
@@ -330,7 +323,7 @@ object Codec extends CodecCompanionCompat {
           Left(AvroError.encodeDecimalScalesMismatch(bigDecimal.scale, scale)),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.BYTES =>
+          case Schema.Type.BYTES =>
             schema.getLogicalType() match {
               case decimal: LogicalTypes.Decimal =>
                 value match {
@@ -362,7 +355,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "BigDecimal",
                   schemaType,
-                  JSchema.Type.BYTES
+                  Schema.Type.BYTES
                 )
             }
         }
@@ -376,7 +369,7 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def decode[A](value: Any)(implicit codec: Codec[A]): Either[AvroError, A] =
+  final def decode[A](value: Avro)(implicit codec: Codec[A]): Either[AvroError, A] =
     codec.schema.flatMap(codec.decode(value, _))
 
   /**
@@ -388,16 +381,9 @@ object Codec extends CodecCompanionCompat {
       java.lang.Double.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.DOUBLE | JSchema.Type.FLOAT | JSchema.Type.INT | JSchema.Type.LONG =>
+          case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
             value match {
-              case double: java.lang.Double =>
-                Right(double)
-              case float: java.lang.Float =>
-                Right(float.toDouble)
-              case int: java.lang.Integer =>
-                Right(int.toDouble)
-              case long: java.lang.Long =>
-                Right(long.toDouble)
+              case Avro.Double(value) => value.asRight
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Double", "Double"))
             }
@@ -408,7 +394,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Double",
                   schemaType,
-                  JSchema.Type.DOUBLE
+                  Schema.Type.DOUBLE
                 )
             }
         }
@@ -452,7 +438,7 @@ object Codec extends CodecCompanionCompat {
     val schema = AvroError.catchNonFatal {
       props.toChain.map { props =>
         val schema =
-          JSchema.createEnum(
+          Schema.createEnum(
             name,
             doc.orNull,
             namespace,
@@ -481,11 +467,10 @@ object Codec extends CodecCompanionCompat {
       },
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ENUM =>
+          case Schema.Type.ENUM =>
             value match {
-              case genericEnum: GenericEnumSymbol[_] =>
+              case Avro.Enum(symbol) =>
                 val symbols = schema.getEnumSymbols().asScala.toList
-                val symbol = genericEnum.toString()
 
                 if (symbols.contains(symbol))
                   decode(symbol)
@@ -502,7 +487,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  JSchema.Type.ENUM
+                  Schema.Type.ENUM
                 )
             }
         }
@@ -571,7 +556,7 @@ object Codec extends CodecCompanionCompat {
         },
         (value, schema) => {
           schema.getType() match {
-            case JSchema.Type.FIXED =>
+            case Schema.Type.FIXED =>
               value match {
                 case fixed: GenericFixed =>
                   val bytes = fixed.bytes()
@@ -597,7 +582,7 @@ object Codec extends CodecCompanionCompat {
                   .decodeUnexpectedSchemaType(
                     typeName,
                     schemaType,
-                    JSchema.Type.FIXED
+                    Schema.Type.FIXED
                   )
               }
           }
@@ -614,14 +599,10 @@ object Codec extends CodecCompanionCompat {
       java.lang.Float.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.FLOAT | JSchema.Type.INT | JSchema.Type.LONG =>
+          case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
             value match {
-              case float: java.lang.Float =>
+              case Avro.Float(float) =>
                 Right(float)
-              case int: java.lang.Integer =>
-                Right(int.toFloat)
-              case long: java.lang.Long =>
-                Right(long.toFloat)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Float", "Float"))
             }
@@ -632,7 +613,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Float",
                   schemaType,
-                  JSchema.Type.FLOAT
+                  Schema.Type.FLOAT
                 )
             }
         }
@@ -645,14 +626,14 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def fromBinary[A](bytes: Array[Byte], writerSchema: JSchema)(
+  final def fromBinary[A](bytes: Array[Byte], writerSchema: Schema)(
     implicit codec: Codec[A]
   ): Either[AvroError, A] =
     AvroError.catchNonFatal {
       val bais = new ByteArrayInputStream(bytes)
       val decoder = DecoderFactory.get.binaryDecoder(bais, null)
       val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
-      codec.decode(value, writerSchema)
+      Avro.fromJava(value).flatMap(codec.decode(_, writerSchema))
     }
 
   /**
@@ -661,39 +642,39 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def fromJson[A](json: String, writerSchema: JSchema)(
+  final def fromJson[A](json: String, writerSchema: Schema)(
     implicit codec: Codec[A]
   ): Either[AvroError, A] =
     AvroError.catchNonFatal {
       val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
       val decoder = DecoderFactory.get.jsonDecoder(writerSchema, bais)
       val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
-      codec.decode(value, writerSchema)
+      Avro.fromJava(value).flatMap(codec.decode(_, writerSchema))
     }
 
   /**
     * Returns a new [[Codec]] instance using the specified
-    * `JSchema`, and encode and decode functions.
+    * `Schema`, and encode and decode functions.
     *
     * @group Create
     */
   final def instance[A](
-    schema: Either[AvroError, JSchema],
+    schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, Any],
-    decode: (Any, JSchema) => Either[AvroError, A]
+    decode: (Avro, Schema) => Either[AvroError, A]
   ): Codec[A] = {
     val _schema = schema
     val _encode = encode
     val _decode = decode
 
     new Codec[A] {
-      override final val schema: Either[AvroError, JSchema] =
+      override final val schema: Either[AvroError, Schema] =
         _schema
 
       override final def encode(a: A): Either[AvroError, Any] =
         _encode(a)
 
-      override final def decode(value: Any, schema: JSchema): Either[AvroError, A] =
+      override final def decode(value: Avro, schema: Schema): Either[AvroError, A] =
         _decode(value, schema)
 
       override final def toString: String =
@@ -713,11 +694,11 @@ object Codec extends CodecCompanionCompat {
       instant => Right(java.lang.Long.valueOf(instant.toEpochMilli)),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.LONG =>
+          case Schema.Type.LONG =>
             val logicalType = schema.getLogicalType()
             if (logicalType == LogicalTypes.timestampMillis()) {
               value match {
-                case long: java.lang.Long =>
+                case Avro.Long(long) =>
                   Right(Instant.ofEpochMilli(long))
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Long", "Instant"))
@@ -730,7 +711,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Instant",
                   schemaType,
-                  JSchema.Type.LONG
+                  Schema.Type.LONG
                 )
             }
         }
@@ -746,9 +727,9 @@ object Codec extends CodecCompanionCompat {
       java.lang.Integer.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.INT =>
+          case Schema.Type.INT =>
             value match {
-              case integer: java.lang.Integer =>
+              case Avro.Int(integer) =>
                 Right(integer)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Int", "Int"))
@@ -760,7 +741,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Int",
                   schemaType,
-                  JSchema.Type.INT
+                  Schema.Type.INT
                 )
             }
         }
@@ -778,15 +759,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def list[A](implicit codec: Codec[A]): Codec[List[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList.traverse(codec.decode(_, elementType))
+              case Avro.Array(items) =>
+                items.toList.traverse(codec.decode(_, elementType))
 
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Collection", "List"))
@@ -798,7 +779,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "List",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -814,11 +795,11 @@ object Codec extends CodecCompanionCompat {
       localDate => Right(java.lang.Integer.valueOf(localDate.toEpochDay.toInt)),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.INT =>
+          case Schema.Type.INT =>
             val logicalType = schema.getLogicalType()
             if (logicalType == LogicalTypes.date()) {
               value match {
-                case int: java.lang.Integer =>
+                case Avro.Int(int) =>
                   Right(LocalDate.ofEpochDay(int.toLong))
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Integer", "LocalDate"))
@@ -830,7 +811,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "LocalDate",
                   schemaType,
-                  JSchema.Type.INT
+                  Schema.Type.INT
                 )
             }
         }
@@ -846,12 +827,10 @@ object Codec extends CodecCompanionCompat {
       java.lang.Long.valueOf(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.LONG | JSchema.Type.INT =>
+          case Schema.Type.LONG | Schema.Type.INT =>
             value match {
-              case long: java.lang.Long =>
+              case Avro.Long(long) =>
                 Right(long)
-              case int: java.lang.Integer =>
-                Right(int.toLong)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Long", "Long"))
             }
@@ -862,7 +841,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Long",
                   schemaType,
-                  JSchema.Type.LONG
+                  Schema.Type.LONG
                 )
             }
         }
@@ -874,7 +853,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def map[A](implicit codec: Codec[A]): Codec[Map[String, A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createMap),
+      codec.schema.map(Schema.createMap),
       _.toList
         .traverse {
           case (key, value) =>
@@ -885,17 +864,16 @@ object Codec extends CodecCompanionCompat {
         .map(_.toMap.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.MAP =>
+          case Schema.Type.MAP =>
             value match {
-              case map: java.util.Map[_, _] =>
+              case Avro.Map(keyvalues) =>
                 val valueSchema = schema.getValueType()
 
-                map.asScala.toList
+                keyvalues.toList
                   .traverse {
-                    case (key: Utf8, value) =>
-                      codec.decode(value, valueSchema).tupleLeft(key.toString)
-                    case (key, _) =>
-                      Left(AvroError.decodeUnexpectedMapKey(key))
+
+                    case (key, value) =>
+                      codec.decode(value, valueSchema).tupleLeft(key)
                   }
                   .map(_.toMap)
 
@@ -909,7 +887,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Map",
                   schemaType,
-                  JSchema.Type.MAP
+                  Schema.Type.MAP
                 )
             }
         }
@@ -925,7 +903,7 @@ object Codec extends CodecCompanionCompat {
       _ => Right(null),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.NULL =>
+          case Schema.Type.NULL =>
             if (value == null) Right(None)
             else Left(AvroError.decodeUnexpectedType(value, "null", "None"))
 
@@ -935,7 +913,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "None",
                   schemaType,
-                  JSchema.Type.NULL
+                  Schema.Type.NULL
                 )
             }
         }
@@ -947,15 +925,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def nonEmptyChain[A](implicit codec: Codec[A]): Codec[NonEmptyChain[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList
+              case Avro.Array(elems) =>
+                elems
                   .traverse(codec.decode(_, elementType))
                   .flatMap { list =>
                     if (list.isEmpty) Left(AvroError.decodeEmptyCollection("NonEmptyChain"))
@@ -972,7 +950,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "NonEmptyChain",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -984,15 +962,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def nonEmptyList[A](implicit codec: Codec[A]): Codec[NonEmptyList[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList
+              case Avro.Array(elems) =>
+                elems.toList
                   .traverse(codec.decode(_, elementType))
                   .flatMap { list =>
                     if (list.isEmpty) Left(AvroError.decodeEmptyCollection("NonEmptyList"))
@@ -1009,7 +987,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "NonEmptyList",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1024,15 +1002,15 @@ object Codec extends CodecCompanionCompat {
     ordering: Ordering[A]
   ): Codec[NonEmptySet[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList
+              case Avro.Array(elems) =>
+                elems
                   .traverse(codec.decode(_, elementType))
                   .flatMap { list =>
                     if (list.isEmpty) Left(AvroError.decodeEmptyCollection("NonEmptySet"))
@@ -1049,7 +1027,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "NonEmptySet",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1061,15 +1039,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def nonEmptyVector[A](implicit codec: Codec[A]): Codec[NonEmptyVector[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.toVector.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toVector
+              case Avro.Array(elems) =>
+                elems
                   .traverse(codec.decode(_, elementType))
                   .flatMap { vector =>
                     if (vector.isEmpty) Left(AvroError.decodeEmptyCollection("NonEmptyVector"))
@@ -1085,7 +1063,7 @@ object Codec extends CodecCompanionCompat {
               AvroError.decodeUnexpectedSchemaType(
                 "NonEmptyVector",
                 schemaType,
-                JSchema.Type.ARRAY
+                Schema.Type.ARRAY
               )
             }
         }
@@ -1115,7 +1093,7 @@ object Codec extends CodecCompanionCompat {
     val schema = AvroError.catchNonFatal {
       val fields =
         free.analyze {
-          new (Field[A, *] ~> λ[a => Either[AvroError, Chain[JSchema.Field]]]) {
+          new (Field[A, *] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]) {
             def apply[B](field: Field[A, B]) =
               field.codec.schema.flatMap { schema =>
                 field.props.toChain
@@ -1125,17 +1103,17 @@ object Codec extends CodecCompanionCompat {
                       .map { default =>
                         Chain.one {
                           val schemaField =
-                            new JSchema.Field(
+                            new Schema.Field(
                               field.name,
                               schema,
                               field.doc.orNull,
                               adaptForSchema {
                                 default.map {
-                                  case null  => JSchema.Field.NULL_DEFAULT_VALUE
+                                  case null  => Schema.Field.NULL_DEFAULT_VALUE
                                   case other => other
                                 }.orNull
                               },
-                              field.order.getOrElse(JSchema.Field.Order.ASCENDING)
+                              field.order.getOrElse(Schema.Field.Order.ASCENDING)
                             )
 
                           field.aliases.foreach(schemaField.addAlias)
@@ -1156,7 +1134,7 @@ object Codec extends CodecCompanionCompat {
       fields.flatMap { fields =>
         props.toChain.map { props =>
           val record =
-            JSchema.createRecord(
+            Schema.createRecord(
               name,
               doc.orNull,
               namespace,
@@ -1197,23 +1175,20 @@ object Codec extends CodecCompanionCompat {
         },
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.RECORD =>
+          case Schema.Type.RECORD =>
             value match {
-              case record: IndexedRecord =>
-                val recordSchema = record.getSchema()
-                val recordFields = recordSchema.getFields()
-
+              case Avro.Record(fields) =>
                 free.foldMap {
                   new (Field[A, *] ~> Either[AvroError, *]) {
                     def apply[B](field: Field[A, B]) = {
-                      val schemaField = recordSchema.getField(field.name)
-                      if (schemaField != null) {
-                        val value = record.get(recordFields.indexOf(schemaField))
-                        field.codec.decode(value, schemaField.schema())
-                      } else {
-                        field.default.toRight {
-                          AvroError.decodeMissingRecordField(field.name, typeName)
-                        }
+                      val value = fields.get(field.name)
+                      value match {
+                        case Some(value) =>
+                          field.codec.decode(value, schema.getField(field.name).schema())
+                        case None =>
+                          field.default.toRight {
+                            AvroError.decodeMissingRecordField(field.name, typeName)
+                          }
                       }
                     }
                   }
@@ -1229,7 +1204,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   typeName,
                   schemaType,
-                  JSchema.Type.RECORD
+                  Schema.Type.RECORD
                 )
             }
         }
@@ -1248,15 +1223,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def seq[A](implicit codec: Codec[A]): Codec[Seq[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList.traverse(codec.decode(_, elementType))
+              case Avro.Array(elems) =>
+                elems.traverse(codec.decode(_, elementType))
 
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Collection", "Seq"))
@@ -1268,7 +1243,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Seq",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1280,15 +1255,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def set[A](implicit codec: Codec[A]): Codec[Set[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList.traverse(codec.decode(_, elementType)).map(_.toSet)
+              case Avro.Array(elems) =>
+                elems.toList.traverse(codec.decode(_, elementType)).map(_.toSet)
 
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Collection", "Set"))
@@ -1300,7 +1275,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Set",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1318,9 +1293,9 @@ object Codec extends CodecCompanionCompat {
         val max: Int = Short.MaxValue.toInt
         (value, schema) => {
           schema.getType() match {
-            case JSchema.Type.INT =>
+            case Schema.Type.INT =>
               value match {
-                case integer: java.lang.Integer =>
+                case Avro.Int(integer) =>
                   if (min <= integer && integer <= max)
                     Right(integer.toShort)
                   else Left(AvroError.unexpectedShort(integer))
@@ -1335,7 +1310,7 @@ object Codec extends CodecCompanionCompat {
                   .decodeUnexpectedSchemaType(
                     "Short",
                     schemaType,
-                    JSchema.Type.INT
+                    Schema.Type.INT
                   )
               }
           }
@@ -1358,14 +1333,10 @@ object Codec extends CodecCompanionCompat {
       new Utf8(_).asRight,
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.STRING | JSchema.Type.BYTES =>
+          case Schema.Type.STRING | Schema.Type.BYTES =>
             value match {
-              case string: String =>
+              case Avro.String(string) =>
                 Right(string)
-              case utf8: Utf8 =>
-                Right(utf8.toString())
-              case bytes: ByteBuffer =>
-                AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
               case other =>
                 Left {
                   AvroError
@@ -1379,7 +1350,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "String",
                   schemaType,
-                  JSchema.Type.STRING
+                  Schema.Type.STRING
                 )
             }
         }
@@ -1434,7 +1405,7 @@ object Codec extends CodecCompanionCompat {
     val schema = AvroError.catchNonFatal {
       alts.toList
         .traverse(_.codec.schema)
-        .map(schemas => JSchema.createUnion(schemas.asJava))
+        .map(schemas => Schema.createUnion(schemas.asJava))
     }
 
     Codec.instance(
@@ -1450,7 +1421,7 @@ object Codec extends CodecCompanionCompat {
       (value, schema) => {
         val schemaTypes =
           schema.getType() match {
-            case JSchema.Type.UNION => schema.getTypes.asScala
+            case Schema.Type.UNION => schema.getTypes.asScala
             case _                 => Seq(schema)
           }
 
@@ -1510,7 +1481,7 @@ object Codec extends CodecCompanionCompat {
       _ => Right(null),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.NULL =>
+          case Schema.Type.NULL =>
             if (value == null) Right(())
             else Left(AvroError.decodeUnexpectedType(value, "null", "Unit"))
 
@@ -1520,7 +1491,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Unit",
                   schemaType,
-                  JSchema.Type.NULL
+                  Schema.Type.NULL
                 )
             }
         }
@@ -1536,7 +1507,7 @@ object Codec extends CodecCompanionCompat {
       uuid => Right(new Utf8(uuid.toString())),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.STRING =>
+          case Schema.Type.STRING =>
             val logicalType = schema.getLogicalType()
             if (logicalType == LogicalTypes.uuid()) {
               value match {
@@ -1555,7 +1526,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "UUID",
                   schemaType,
-                  JSchema.Type.STRING
+                  Schema.Type.STRING
                 )
             }
         }
@@ -1567,15 +1538,15 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def vector[A](implicit codec: Codec[A]): Codec[Vector[A]] =
     Codec.instance(
-      codec.schema.map(JSchema.createArray),
+      codec.schema.map(Schema.createArray),
       _.traverse(codec.encode).map(_.asJava),
       (value, schema) => {
         schema.getType() match {
-          case JSchema.Type.ARRAY =>
+          case Schema.Type.ARRAY =>
             val elementType = schema.getElementType()
             value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toVector.traverse(codec.decode(_, elementType))
+              case Avro.Array(elems) =>
+                elems.traverse(codec.decode(_, elementType))
 
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Collection", "Vector"))
@@ -1587,7 +1558,7 @@ object Codec extends CodecCompanionCompat {
                 .decodeUnexpectedSchemaType(
                   "Vector",
                   schemaType,
-                  JSchema.Type.ARRAY
+                  Schema.Type.ARRAY
                 )
             }
         }
@@ -1678,7 +1649,7 @@ object Codec extends CodecCompanionCompat {
 
     def default: Option[B]
 
-    def order: Option[JSchema.Field.Order]
+    def order: Option[Schema.Field.Order]
 
     def aliases: Seq[String]
 
@@ -1692,7 +1663,7 @@ object Codec extends CodecCompanionCompat {
       codec: Codec[B],
       doc: Option[String],
       default: Option[B],
-      order: Option[JSchema.Field.Order],
+      order: Option[Schema.Field.Order],
       aliases: Seq[String],
       props: Props
     ): Field[A, B] = {
@@ -1711,7 +1682,7 @@ object Codec extends CodecCompanionCompat {
         override final val codec: Codec[B] = _codec
         override final val doc: Option[String] = _doc
         override final val default: Option[B] = _default
-        override final val order: Option[JSchema.Field.Order] = _order
+        override final val order: Option[Schema.Field.Order] = _order
         override final val aliases: Seq[String] = _aliases
         override final val props: Props = _props
       }
@@ -1727,7 +1698,7 @@ object Codec extends CodecCompanionCompat {
       access: A => B,
       doc: Option[String] = None,
       default: Option[B] = None,
-      order: Option[JSchema.Field.Order] = None,
+      order: Option[Schema.Field.Order] = None,
       aliases: Seq[String] = Seq.empty,
       props: Props = Props.empty
     )(implicit codec: Codec[B]): FreeApplicative[Field[A, *], B]
@@ -1741,7 +1712,7 @@ object Codec extends CodecCompanionCompat {
           access: Any => B,
           doc: Option[String],
           default: Option[B],
-          order: Option[JSchema.Field.Order],
+          order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
         )(implicit codec: Codec[B]): FreeApplicative[Field[Any, *], B] =

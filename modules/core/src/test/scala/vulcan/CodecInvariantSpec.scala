@@ -4,7 +4,7 @@ import cats.Eq
 import cats.laws.discipline.InvariantTests
 import cats.tests.CatsSuite
 import java.nio.charset.{Charset, StandardCharsets}
-import org.apache.avro.Schema
+import org.apache.avro.{Schema}
 import org.scalacheck.{Arbitrary, Gen}
 import scala.util.Try
 
