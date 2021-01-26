@@ -135,7 +135,7 @@ package object generic {
                 }
 
               fields.map { values =>
-                Avro.ARecord(values.toMap, schema)
+                Avro.Record(values.toMap, schema)
               }
             },
         if (caseClass.isValueClass) { value =>
@@ -144,7 +144,7 @@ package object generic {
             .map(decoded => caseClass.rawConstruct(List(decoded)))
         } else {
           _ match {
-            case Avro.ARecord(fields, _) =>
+            case Avro.Record(fields, _) =>
               val f =
                 caseClass.parameters.toList.traverse { param =>
                   fields

@@ -536,7 +536,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
     describe("encode") {
       it("should encode using codec for type") {
         forAll { (n: Int) =>
-          assert(Codec.encode(n).value == Avro.AInt(n, None))
+          assert(Codec.encode(n).value == Avro.Int(n, None))
         }
       }
     }
@@ -1688,7 +1688,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
           forAll { (n: Int) =>
             assert(
               codec
-                .decode(Avro.AInt(n, None)) == Right(Some(First(n)))
+                .decode(Avro.Int(n, None)) == Right(Some(First(n)))
             )
           }
         }
@@ -1696,7 +1696,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
         it("should decode double as second") {
           forAll { (n: Double) =>
             assert(
-              codec.decode(Avro.ADouble(n)) == Right(
+              codec.decode(Avro.Double(n)) == Right(
                 Some(Second(n))
               )
             )
@@ -1734,7 +1734,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
           implicit val intCodec: Codec[Int] =
             Codec.instance(
               Codec.int.schema,
-              _ => Right(Avro.AString("invalid", None)),
+              _ => Right(Avro.String("invalid", None)),
               _ => Left(AvroError("error"))
             )
 

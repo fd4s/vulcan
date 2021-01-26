@@ -30,8 +30,8 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
         charsetGen.map { charset =>
           Codec.instance(
             schema,
-            s => Right(Avro.ABytes(java.nio.ByteBuffer.wrap(s.getBytes(charset)), None)),
-            value => Right(new String(value.asInstanceOf[Avro.ABytes].value.array(), charset))
+            s => Right(Avro.Bytes(java.nio.ByteBuffer.wrap(s.getBytes(charset)), None)),
+            value => Right(new String(value.asInstanceOf[Avro.Bytes].value.array(), charset))
           )
         }
       }

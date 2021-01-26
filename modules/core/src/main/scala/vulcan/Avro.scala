@@ -14,26 +14,29 @@ import org.apache.avro.LogicalType
 sealed trait Avro
 
 object Avro {
-  final case class ABoolean(value: Boolean) extends Avro
-  final case class AInt(value: Int, logicalType: Option[LogicalType]) extends Avro
-  final case class ALong(value: Long, logicalType: Option[LogicalType]) extends Avro
-  final case class ABytes(value: ByteBuffer, logicalType: Option[LogicalType]) extends Avro
-  final case class AFixed(value: Array[Byte], schema: Schema) extends Avro {
+  final case class Boolean(value: scala.Boolean) extends Avro
+  final case class Int(value: scala.Int, logicalType: Option[LogicalType]) extends Avro
+  final case class Long(value: scala.Long, logicalType: Option[LogicalType]) extends Avro
+  final case class Bytes(value: ByteBuffer, logicalType: Option[LogicalType]) extends Avro
+  final case class Fixed(value: scala.Array[Byte], schema: Schema) extends Avro {
     require(schema.getType() == Schema.Type.FIXED)
 
-    val fixedSize: Int = schema.getFixedSize()
+    val fixedSize: scala.Int = schema.getFixedSize()
 
     require(value.lengthCompare(fixedSize) == 0)
   }
-  final case class AString(value: String, logicalType: Option[LogicalType]) extends Avro
-  final case class AFloat(value: Float) extends Avro
-  final case class ADouble(value: Double) extends Avro
-  final case class AArray[Elem <: Avro](values: Vector[Elem]) extends Avro
-  final case class AEnum(value: String, schema: Schema) extends Avro
-  final case class ARecord(fields: Map[String, Avro], schema: Schema) extends Avro
-  final case class AMap(values: Map[String, Avro]) extends Avro
-  case object ANull extends Avro
-  type ANull = ANull.type
+  final case class String(value: java.lang.String, logicalType: Option[LogicalType]) extends Avro
+  final case class Float(value: scala.Float) extends Avro
+  final case class Double(value: scala.Double) extends Avro
+  final case class Array[Elem <: Avro](values: Vector[Elem]) extends Avro
+  final case class Enum(value: java.lang.String, schema: Schema) extends Avro
+  final case class Record(
+    fields: scala.collection.immutable.Map[java.lang.String, Avro],
+    schema: Schema
+  ) extends Avro
+  final case class Map(values: scala.collection.immutable.Map[java.lang.String, Avro]) extends Avro
+  case object Null extends Avro
+  type Null = Null.type
 
   def fromJava(jAvro: Any, schema: Schema): Either[AvroError, Avro] =
     (schema.getType(), jAvro) match {
@@ -53,18 +56,18 @@ object Avro {
                }).tupleLeft(field.name())
             }
           }
-          .map(fields => ARecord(fields.toMap, schema))
+          .map(fields => Record(fields.toMap, schema))
       case (Schema.Type.ENUM, genericEnum: GenericEnumSymbol[_]) =>
         val symbols = schema.getEnumSymbols().asScala.toList
         val symbol = genericEnum.toString()
 
         if (symbols.contains(symbol))
-          Right(AEnum(symbol, schema))
+          Right(Enum(symbol, schema))
         else
           Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, "foo"))
       case (Schema.Type.ARRAY, collection: java.util.Collection[_]) => {
         val element = schema.getElementType
-        collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray(_))
+        collection.asScala.toVector.traverse(fromJava(_, element)).map(Array(_))
       }
       case (Schema.Type.MAP, map: java.util.Map[_, _]) =>
         val valueSchema = schema.getValueType()
@@ -75,7 +78,7 @@ object Avro {
             case (key, _) =>
               Left(AvroError.decodeUnexpectedMapKey(key))
           }
-          .map(kvs => AMap(kvs.toMap))
+          .map(kvs => Map(kvs.toMap))
 
       case (Schema.Type.UNION, value) =>
         schema.getTypes.asScala.toList
@@ -90,37 +93,37 @@ object Avro {
       case (Schema.Type.FIXED, fixed: GenericFixed) =>
         val bytes = fixed.bytes()
         if (bytes.length == schema.getFixedSize()) {
-          AFixed(bytes, schema).asRight
+          Fixed(bytes, schema).asRight
         } else {
           Left {
             AvroError.decodeNotEqualFixedSize(
               bytes.length,
               schema.getFixedSize(),
-              "AFixed"
+              "Fixed"
             )
           }
         }
-      case (Schema.Type.STRING, string: String) =>
-        AString(string, Option(schema.getLogicalType())).asRight
+      case (Schema.Type.STRING, string: java.lang.String) =>
+        String(string, Option(schema.getLogicalType())).asRight
       case (Schema.Type.STRING, utf8: Utf8) =>
-        AString(utf8.toString, Option(schema.getLogicalType())).asRight
+        String(utf8.toString, Option(schema.getLogicalType())).asRight
       case (Schema.Type.BYTES, bytes: ByteBuffer) =>
-        ABytes(bytes, Option(schema.getLogicalType())).asRight
-      case (Schema.Type.BYTES, string: String) =>
-        ABytes(
+        Bytes(bytes, Option(schema.getLogicalType())).asRight
+      case (Schema.Type.BYTES, string: java.lang.String) =>
+        Bytes(
           ByteBuffer.wrap(string.getBytes(StandardCharsets.UTF_8)),
           Option(schema.getLogicalType())
         ).asRight
       case (Schema.Type.BYTES, utf8: Utf8) =>
-        ABytes(ByteBuffer.wrap(utf8.getBytes()), Option(schema.getLogicalType())).asRight
+        Bytes(ByteBuffer.wrap(utf8.getBytes()), Option(schema.getLogicalType())).asRight
       case (Schema.Type.INT, int: java.lang.Integer) =>
-        AInt(int, Option(schema.getLogicalType())).asRight
+        Int(int, Option(schema.getLogicalType())).asRight
       case (Schema.Type.LONG, long: java.lang.Long) =>
-        ALong(long, Option(schema.getLogicalType())).asRight
-      case (Schema.Type.FLOAT, float: java.lang.Float)       => AFloat(float).asRight
-      case (Schema.Type.DOUBLE, double: java.lang.Double)    => ADouble(double).asRight
-      case (Schema.Type.BOOLEAN, boolean: java.lang.Boolean) => ABoolean(boolean).asRight
-      case (Schema.Type.NULL, null)                          => ANull.asRight
+        Long(long, Option(schema.getLogicalType())).asRight
+      case (Schema.Type.FLOAT, float: java.lang.Float)       => Float(float).asRight
+      case (Schema.Type.DOUBLE, double: java.lang.Double)    => Double(double).asRight
+      case (Schema.Type.BOOLEAN, boolean: java.lang.Boolean) => Boolean(boolean).asRight
+      case (Schema.Type.NULL, null)                          => Null.asRight
       case (schemaType, value) =>
         AvroError(
           s"Unexpected value converting schema type $schemaType from Java - found $value of type ${value.getClass.getName}"
@@ -128,20 +131,20 @@ object Avro {
     }
 
   def toJava(avro: Avro): Either[AvroError, Any] = avro match {
-    case ABoolean(value)  => java.lang.Boolean.valueOf(value).asRight
-    case AInt(value, _)   => java.lang.Integer.valueOf(value).asRight
-    case ALong(value, _)  => java.lang.Long.valueOf(value).asRight
-    case ABytes(value, _) => value.asRight
-    case fixed @ AFixed(bytes, schema) => {
+    case Boolean(value)  => java.lang.Boolean.valueOf(value).asRight
+    case Int(value, _)   => java.lang.Integer.valueOf(value).asRight
+    case Long(value, _)  => java.lang.Long.valueOf(value).asRight
+    case Bytes(value, _) => value.asRight
+    case fixed @ Fixed(bytes, schema) => {
       val buffer = ByteBuffer.allocate(fixed.fixedSize).put(bytes)
       GenericData.get().createFixed(null, buffer.array(), schema).asRight
     }
-    case AString(s, _)        => new Utf8(s).asRight
-    case AFloat(f)            => java.lang.Float.valueOf(f).asRight
-    case ADouble(d)           => java.lang.Double.valueOf(d).asRight
-    case AArray(items)        => items.traverse(toJava).map(_.asJava)
-    case AEnum(value, schema) => GenericData.get().createEnum(value, schema).asRight
-    case ARecord(fields, schema) =>
+    case String(s, _)        => new Utf8(s).asRight
+    case Float(f)            => java.lang.Float.valueOf(f).asRight
+    case Double(d)           => java.lang.Double.valueOf(d).asRight
+    case Array(items)        => items.traverse(toJava).map(_.asJava)
+    case Enum(value, schema) => GenericData.get().createEnum(value, schema).asRight
+    case Record(fields, schema) =>
       val encodedFields = fields.toList.traverse {
         case (name, value) => toJava(value).tupleLeft(name)
       }
@@ -153,8 +156,8 @@ object Avro {
         }
         record
       }
-    case AMap(values) =>
+    case Map(values) =>
       values.toList.traverse { case (k, v) => toJava(v).tupleLeft(new Utf8(k)) }.map(_.toMap.asJava)
-    case ANull => Right(null)
+    case Null => Right(null)
   }
 }
