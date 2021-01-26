@@ -31,7 +31,7 @@ object Avro {
   final case class AArray(values: Vector[Avro]) extends Avro
   final case class AEnum(value: String, schema: Schema) extends Avro
   final case class ARecord(fields: Map[String, Avro], schema: Schema) extends Avro
-  final case class AMap(values: Map[String, Avro], valueSchema: Schema) extends Avro
+  final case class AMap(values: Map[String, Avro]) extends Avro
   case object ANull extends Avro
 
   def fromJava(jAvro: Any, schema: Schema): Either[AvroError, Avro] =
@@ -74,7 +74,7 @@ object Avro {
             case (key, _) =>
               Left(AvroError.decodeUnexpectedMapKey(key))
           }
-          .map(kvs => AMap(kvs.toMap, valueSchema))
+          .map(kvs => AMap(kvs.toMap))
 
       case (Schema.Type.UNION, value) =>
         schema.getTypes.asScala.toList
@@ -152,7 +152,7 @@ object Avro {
         }
         record
       }
-    case AMap(values, _) =>
+    case AMap(values) =>
       values.toList.traverse { case (k, v) => toJava(v).tupleLeft(new Utf8(k)) }.map(_.toMap.asJava)
     case ANull => Right(null)
   }

@@ -627,18 +627,15 @@ object Codec extends CodecCompanionCompat {
   implicit final def map[A](implicit codec: Codec[A]): Codec[Map[String, A]] =
     Codec.instance(
       codec.schema.map(Schema.createMap),
-      items =>
-        codec.schema.flatMap { schema =>
-          items.toList
-            .traverse {
-              case (key, value) =>
-                codec
-                  .encode(value)
-                  .tupleLeft(key)
-            }
-            .map(kvs => Avro.AMap(kvs.toMap, schema))
-        }, {
-        case Avro.AMap(keyvalues, _) =>
+      _.toList
+        .traverse {
+          case (key, value) =>
+            codec
+              .encode(value)
+              .tupleLeft(key)
+        }
+        .map(kvs => Avro.AMap(kvs.toMap)), {
+        case Avro.AMap(keyvalues) =>
           keyvalues.toList
             .traverse {
 
