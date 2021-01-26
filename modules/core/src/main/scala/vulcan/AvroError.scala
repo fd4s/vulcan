@@ -11,6 +11,7 @@ import cats.data.NonEmptyList
 import cats.instances.string._
 import org.apache.avro.{Schema, LogicalType}
 import scala.util.control.NonFatal
+import java.io.{StringWriter, PrintWriter}
 
 /**
   * Error which occurred while generating a schema, or
@@ -300,6 +301,11 @@ object AvroError {
       s"Symbol $symbol is not part of schema symbols [${symbols.mkString(", ")}] for type $encodingTypeName"
     }
 
-  private[vulcan] final def fromThrowable(throwable: Throwable): AvroError =
-    AvroError(throwable.toString)
+  private[vulcan] final def fromThrowable(throwable: Throwable): AvroError = {
+   val sw = new StringWriter()
+val pw = new PrintWriter(sw)
+throwable.printStackTrace(pw)
+val sStackTrace = sw.toString()
+    AvroError(sStackTrace)
+  }
 }

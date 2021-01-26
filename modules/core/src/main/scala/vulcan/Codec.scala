@@ -1004,7 +1004,7 @@ object Codec extends CodecCompanionCompat {
                 field.props.toChain
                   .flatMap { props =>
                     field.default
-                      .traverse(field.codec.encode(_))
+                      .traverse(field.codec.encode(_).flatMap(Avro.toJava))
                       .map { default =>
                         Chain.one {
                           val schemaField =
