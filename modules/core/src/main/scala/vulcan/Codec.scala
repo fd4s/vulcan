@@ -193,7 +193,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Cats
     */
-  implicit final def chain[A](implicit codec: Codec[A]): Codec.Aux[Chain[A], Avro.AArray] =
+  implicit final def chain[A](implicit codec: Codec[A]): Codec.Aux[Chain[A], Avro.AArray[codec.Repr]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode(_)).map(items => Avro.AArray(items.toVector)), {
@@ -207,7 +207,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val char: Codec.Aux[Char, Avro.AInt] =
+  implicit final val char: Codec.Aux[Char, Avro.AString] =
     Codec.instance(
       Right(SchemaBuilder.builder().stringType()),
       char => Right(Avro.AString(char.toString, None)), {
@@ -228,7 +228,7 @@ object Codec extends CodecCompanionCompat {
   final def decimal(
     precision: Int,
     scale: Int
-  ): Codec.Aux[BigDecimal, Avro.ADecimal] = {
+  ): Codec.Aux[BigDecimal, Avro.ABytes] = {
     val conversion = new Conversions.DecimalConversion()
     val logicalType = LogicalTypes.decimal(precision, scale)
     val schema = AvroError.catchNonFatal {
@@ -586,7 +586,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Collection
     */
-  implicit final def list[A](implicit codec: Codec[A]): Codec.Aux[List[A], Avro.AArray] =
+  implicit final def list[A](implicit codec: Codec[A]): Codec.Aux[List[A], Avro.AArray[codec.Repr]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
       _.traverse(codec.encode(_)).map(items => Avro.AArray(items.toVector)), {
@@ -670,7 +670,7 @@ object Codec extends CodecCompanionCompat {
       }
     )
 
-  implicit final def set[A: Codec]: Codec.Aux[Set[A], Avro.AArray] =
+  implicit final def set[A](implicit codec: Codec[A]): Codec.Aux[Set[A], Avro.AArray[codec.Repr]] =
     Codec
       .list[A]
       .imap(_.toSet)(_.toList)
@@ -1008,7 +1008,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Collection
     */
-  implicit final def vector[A](implicit codec: Codec[A]): Codec.Aux[Vector[A], Avro.AArray] =
+  implicit final def vector[A](implicit codec: Codec[A]): Codec.Aux[Vector[A], Avro.AArray[codec.Repr]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
       _.traverse(codec.encode(_)).map(items => Avro.AArray(items)), {

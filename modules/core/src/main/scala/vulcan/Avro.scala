@@ -28,7 +28,7 @@ object Avro {
   final case class AString(value: String, logicalType: Option[LogicalType]) extends Avro
   final case class AFloat(value: Float) extends Avro
   final case class ADouble(value: Double) extends Avro
-  final case class AArray(values: Vector[Avro]) extends Avro
+  final case class AArray[Elem <: Avro](values: Vector[Elem]) extends Avro
   final case class AEnum(value: String, schema: Schema) extends Avro
   final case class ARecord(fields: Map[String, Avro], schema: Schema) extends Avro
   final case class AMap(values: Map[String, Avro]) extends Avro
@@ -64,7 +64,7 @@ object Avro {
           Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, "foo"))
       case (Schema.Type.ARRAY, collection: java.util.Collection[_]) => {
         val element = schema.getElementType
-        collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray)
+        collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray(_))
       }
       case (Schema.Type.MAP, map: java.util.Map[_, _]) =>
         val valueSchema = schema.getValueType()
