@@ -30,20 +30,8 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
         charsetGen.map { charset =>
           Codec.instance(
             schema,
-            s => Right(Avro.ABytes(java.nio.ByteBuffer.wrap(s.getBytes(charset)))),
-            (value, schema) => {
-              if (schema.getType() == Schema.Type.STRING)
-                Right(new String(value.asInstanceOf[Array[Byte]], charset))
-              else
-                Left {
-                  AvroError
-                    .decodeUnexpectedSchemaType(
-                      "String",
-                      schema.getType(),
-                      Schema.Type.STRING
-                    )
-                }
-            }
+            s => Right(Avro.ABytes(java.nio.ByteBuffer.wrap(s.getBytes(charset)), None)),
+            value => Right(new String(value.asInstanceOf[Array[Byte]], charset))
           )
         }
       }
@@ -58,8 +46,8 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
 
           assert(e1.isRight == e2.isRight)
           if (e1.isRight && e2.isRight) {
-            val d1 = c1.schema.flatMap(c1.decode(e1.value, _))
-            val d2 = c2.schema.flatMap(c2.decode(e2.value, _))
+            val d1 = c1.decode(e1.value)
+            val d2 = c2.decode(e2.value)
             assert(d1 === d2)
           }
         }

@@ -536,7 +536,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
     describe("encode") {
       it("should encode using codec for type") {
         forAll { (n: Int) =>
-          assert(Codec.encode(n).value == Avro.AInt(n))
+          assert(Codec.encode(n).value == Avro.AInt(n, None))
         }
       }
     }
@@ -638,10 +638,10 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
               )
               .schema
               .isLeft
-              // .swap
-              // .value
-              // .message ==
-              // "java.lang.IllegalArgumentException: Invalid fixed size: -1"
+            // .swap
+            // .value
+            // .message ==
+            // "java.lang.IllegalArgumentException: Invalid fixed size: -1"
           }
         }
       }
@@ -1681,14 +1681,14 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
       describe("decode") {
         it("should decode null as none") {
           val schema = unsafeSchema[Option[FirstOrSecond]]
-          assert(Avro.fromJava(null, schema).flatMap(codec.decode(_, schema)) == Right(None))
+          assert(Avro.fromJava(null, schema).flatMap(codec.decode) == Right(None))
         }
 
         it("should decode int as first") {
           forAll { (n: Int) =>
             assert(
               codec
-                .decode(Avro.AInt(n), unsafeSchema[Option[FirstOrSecond]]) == Right(Some(First(n)))
+                .decode(Avro.AInt(n, None)) == Right(Some(First(n)))
             )
           }
         }
@@ -1696,7 +1696,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
         it("should decode double as second") {
           forAll { (n: Double) =>
             assert(
-              codec.decode(Avro.ADouble(n), unsafeSchema[Option[FirstOrSecond]]) == Right(
+              codec.decode(Avro.ADouble(n)) == Right(
                 Some(Second(n))
               )
             )
@@ -1719,7 +1719,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
             Codec.instance(
               Codec.int.schema,
               _ => Left(AvroError("error")),
-              (_, _) => Left(AvroError("error"))
+              _ => Left(AvroError("error"))
             )
 
           implicit val caseClassFieldCodec: Codec[CaseClassField] =
@@ -1734,8 +1734,8 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
           implicit val intCodec: Codec[Int] =
             Codec.instance(
               Codec.int.schema,
-              _ => Right(Avro.AString("invalid")),
-              (_, _) => Left(AvroError("error"))
+              _ => Right(Avro.AString("invalid", None)),
+              _ => Left(AvroError("error"))
             )
 
           implicit val caseClassFieldCodec: Codec[CaseClassField] =
@@ -2235,8 +2235,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
 
       describe("encode") {
         it("should encode as record") {
-          val name = unsafeEncode("name")
-          println(name)
 
           val record = new GenericData.Record(unsafeSchema[CaseClassTwoFields])
           record.put(0, unsafeEncode("name"))
@@ -2720,21 +2718,21 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
           )
         }
 
-        it("should error if no schema in union with container name") {
-          assertDecodeError[SealedTraitCaseClassSingle](
-            unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
-            unsafeSchema[SealedTraitCaseClass],
-            "Missing schema CaseClassInSealedTraitCaseClassSingle in union"
-          )
-        }
+        // it("should error if no schema in union with container name") {
+        //   assertDecodeError[SealedTraitCaseClassSingle](
+        //     unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
+        //     unsafeSchema[SealedTraitCaseClass],
+        //     "Missing schema CaseClassInSealedTraitCaseClassSingle in union"
+        //   )
+        // }
 
-        it("should error if no alternative with container name") {
-          assertDecodeError[SealedTraitCaseClass](
-            unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
-            unsafeSchema[SealedTraitCaseClassSingle],
-            "Missing alternative CaseClassInSealedTraitCaseClassSingle in union"
-          )
-        }
+        // it("should error if no alternative with container name") {
+        //   assertDecodeError[SealedTraitCaseClass](
+        //     unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
+        //     unsafeSchema[SealedTraitCaseClassSingle],
+        //     "Missing alternative CaseClassInSealedTraitCaseClassSingle in union"
+        //   )
+        // }
 
         it("should decode using schema and decoder for alternative") {
           val encoded = unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0))
@@ -2908,13 +2906,14 @@ trait CodecSpecHelpers {
 
   def unsafeEncode[A](a: A)(implicit codec: Codec[A]): Any = {
     val avro = codec.encode(a).value
-    println(avro)
+    //println(avro)
     Avro.toJava(avro).value
   }
 
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
     codec.schema
-      .flatMap(schema => Avro.fromJava(value, schema).flatMap(codec.decode(_, schema)))
+      .flatMap(Avro.fromJava(value, _))
+      .flatMap(codec.decode)
       .value
 
   def assertSchemaIs[A](expectedSchema: String)(implicit codec: Codec[A]): Assertion =
@@ -2925,7 +2924,7 @@ trait CodecSpecHelpers {
     encoded: Either[AvroError, Any]
   )(implicit codec: Codec[A]): Assertion = {
     val encode = Avro.toJava(codec.encode(a).value).value
-    println(encode)
+    //println(encode)
     encode shouldBe (encoded.value)
   }
 
@@ -2938,7 +2937,7 @@ trait CodecSpecHelpers {
       val decode =
         schema
           .flatMap(
-            schema => Avro.fromJava(value, schema).toOption.map(codec.decode(_, schema).value)
+            schema => Avro.fromJava(value, schema).toOption.map(codec.decode(_).value)
           )
           .getOrElse(unsafeDecode(value))
 
@@ -2960,7 +2959,7 @@ trait CodecSpecHelpers {
   )(implicit codec: Codec[A]): Assertion = {
     val _ = expectedErrorMessage
     //assert(Avro.fromJava(value, schema).flatMap(codec.decode(_, schema)).swap.value.message == expectedErrorMessage)
-    assert(Avro.fromJava(value, schema).flatMap(codec.decode(_, schema)).isLeft)
+    assert(Avro.fromJava(value, schema).flatMap(codec.decode(_)).isLeft)
   }
 
   def assertEncodeError[A](
