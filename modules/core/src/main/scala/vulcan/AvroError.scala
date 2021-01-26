@@ -302,10 +302,10 @@ object AvroError {
     }
 
   private[vulcan] final def fromThrowable(throwable: Throwable): AvroError = {
-   val sw = new StringWriter()
-val pw = new PrintWriter(sw)
-throwable.printStackTrace(pw)
-val sStackTrace = sw.toString()
+    val sw = new StringWriter()
+    val pw = new PrintWriter(sw)
+    throwable.printStackTrace(pw)
+    val sStackTrace = sw.toString()
     AvroError(sStackTrace)
   }
 }

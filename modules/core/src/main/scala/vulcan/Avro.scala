@@ -85,7 +85,9 @@ object Avro {
       case (Schema.Type.BOOLEAN, boolean: java.lang.Boolean) => ABoolean(boolean).asRight
       case (Schema.Type.NULL, null)                          => ANull.asRight
       case (schemaType, value) =>
-        AvroError(s"Unexpected value converting schema type $schemaType from Java - found $value of type ${value.getClass.getName}").asLeft
+        AvroError(
+          s"Unexpected value converting schema type $schemaType from Java - found $value of type ${value.getClass.getName}"
+        ).asLeft
     }
 
   def toJava(avro: Avro): Either[AvroError, Any] = avro match {

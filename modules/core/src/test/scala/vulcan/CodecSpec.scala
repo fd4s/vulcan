@@ -2234,8 +2234,8 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
           println(name)
 
           val record = new GenericData.Record(unsafeSchema[CaseClassTwoFields])
-              record.put(0, unsafeEncode("name"))
-              record.put(1, unsafeEncode(0))
+          record.put(0, unsafeEncode("name"))
+          record.put(1, unsafeEncode(0))
 
           assertEncodeIs[CaseClassTwoFields](
             CaseClassTwoFields("name", 0),
@@ -2673,8 +2673,8 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
 
           val encoded = unsafeEncode[SealedTraitCaseClass](value)
 
-       //(value)
-        //  println(encoded)
+          //(value)
+          //  println(encoded)
           assertEncodeIs[SealedTraitCaseClass](
             value,
             Right(encoded)
@@ -2733,7 +2733,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers with Matchers {
 
         it("should decode using schema and decoder for alternative") {
           val encoded = unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0))
-    //      println(s"encoded: $encoded")
+          //      println(s"encoded: $encoded")
 
           assertDecodeIs[SealedTraitCaseClass](
             encoded,

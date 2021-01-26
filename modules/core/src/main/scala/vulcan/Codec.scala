@@ -144,14 +144,12 @@ object Codec extends CodecCompanionCompat {
   implicit final val boolean: Codec[Boolean] =
     Codec.instance(
       Right(SchemaBuilder.builder().booleanType()),
-      Avro.ABoolean(_).asRight,
-      {
-              case (Avro.ABoolean(boolean), _) =>
-                Right(boolean)
-              case (other, _) =>
-                Left(AvroError.decodeUnexpectedType(other, "Boolean", "Boolean"))
-            }
-
+      Avro.ABoolean(_).asRight, {
+        case (Avro.ABoolean(boolean), _) =>
+          Right(boolean)
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Boolean", "Boolean"))
+      }
     )
 
   /**
@@ -161,33 +159,14 @@ object Codec extends CodecCompanionCompat {
     Codec.instance(
       Right(SchemaBuilder.builder().intType()),
       byte => Right(Avro.AInt(byte.toInt)), {
-        val min: Int = Byte.MinValue.toInt
-        val max: Int = Byte.MaxValue.toInt
-        (value, schema) => {
-          schema.getType() match {
-            case Schema.Type.INT =>
-              value match {
-                case Avro.AInt(integer) =>
-                  if (min <= integer && integer <= max)
-                    Right(integer.toByte)
-                  else Left(AvroError.unexpectedByte(integer))
+        case (Avro.AInt(integer), _) =>
+          if (Byte.MinValue.toInt <= integer && integer <= Byte.MaxValue.toInt)
+            Right(integer.toByte)
+          else Left(AvroError.unexpectedByte(integer))
 
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Int", "Byte"))
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Int", "Byte"))
 
-              }
-
-            case schemaType =>
-              Left {
-                AvroError
-                  .decodeUnexpectedSchemaType(
-                    "Byte",
-                    schemaType,
-                    Schema.Type.INT
-                  )
-              }
-          }
-        }
       }
     )
 
@@ -197,26 +176,11 @@ object Codec extends CodecCompanionCompat {
   implicit final val bytes: Codec[Array[Byte]] =
     Codec.instance(
       Right(SchemaBuilder.builder().bytesType()),
-      bytes => Avro.ABytes(ByteBuffer.wrap(bytes)).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.BYTES | Schema.Type.STRING =>
-            value match {
-              case Avro.AString(string) =>
-                Right(string.getBytes(StandardCharsets.UTF_8))
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "Array[Byte]"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError.decodeUnexpectedSchemaType(
-                "Array[Byte]",
-                schemaType,
-                Schema.Type.BYTES
-              )
-            }
-        }
+      bytes => Avro.ABytes(ByteBuffer.wrap(bytes)).asRight, {
+        case (Avro.AString(string), _) =>
+          Right(string.getBytes(StandardCharsets.UTF_8))
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "Array[Byte]"))
       }
     )
 
@@ -257,29 +221,13 @@ object Codec extends CodecCompanionCompat {
   implicit final val char: Codec[Char] =
     Codec.instance(
       Right(SchemaBuilder.builder().stringType()),
-      char => Right(Avro.AString(char.toString)),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.STRING =>
-            value match {
-              case Avro.AString(string) =>
-                if (string.length == 1) Right(string.charAt(0))
-                else Left(AvroError.unexpectedChar(string.length))
+      char => Right(Avro.AString(char.toString)), {
+        case (Avro.AString(string), _) =>
+          if (string.length == 1) Right(string.charAt(0))
+          else Left(AvroError.unexpectedChar(string.length))
 
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Utf8", "Char"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Char",
-                  schemaType,
-                  Schema.Type.STRING
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Utf8", "Char"))
       }
     )
 
@@ -379,26 +327,13 @@ object Codec extends CodecCompanionCompat {
   implicit final val double: Codec[Double] =
     Codec.instance(
       Right(SchemaBuilder.builder().doubleType()),
-      Avro.ADouble(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
-            value match {
-              case Avro.ADouble(value) => value.asRight
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Double", "Double"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Double",
-                  schemaType,
-                  Schema.Type.DOUBLE
-                )
-            }
-        }
+      Avro.ADouble(_).asRight, {
+        case (Avro.ADouble(value), _) => value.asRight
+        case (Avro.AFloat(value), _)  => value.toDouble.asRight
+        case (Avro.AInt(value), _)    => value.toDouble.asRight
+        case (Avro.ALong(value), _)   => value.toDouble.asRight
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Double", "Double"))
       }
     )
 
@@ -595,27 +530,12 @@ object Codec extends CodecCompanionCompat {
   implicit final val float: Codec[Float] =
     Codec.instance(
       Right(SchemaBuilder.builder().floatType()),
-      Avro.AFloat(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
-            value match {
-              case Avro.AFloat(float) =>
-                Right(float)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Float", "Float"))
-            }
+      Avro.AFloat(_).asRight, {
+        case (Avro.AFloat(float), _) =>
+          Right(float)
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Float", "Float"))
 
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Float",
-                  schemaType,
-                  Schema.Type.FLOAT
-                )
-            }
-        }
       }
     )
 
@@ -723,27 +643,11 @@ object Codec extends CodecCompanionCompat {
   implicit final val int: Codec[Int] =
     Codec.instance(
       Right(SchemaBuilder.builder().intType()),
-      Avro.AInt(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.INT =>
-            value match {
-              case Avro.AInt(integer) =>
-                Right(integer)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Int", "Int"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Int",
-                  schemaType,
-                  Schema.Type.INT
-                )
-            }
-        }
+      Avro.AInt(_).asRight, {
+        case (Avro.AInt(integer), _) =>
+          Right(integer)
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Int", "Int"))
       }
     )
 
@@ -823,27 +727,11 @@ object Codec extends CodecCompanionCompat {
   implicit final val long: Codec[Long] =
     Codec.instance(
       Right(SchemaBuilder.builder().longType()),
-      Avro.ALong(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.LONG | Schema.Type.INT =>
-            value match {
-              case Avro.ALong(long) =>
-                Right(long)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Long", "Long"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Long",
-                  schemaType,
-                  Schema.Type.LONG
-                )
-            }
-        }
+      Avro.ALong(_).asRight, {
+        case (Avro.ALong(long), _) =>
+          Right(long)
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Long", "Long"))
       }
     )
 
@@ -1152,17 +1040,17 @@ object Codec extends CodecCompanionCompat {
   implicit final val string: Codec[String] =
     Codec.instance(
       Right(SchemaBuilder.builder().stringType()),
-      Avro.AString(_).asRight,{
-              case (Avro.AString(string), _) =>
-                Right(string)
-              case (Avro.ABytes(bytes), _) =>
-              AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
-              case (other, _) =>
-                Left {
-                  AvroError
-                    .decodeUnexpectedTypes(other, NonEmptyList.of("String", "Utf8"), "String")
-                }
-              }
+      Avro.AString(_).asRight, {
+        case (Avro.AString(string), _) =>
+          Right(string)
+        case (Avro.ABytes(bytes), _) =>
+          AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
+        case (other, _) =>
+          Left {
+            AvroError
+              .decodeUnexpectedTypes(other, NonEmptyList.of("String", "Utf8"), "String")
+          }
+      }
     )
 
   /**
