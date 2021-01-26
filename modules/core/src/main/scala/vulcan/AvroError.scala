@@ -236,7 +236,7 @@ object AvroError {
           dtn => s"Exhausted alternatives for type $typeName while decoding $dtn"
         )
       case None =>
-        AvroError(s"Exhausted alternatives for type $typeName")
+        AvroError(s"Exhausted alternatives for type $typeName while decoding")
     }
   }
 
@@ -288,7 +288,7 @@ object AvroError {
         case Some(encodingTypeName) =>
           s"Exhausted alternatives for type $typeName while encoding $encodingTypeName"
         case None =>
-          s"Exhausted alternatives for type $typeName"
+          s"Exhausted alternatives for type $typeName while encoding"
       }
     }
 

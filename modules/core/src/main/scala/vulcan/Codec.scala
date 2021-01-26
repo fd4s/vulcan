@@ -179,6 +179,7 @@ object Codec extends CodecCompanionCompat {
       bytes => Avro.ABytes(ByteBuffer.wrap(bytes)).asRight, {
         case (Avro.AString(string), _) =>
           Right(string.getBytes(StandardCharsets.UTF_8))
+        case (Avro.ABytes(buffer), _) => Right(buffer.array())
         case (other, _) =>
           Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "Array[Byte]"))
       }
@@ -535,6 +536,8 @@ object Codec extends CodecCompanionCompat {
       Avro.AFloat(_).asRight, {
         case (Avro.AFloat(float), _) =>
           Right(float)
+          case (Avro.ALong(long), _) => Right(long.toFloat)
+        case (Avro.AInt(int), _) => Right(int.toFloat)
         case (other, _) =>
           Left(AvroError.decodeUnexpectedType(other, "Float", "Float"))
 
@@ -734,6 +737,7 @@ object Codec extends CodecCompanionCompat {
       Avro.ALong(_).asRight, {
         case (Avro.ALong(long), _) =>
           Right(long)
+        case (Avro.AInt(int), _) => Right(int.toLong)
         case (other, _) =>
           Left(AvroError.decodeUnexpectedType(other, "Long", "Long"))
       }
@@ -1126,27 +1130,27 @@ object Codec extends CodecCompanionCompat {
           }
 
         value match {
-          case container: GenericContainer =>
-            val altName =
-              container.getSchema.getName
+          // case container: GenericContainer =>
+          //   val altName =
+          //     container.getSchema.getName
 
-            val altUnionSchema =
-              schemaTypes
-                .find(_.getName == altName)
-                .toRight(AvroError.decodeMissingUnionSchema(altName, None))
+          //   val altUnionSchema =
+          //     schemaTypes
+          //       .find(_.getName == altName)
+          //       .toRight(AvroError.decodeMissingUnionSchema(altName, None))
 
-            def altMatching =
-              alts
-                .find(_.codec.schema.exists(_.getName == altName))
-                .toRight(AvroError.decodeMissingUnionAlternative(altName, None))
+          //   def altMatching =
+          //     alts
+          //       .find(_.codec.schema.exists(_.getName == altName))
+          //       .toRight(AvroError.decodeMissingUnionAlternative(altName, None))
 
-            altUnionSchema.flatMap { altSchema =>
-              altMatching.flatMap { alt =>
-                alt.codec
-                  .decode(container, altSchema)
-                  .map(alt.prism.reverseGet)
-              }
-            }
+          //   altUnionSchema.flatMap { altSchema =>
+          //     altMatching.flatMap { alt =>
+          //       alt.codec
+          //         .decode(container, altSchema)
+          //         .map(alt.prism.reverseGet)
+          //     }
+          //   }
 
           case other =>
             alts

@@ -7,6 +7,8 @@ import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericFixed, GenericRecord}
 
 import vulcan.internal.converters.collection._
+import org.apache.avro.generic.GenericEnumSymbol
+import java.nio.charset.StandardCharsets
 
 sealed trait Avro
 
@@ -42,16 +44,37 @@ object Avro {
           .toList
           .traverse { field =>
             AvroError.catchNonFatal {
-              fromJava(record.get(field.name), field.schema).tupleLeft(field.name)
+              (if (record.hasField(field.name)) {
+                 fromJava(record.get(field.name()), field.schema)
+               } else {
+                 fromJava(field.defaultVal(), field.schema)
+               }).tupleLeft(field.name())
             }
           }
           .map(fields => ARecord(fields.toMap, schema))
-      case (Schema.Type.ENUM, _) => ???
+      case (Schema.Type.ENUM, genericEnum: GenericEnumSymbol[_]) =>
+        val symbols = schema.getEnumSymbols().asScala.toList
+        val symbol = genericEnum.toString()
+
+        if (symbols.contains(symbol))
+          Right(AEnum(symbol, schema))
+        else
+          Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, "foo"))
       case (Schema.Type.ARRAY, collection: java.util.Collection[_]) => {
         val element = schema.getElementType
         collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray(_, element))
       }
-      case (Schema.Type.MAP, _) => ???
+      case (Schema.Type.MAP, map: java.util.Map[_, _]) =>
+        val valueSchema = schema.getValueType()
+        map.asScala.toList
+          .traverse {
+            case (key: Utf8, value) =>
+              fromJava(value, valueSchema).tupleLeft(key.toString)
+            case (key, _) =>
+              Left(AvroError.decodeUnexpectedMapKey(key))
+          }
+          .map(kvs => AMap(kvs.toMap))
+
       case (Schema.Type.UNION, value) =>
         schema.getTypes.asScala.toList
           .collectFirstSome { altSchema =>
@@ -78,6 +101,8 @@ object Avro {
       case (Schema.Type.STRING, string: String)              => AString(string).asRight
       case (Schema.Type.STRING, utf8: Utf8)                  => AString(utf8.toString).asRight
       case (Schema.Type.BYTES, bytes: ByteBuffer)            => ABytes(bytes).asRight
+            case (Schema.Type.BYTES, string: String)              => ABytes(ByteBuffer.wrap(string.getBytes(StandardCharsets.UTF_8))).asRight
+      case (Schema.Type.BYTES, utf8: Utf8)                  => ABytes(ByteBuffer.wrap(utf8.getBytes())).asRight
       case (Schema.Type.INT, int: java.lang.Integer)         => AInt(int).asRight
       case (Schema.Type.LONG, long: java.lang.Long)          => ALong(long).asRight
       case (Schema.Type.FLOAT, float: java.lang.Float)       => AFloat(float).asRight
@@ -99,11 +124,11 @@ object Avro {
       val buffer = ByteBuffer.allocate(fixed.fixedSize).put(bytes)
       GenericData.get().createFixed(null, buffer.array(), schema).asRight
     }
-    case AString(s)       => new Utf8(s).asRight
-    case AFloat(f)        => java.lang.Float.valueOf(f).asRight
-    case ADouble(d)       => java.lang.Double.valueOf(d).asRight
-    case AArray(items, _) => items.traverse(toJava).map(_.asJava)
-    case AEnum(_, _)      => ???
+    case AString(s)           => new Utf8(s).asRight
+    case AFloat(f)            => java.lang.Float.valueOf(f).asRight
+    case ADouble(d)           => java.lang.Double.valueOf(d).asRight
+    case AArray(items, _)     => items.traverse(toJava).map(_.asJava)
+    case AEnum(value, schema) => GenericData.get().createEnum(value, schema).asRight
     case ARecord(fields, schema) =>
       val encodedFields = fields.toList.traverse {
         case (name, value) => toJava(value).tupleLeft(name)
@@ -116,7 +141,8 @@ object Avro {
         }
         record
       }
-    case AMap(_) => ???
-    case ANull   => Right(null)
+    case AMap(values) =>
+      values.toList.traverse { case (k, v) => toJava(v).tupleLeft(new Utf8(k)) }.map(_.toMap.asJava)
+    case ANull => Right(null)
   }
 }
