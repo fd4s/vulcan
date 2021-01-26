@@ -190,14 +190,16 @@ object Codec extends CodecCompanionCompat {
   implicit final def chain[A](implicit codec: Codec[A]): Codec[Chain[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
-      _.toList.traverse(codec.encode).map(items => Avro.AArray(items.toVector)),
+      items =>
+        codec.schema.flatMap { schema =>
+          items.toList.traverse(codec.encode).map(items => Avro.AArray(items.toVector, schema))
+        },
       (value, schema) => {
         schema.getType() match {
           case Schema.Type.ARRAY =>
-            val elementType = schema.getElementType()
             value match {
-              case Avro.AArray(elements) =>
-                elements.traverse(codec.decode(_, elementType)).map(Chain.fromSeq)
+              case Avro.AArray(elements, elementSchema) =>
+                elements.traverse(codec.decode(_, elementSchema)).map(Chain.fromSeq)
               case other =>
                 Left(AvroError.decodeUnexpectedType(other, "Collection", "Chain"))
             }
@@ -663,13 +665,15 @@ object Codec extends CodecCompanionCompat {
   implicit final def list[A](implicit codec: Codec[A]): Codec[List[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
-      _.traverse(codec.encode).map(items => Avro.AArray(items.toVector)),
+      items =>
+        codec.schema.flatMap { schema =>
+          items.traverse(codec.encode).map(items => Avro.AArray(items.toVector, schema))
+        },
       (value, schema) => {
         schema.getType() match {
           case Schema.Type.ARRAY =>
-            val elementType = schema.getElementType()
             value match {
-              case Avro.AArray(items) =>
+              case Avro.AArray(items, elementType) =>
                 items.toList.traverse(codec.decode(_, elementType))
 
               case other =>
@@ -1237,13 +1241,15 @@ object Codec extends CodecCompanionCompat {
   implicit final def vector[A](implicit codec: Codec[A]): Codec[Vector[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
-      _.traverse(codec.encode).map(items => Avro.AArray(items)),
+      items =>
+        codec.schema.flatMap { schema =>
+          items.traverse(codec.encode).map(items => Avro.AArray(items, schema))
+        },
       (value, schema) => {
         schema.getType() match {
           case Schema.Type.ARRAY =>
-            val elementType = schema.getElementType()
             value match {
-              case Avro.AArray(elems) =>
+              case Avro.AArray(elems, elementType) =>
                 elems.traverse(codec.decode(_, elementType))
 
               case other =>

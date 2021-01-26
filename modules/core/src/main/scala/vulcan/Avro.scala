@@ -25,7 +25,7 @@ object Avro {
   final case class AString(value: String) extends Avro
   final case class AFloat(value: Float) extends Avro
   final case class ADouble(value: Double) extends Avro
-  final case class AArray(values: Vector[Avro]) extends Avro
+  final case class AArray(values: Vector[Avro], elements: Schema) extends Avro
   final case class AEnum(value: String, schema: Schema) extends Avro
   final case class ARecord(fields: Map[String, Avro], schema: Schema) extends Avro
   final case class AMap(values: Map[String, Avro]) extends Avro
@@ -49,7 +49,7 @@ object Avro {
       case (Schema.Type.ENUM, _) => ???
       case (Schema.Type.ARRAY, collection: java.util.Collection[_]) => {
         val element = schema.getElementType
-        collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray(_))
+        collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray(_, element))
       }
       case (Schema.Type.MAP, _) => ???
       case (Schema.Type.UNION, value) =>
@@ -99,11 +99,11 @@ object Avro {
       val buffer = ByteBuffer.allocate(fixed.fixedSize).put(bytes)
       GenericData.get().createFixed(null, buffer.array(), schema).asRight
     }
-    case AString(s)    => new Utf8(s).asRight
-    case AFloat(f)     => java.lang.Float.valueOf(f).asRight
-    case ADouble(d)    => java.lang.Double.valueOf(d).asRight
-    case AArray(items) => items.traverse(toJava).map(_.asJava)
-    case AEnum(_, _)   => ???
+    case AString(s)       => new Utf8(s).asRight
+    case AFloat(f)        => java.lang.Float.valueOf(f).asRight
+    case ADouble(d)       => java.lang.Double.valueOf(d).asRight
+    case AArray(items, _) => items.traverse(toJava).map(_.asJava)
+    case AEnum(_, _)      => ???
     case ARecord(fields, schema) =>
       val encodedFields = fields.toList.traverse {
         case (name, value) => toJava(value).tupleLeft(name)
