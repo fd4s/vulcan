@@ -634,7 +634,9 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Collection
     */
-  implicit final def map[A](implicit codec: Codec[A]): Codec.Aux[Map[String, A], Avro.Map] =
+  implicit final def map[A](
+    implicit codec: Codec[A]
+  ): Codec.Aux[Map[String, A], Avro.Map[codec.Repr]] =
     Codec.instance(
       codec.schema.map(Schema.createMap),
       _.toList
@@ -648,9 +650,7 @@ object Codec extends CodecCompanionCompat {
         case Avro.Map(keyvalues) =>
           keyvalues.toList
             .traverse {
-
-              case (key, value) =>
-                codec.decode(value).tupleLeft(key)
+              case (key, value) => codec.decode(value).tupleLeft(key)
             }
             .map(_.toMap)
 
@@ -681,7 +681,9 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Cats
     */
-  implicit final def nonEmptyChain[A](implicit codec: Codec[A]): Codec[NonEmptyChain[A]] =
+  implicit final def nonEmptyChain[A](
+    implicit codec: Codec[A]
+  ): Codec.Aux[NonEmptyChain[A], Avro.Array[codec.Repr]] =
     Codec
       .chain[A]
       .imapError(
@@ -692,7 +694,9 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Cats
     */
-  implicit final def nonEmptyList[A](implicit codec: Codec[A]): Codec[NonEmptyList[A]] =
+  implicit final def nonEmptyList[A](
+    implicit codec: Codec[A]
+  ): Codec.Aux[NonEmptyList[A], Avro.Array[codec.Repr]] =
     Codec
       .list[A]
       .imapError(
@@ -706,7 +710,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def nonEmptySet[A](
     implicit codec: Codec[A],
     ordering: Ordering[A]
-  ): Codec[NonEmptySet[A]] =
+  ): Codec.Aux[NonEmptySet[A], Avro.Array[codec.Repr]] =
     Codec
       .list[A]
       .imapError(
@@ -720,7 +724,9 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Cats
     */
-  implicit final def nonEmptyVector[A](implicit codec: Codec[A]): Codec[NonEmptyVector[A]] =
+  implicit final def nonEmptyVector[A](
+    implicit codec: Codec[A]
+  ): Codec.Aux[NonEmptyVector[A], Avro.Array[codec.Repr]] =
     Codec
       .vector[A]
       .imapError(

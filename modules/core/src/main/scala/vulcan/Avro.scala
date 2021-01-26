@@ -34,7 +34,8 @@ object Avro {
     fields: scala.collection.immutable.Map[java.lang.String, Avro],
     schema: Schema
   ) extends Avro
-  final case class Map(values: scala.collection.immutable.Map[java.lang.String, Avro]) extends Avro
+  final case class Map[Elem <: Avro](values: scala.collection.immutable.Map[java.lang.String, Elem])
+      extends Avro
   case object Null extends Avro
   type Null = Null.type
 
