@@ -191,11 +191,8 @@ object Codec extends CodecCompanionCompat {
   implicit final def chain[A](implicit codec: Codec[A]): Codec[Chain[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
-      items =>
-        codec.schema.flatMap { schema =>
-          items.toList.traverse(codec.encode).map(items => Avro.AArray(items.toVector, schema))
-        }, {
-        case Avro.AArray(elements, _) =>
+      _.toList.traverse(codec.encode).map(items => Avro.AArray(items.toVector)), {
+        case Avro.AArray(elements) =>
           elements.traverse(codec.decode).map(Chain.fromSeq)
         case other =>
           Left(AvroError.decodeUnexpectedType(other, "Collection", "Chain"))
@@ -584,12 +581,9 @@ object Codec extends CodecCompanionCompat {
   implicit final def list[A](implicit codec: Codec[A]): Codec[List[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
-      items =>
-        codec.schema.flatMap { schema =>
-          items.traverse(codec.encode).map(items => Avro.AArray(items.toVector, schema))
-        }, {
-        case Avro.AArray(items, _) =>
-          items.toList.traverse(codec.decode(_))
+      _.traverse(codec.encode).map(items => Avro.AArray(items.toVector)), {
+        case Avro.AArray(items) =>
+          items.toList.traverse(codec.decode)
 
         case other =>
           Left(AvroError.decodeUnexpectedType(other, "Collection", "List"))
@@ -1012,11 +1006,8 @@ object Codec extends CodecCompanionCompat {
   implicit final def vector[A](implicit codec: Codec[A]): Codec[Vector[A]] =
     Codec.instance(
       codec.schema.map(Schema.createArray),
-      items =>
-        codec.schema.flatMap { schema =>
-          items.traverse(codec.encode).map(items => Avro.AArray(items, schema))
-        }, {
-        case Avro.AArray(elems, _) =>
+      _.traverse(codec.encode).map(items => Avro.AArray(items)), {
+        case Avro.AArray(elems) =>
           elems.traverse(codec.decode(_))
 
         case other =>

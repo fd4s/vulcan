@@ -28,7 +28,7 @@ object Avro {
   final case class AString(value: String, logicalType: Option[LogicalType]) extends Avro
   final case class AFloat(value: Float) extends Avro
   final case class ADouble(value: Double) extends Avro
-  final case class AArray(values: Vector[Avro], elements: Schema) extends Avro
+  final case class AArray(values: Vector[Avro]) extends Avro
   final case class AEnum(value: String, schema: Schema) extends Avro
   final case class ARecord(fields: Map[String, Avro], schema: Schema) extends Avro
   final case class AMap(values: Map[String, Avro], valueSchema: Schema) extends Avro
@@ -63,7 +63,7 @@ object Avro {
           Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, "foo"))
       case (Schema.Type.ARRAY, collection: java.util.Collection[_]) => {
         val element = schema.getElementType
-        collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray(_, element))
+        collection.asScala.toVector.traverse(fromJava(_, element)).map(AArray)
       }
       case (Schema.Type.MAP, map: java.util.Map[_, _]) =>
         val valueSchema = schema.getValueType()
@@ -138,7 +138,7 @@ object Avro {
     case AString(s, _)        => new Utf8(s).asRight
     case AFloat(f)            => java.lang.Float.valueOf(f).asRight
     case ADouble(d)           => java.lang.Double.valueOf(d).asRight
-    case AArray(items, _)     => items.traverse(toJava).map(_.asJava)
+    case AArray(items)        => items.traverse(toJava).map(_.asJava)
     case AEnum(value, schema) => GenericData.get().createEnum(value, schema).asRight
     case ARecord(fields, schema) =>
       val encodedFields = fields.toList.traverse {
