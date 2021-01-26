@@ -31,7 +31,7 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
           Codec.instance(
             schema,
             s => Right(Avro.ABytes(java.nio.ByteBuffer.wrap(s.getBytes(charset)), None)),
-            value => Right(new String(value.asInstanceOf[Array[Byte]], charset))
+            value => Right(new String(value.asInstanceOf[Avro.ABytes].value.array(), charset))
           )
         }
       }

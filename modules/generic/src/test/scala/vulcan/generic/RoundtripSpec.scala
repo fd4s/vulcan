@@ -67,10 +67,10 @@ final class RoundtripSpec extends BaseSpec {
     val avroSchema = codec.schema
     assert(avroSchema.isRight)
 
-    val encoded = codec.encode(a)
+    val encoded = codec.encode(a).flatMap(Avro.toJava)
     assert(encoded.isRight)
 
-    val decoded = codec.decode(encoded.value, avroSchema.value)
+    val decoded = Avro.fromJava(encoded.value, avroSchema.value).flatMap(codec.decode)
     assert(decoded === Right(a))
   }
 
@@ -89,7 +89,7 @@ final class RoundtripSpec extends BaseSpec {
     implicit codec: Codec[A]
   ): Either[AvroError, Array[Byte]] =
     codec.schema.flatMap { schema =>
-      codec.encode(a).map { encoded =>
+      codec.encode(a).flatMap(Avro.toJava).map { encoded =>
         val baos = new ByteArrayOutputStream()
         val serializer = EncoderFactory.get().binaryEncoder(baos, null)
         new GenericDatumWriter[Any](schema)
@@ -112,6 +112,6 @@ final class RoundtripSpec extends BaseSpec {
           new GenericData
         ).read(null, deserializer)
 
-      codec.decode(read, schema)
+      Avro.fromJava(read, schema).flatMap(codec.decode)
     }
 }

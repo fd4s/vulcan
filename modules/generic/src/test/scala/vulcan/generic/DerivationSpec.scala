@@ -4,8 +4,13 @@ import vulcan.generic.examples._
 import vulcan.BaseSpec
 import vulcan.RoundtripHelpers
 import vulcan.CodecSpecHelpers
+import org.scalatest.matchers.should.Matchers
 
-final class DerivationSpec extends BaseSpec with RoundtripHelpers with CodecSpecHelpers {
+final class DerivationSpec
+    extends BaseSpec
+    with RoundtripHelpers
+    with CodecSpecHelpers
+    with Matchers {
   describe("Codec") {
     describe("deriveEnum") {
       describe("schema") {

@@ -16,13 +16,7 @@ sealed trait Avro
 object Avro {
   final case class ABoolean(value: Boolean) extends Avro
   final case class AInt(value: Int, logicalType: Option[LogicalType]) extends Avro
-  object AInt {
-    def unapply(aint: AInt): Some[Int] = Some(aint.value)
-  }
   final case class ALong(value: Long, logicalType: Option[LogicalType]) extends Avro
-  object ALong {
-    def unapply(along: ALong): Some[Long] = Some(along.value)
-  }
   final case class ABytes(value: ByteBuffer, logicalType: Option[LogicalType]) extends Avro
   final case class AFixed(value: Array[Byte], schema: Schema) extends Avro {
     require(schema.getType() == Schema.Type.FIXED)

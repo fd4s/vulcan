@@ -909,7 +909,7 @@ object Codec extends CodecCompanionCompat {
     */
   final def toBinary[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Array[Byte]] =
     codec.schema.flatMap { schema =>
-      codec.encode(a).flatMap { encoded =>
+      codec.encode(a).flatMap(Avro.toJava).flatMap { encoded =>
         AvroError.catchNonFatal {
           val baos = new ByteArrayOutputStream
           val encoder = EncoderFactory.get.binaryEncoder(baos, null)
@@ -961,19 +961,18 @@ object Codec extends CodecCompanionCompat {
           }
           .getOrElse {
             Left(AvroError.encodeExhaustedAlternatives(a, None))
-          }, {
-        case other =>
-          alts
-            .collectFirstSome { alt =>
-              alt.codec
-                .decode(other)
-                .map(alt.prism.reverseGet)
-                .toOption
-            }
-            .toRight {
-              AvroError.decodeExhaustedAlternatives(other, None)
-            }
-      }
+          },
+      value =>
+        alts
+          .collectFirstSome { alt =>
+            alt.codec
+              .decode(value)
+              .map(alt.prism.reverseGet)
+              .toOption
+          }
+          .toRight {
+            AvroError.decodeExhaustedAlternatives(value, None)
+          }
     )
   }
 
