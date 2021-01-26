@@ -33,6 +33,7 @@ object Avro {
   final case class ARecord(fields: Map[String, Avro], schema: Schema) extends Avro
   final case class AMap(values: Map[String, Avro]) extends Avro
   case object ANull extends Avro
+  type ANull = ANull.type
 
   def fromJava(jAvro: Any, schema: Schema): Either[AvroError, Avro] =
     (schema.getType(), jAvro) match {

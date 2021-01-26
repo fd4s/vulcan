@@ -44,8 +44,8 @@ package object generic {
         }
       },
       _.eliminate(
-        headCodec.encode,
-        tailCodec.value.encode
+        headCodec.encode(_),
+        tailCodec.value.encode(_)
       ),
       value => {
 
