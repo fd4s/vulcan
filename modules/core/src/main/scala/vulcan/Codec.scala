@@ -143,29 +143,15 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final val boolean: Codec[Boolean] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.BOOLEAN,
+      "Boolean",
       Right(SchemaBuilder.builder().booleanType()),
-      java.lang.Boolean.valueOf(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.BOOLEAN =>
-            value match {
-              case boolean: java.lang.Boolean =>
-                Right(boolean)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Boolean", "Boolean"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Boolean",
-                  schemaType,
-                  Schema.Type.BOOLEAN
-                )
-            }
-        }
+      java.lang.Boolean.valueOf(_).asRight, {
+        case (boolean: java.lang.Boolean, _) =>
+          Right(boolean)
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Boolean", "Boolean"))
       }
     )
 
@@ -221,33 +207,18 @@ object Codec extends CodecCompanionCompat {
     * @group Cats
     */
   implicit final def chain[A](implicit codec: Codec[A]): Codec[Chain[A]] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.ARRAY,
+      "Chain",
       codec.schema.map(Schema.createArray),
-      _.toList.traverse(codec.encode).map(_.asJava),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.ARRAY =>
-            val elementType = schema.getElementType()
-            value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList
-                  .traverse(codec.decode(_, elementType))
-                  .map(Chain.fromSeq)
+      _.toList.traverse(codec.encode).map(_.asJava), {
+        case (collection: java.util.Collection[_], schema) =>
+          collection.asScala.toList
+            .traverse(codec.decode(_, schema.getElementType()))
+            .map(Chain.fromSeq)
 
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Collection", "Chain"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Chain",
-                  schemaType,
-                  Schema.Type.ARRAY
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Collection", "Chain"))
       }
     )
 
@@ -255,32 +226,18 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final val char: Codec[Char] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.STRING,
+      "Char",
       Right(SchemaBuilder.builder().stringType()),
-      char => Right(new Utf8(char.toString)),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.STRING =>
-            value match {
-              case utf8: Utf8 =>
-                val string = utf8.toString
-                if (string.length == 1) Right(string.charAt(0))
-                else Left(AvroError.unexpectedChar(string.length))
+      char => Right(new Utf8(char.toString)), {
+        case (utf8: Utf8, _) =>
+          val string = utf8.toString
+          if (string.length == 1) Right(string.charAt(0))
+          else Left(AvroError.unexpectedChar(string.length))
 
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Utf8", "Char"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Char",
-                  schemaType,
-                  Schema.Type.STRING
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Utf8", "Char"))
       }
     )
 
@@ -300,7 +257,9 @@ object Codec extends CodecCompanionCompat {
         logicalType.addToSchema(SchemaBuilder.builder().bytesType())
       }
     }
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.BYTES,
+      "BigDecimal",
       schema,
       bigDecimal =>
         if (bigDecimal.scale == scale) {
@@ -318,42 +277,29 @@ object Codec extends CodecCompanionCompat {
         } else
           Left(AvroError.encodeDecimalScalesMismatch(bigDecimal.scale, scale)),
       (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.BYTES =>
-            schema.getLogicalType() match {
-              case decimal: LogicalTypes.Decimal =>
-                value match {
-                  case buffer: ByteBuffer =>
-                    val bigDecimal = BigDecimal(conversion.fromBytes(buffer, schema, decimal))
-                    if (bigDecimal.precision <= decimal.getPrecision()) {
-                      Right(bigDecimal)
-                    } else {
-                      Left {
-                        AvroError
-                          .decodeDecimalPrecisionExceeded(
-                            bigDecimal.precision,
-                            decimal.getPrecision()
-                          )
-                      }
-                    }
-
-                  case other =>
-                    Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "BigDecimal"))
+        schema.getLogicalType() match {
+          case decimal: LogicalTypes.Decimal =>
+            value match {
+              case buffer: ByteBuffer =>
+                val bigDecimal = BigDecimal(conversion.fromBytes(buffer, schema, decimal))
+                if (bigDecimal.precision <= decimal.getPrecision()) {
+                  Right(bigDecimal)
+                } else {
+                  Left {
+                    AvroError
+                      .decodeDecimalPrecisionExceeded(
+                        bigDecimal.precision,
+                        decimal.getPrecision()
+                      )
+                  }
                 }
 
-              case logicalType =>
-                Left(AvroError.decodeUnexpectedLogicalType(logicalType, "BigDecimal"))
+              case other =>
+                Left(AvroError.decodeUnexpectedType(other, "ByteBuffer", "BigDecimal"))
             }
 
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "BigDecimal",
-                  schemaType,
-                  Schema.Type.BYTES
-                )
-            }
+          case logicalType =>
+            Left(AvroError.decodeUnexpectedLogicalType(logicalType, "BigDecimal"))
         }
       }
     )
@@ -459,7 +405,9 @@ object Codec extends CodecCompanionCompat {
         schema
       }
     }
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.ENUM,
+      typeName,
       schema,
       a => {
         val symbol = encode(a)
@@ -467,34 +415,18 @@ object Codec extends CodecCompanionCompat {
           schema.map(GenericData.get().createEnum(symbol, _))
         else
           Left(AvroError.encodeSymbolNotInSchema(symbol, symbols, typeName))
-      },
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.ENUM =>
-            value match {
-              case genericEnum: GenericEnumSymbol[_] =>
-                val symbols = schema.getEnumSymbols().asScala.toList
-                val symbol = genericEnum.toString()
+      }, {
+        case (genericEnum: GenericEnumSymbol[_], schema) =>
+          val symbols = schema.getEnumSymbols().asScala.toList
+          val symbol = genericEnum.toString()
 
-                if (symbols.contains(symbol))
-                  decode(symbol)
-                else
-                  Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, typeName))
+          if (symbols.contains(symbol))
+            decode(symbol)
+          else
+            Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, typeName))
 
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "GenericEnumSymbol", typeName))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  typeName,
-                  schemaType,
-                  Schema.Type.ENUM
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "GenericEnumSymbol", typeName))
       }
     )
   }
@@ -547,7 +479,9 @@ object Codec extends CodecCompanionCompat {
       }
     }
     Codec
-      .instance(
+      .instanceForSchemaType(
+        Schema.Type.FIXED,
+        typeName,
         schema,
         a => {
           val bytes = encode(a)
@@ -557,39 +491,23 @@ object Codec extends CodecCompanionCompat {
           } else {
             Left(AvroError.encodeExceedsFixedSize(bytes.length, size, typeName))
           }
-        },
-        (value, schema) => {
-          schema.getType() match {
-            case Schema.Type.FIXED =>
-              value match {
-                case fixed: GenericFixed =>
-                  val bytes = fixed.bytes()
-                  if (bytes.length == schema.getFixedSize()) {
-                    decode(bytes)
-                  } else {
-                    Left {
-                      AvroError.decodeNotEqualFixedSize(
-                        bytes.length,
-                        schema.getFixedSize(),
-                        typeName
-                      )
-                    }
-                  }
-
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "GenericFixed", typeName))
-              }
-
-            case schemaType =>
+        }, {
+          case (fixed: GenericFixed, schema) =>
+            val bytes = fixed.bytes()
+            if (bytes.length == schema.getFixedSize()) {
+              decode(bytes)
+            } else {
               Left {
-                AvroError
-                  .decodeUnexpectedSchemaType(
-                    typeName,
-                    schemaType,
-                    Schema.Type.FIXED
-                  )
+                AvroError.decodeNotEqualFixedSize(
+                  bytes.length,
+                  schema.getFixedSize(),
+                  typeName
+                )
               }
-          }
+            }
+
+          case (other, _) =>
+            Left(AvroError.decodeUnexpectedType(other, "GenericFixed", typeName))
         }
       )
   }
@@ -693,36 +611,48 @@ object Codec extends CodecCompanionCompat {
     }
   }
 
+  private[vulcan] final def instanceForSchemaType[A](
+    schemaType: Schema.Type,
+    decodingTypeName: String,
+    schema: Either[AvroError, Schema],
+    encode: A => Either[AvroError, Any],
+    decode: (Any, Schema) => Either[AvroError, A]
+  ): Codec[A] =
+    instance(
+      schema,
+      encode,
+      (value, schema) =>
+        if (schema.getType() == schemaType) decode(value, schema)
+        else
+          Left {
+            AvroError
+              .decodeUnexpectedSchemaType(
+                decodingTypeName,
+                schema.getType(),
+                schemaType
+              )
+          }
+    )
+
   /**
     * @group JavaTime
     */
   implicit final val instant: Codec[Instant] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.LONG,
+      "Instant",
       Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
       instant => Right(java.lang.Long.valueOf(instant.toEpochMilli)),
       (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.LONG =>
-            val logicalType = schema.getLogicalType()
-            if (logicalType == LogicalTypes.timestampMillis()) {
-              value match {
-                case long: java.lang.Long =>
-                  Right(Instant.ofEpochMilli(long))
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Long", "Instant"))
-              }
-            } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "Instant"))
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Instant",
-                  schemaType,
-                  Schema.Type.LONG
-                )
-            }
-        }
+        val logicalType = schema.getLogicalType()
+        if (logicalType == LogicalTypes.timestampMillis()) {
+          value match {
+            case long: java.lang.Long =>
+              Right(Instant.ofEpochMilli(long))
+            case other =>
+              Left(AvroError.decodeUnexpectedType(other, "Long", "Instant"))
+          }
+        } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "Instant"))
       }
     )
 
@@ -730,29 +660,15 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final val int: Codec[Int] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.INT,
+      "Int",
       Right(SchemaBuilder.builder().intType()),
-      java.lang.Integer.valueOf(_).asRight,
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.INT =>
-            value match {
-              case integer: java.lang.Integer =>
-                Right(integer)
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Int", "Int"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Int",
-                  schemaType,
-                  Schema.Type.INT
-                )
-            }
-        }
+      java.lang.Integer.valueOf(_).asRight, {
+        case (integer: java.lang.Integer, _) =>
+          Right(integer)
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Int", "Int"))
       }
     )
 
@@ -766,31 +682,16 @@ object Codec extends CodecCompanionCompat {
     * @group Collection
     */
   implicit final def list[A](implicit codec: Codec[A]): Codec[List[A]] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.ARRAY,
+      "List",
       codec.schema.map(Schema.createArray),
-      _.traverse(codec.encode).map(_.asJava),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.ARRAY =>
-            val elementType = schema.getElementType()
-            value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toList.traverse(codec.decode(_, elementType))
+      _.traverse(codec.encode).map(_.asJava), {
+        case (collection: java.util.Collection[_], schema) =>
+          collection.asScala.toList.traverse(codec.decode(_, schema.getElementType()))
 
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Collection", "List"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "List",
-                  schemaType,
-                  Schema.Type.ARRAY
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Collection", "List"))
       }
     )
 
@@ -798,31 +699,22 @@ object Codec extends CodecCompanionCompat {
     * @group JavaTime
     */
   implicit final val localDate: Codec[LocalDate] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.INT,
+      "LocalDate",
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
       localDate => Right(java.lang.Integer.valueOf(localDate.toEpochDay.toInt)),
       (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.INT =>
-            val logicalType = schema.getLogicalType()
-            if (logicalType == LogicalTypes.date()) {
-              value match {
-                case int: java.lang.Integer =>
-                  Right(LocalDate.ofEpochDay(int.toLong))
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Integer", "LocalDate"))
-              }
-            } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "LocalDate"))
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "LocalDate",
-                  schemaType,
-                  Schema.Type.INT
-                )
-            }
-        }
+        val logicalType = schema.getLogicalType()
+        if (logicalType == LogicalTypes.date()) {
+          value match {
+            case int: java.lang.Integer =>
+              Right(LocalDate.ofEpochDay(int.toLong))
+            case other =>
+              Left(AvroError.decodeUnexpectedType(other, "Integer", "LocalDate"))
+          }
+        } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "LocalDate"))
+
       }
     )
 
@@ -862,7 +754,9 @@ object Codec extends CodecCompanionCompat {
     * @group Collection
     */
   implicit final def map[A](implicit codec: Codec[A]): Codec[Map[String, A]] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.MAP,
+      "Map",
       codec.schema.map(Schema.createMap),
       _.toList
         .traverse {
@@ -871,37 +765,21 @@ object Codec extends CodecCompanionCompat {
               .encode(value)
               .tupleLeft(new Utf8(key))
         }
-        .map(_.toMap.asJava),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.MAP =>
-            value match {
-              case map: java.util.Map[_, _] =>
-                val valueSchema = schema.getValueType()
+        .map(_.toMap.asJava), {
+        case (map: java.util.Map[_, _], schema) =>
+          val valueSchema = schema.getValueType()
 
-                map.asScala.toList
-                  .traverse {
-                    case (key: Utf8, value) =>
-                      codec.decode(value, valueSchema).tupleLeft(key.toString)
-                    case (key, _) =>
-                      Left(AvroError.decodeUnexpectedMapKey(key))
-                  }
-                  .map(_.toMap)
-
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "java.util.Map", "Map"))
+          map.asScala.toList
+            .traverse {
+              case (key: Utf8, value) =>
+                codec.decode(value, valueSchema).tupleLeft(key.toString)
+              case (key, _) =>
+                Left(AvroError.decodeUnexpectedMapKey(key))
             }
+            .map(_.toMap)
 
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Map",
-                  schemaType,
-                  Schema.Type.MAP
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "java.util.Map", "Map"))
       }
     )
 
@@ -909,26 +787,14 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final val none: Codec[None.type] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.NULL,
+      "None",
       Right(SchemaBuilder.builder().nullType()),
       _ => Right(null),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.NULL =>
-            if (value == null) Right(None)
-            else Left(AvroError.decodeUnexpectedType(value, "null", "None"))
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "None",
-                  schemaType,
-                  Schema.Type.NULL
-                )
-            }
-        }
-      }
+      (value, _) =>
+        if (value == null) Right(None)
+        else Left(AvroError.decodeUnexpectedType(value, "null", "None"))
     )
 
   /**
@@ -1064,7 +930,9 @@ object Codec extends CodecCompanionCompat {
         }
       }
     }
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.RECORD,
+      typeName,
       schema,
       a =>
         schema.flatMap { schema =>
@@ -1083,45 +951,29 @@ object Codec extends CodecCompanionCompat {
             }
             record
           }
-        },
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.RECORD =>
-            value match {
-              case record: IndexedRecord =>
-                val recordSchema = record.getSchema()
-                val recordFields = recordSchema.getFields()
+        }, {
+        case (record: IndexedRecord, _) =>
+          val recordSchema = record.getSchema()
+          val recordFields = recordSchema.getFields()
 
-                free.foldMap {
-                  new (Field[A, *] ~> Either[AvroError, *]) {
-                    def apply[B](field: Field[A, B]) = {
-                      val schemaField = recordSchema.getField(field.name)
-                      if (schemaField != null) {
-                        val value = record.get(recordFields.indexOf(schemaField))
-                        field.codec.decode(value, schemaField.schema())
-                      } else {
-                        field.default.toRight {
-                          AvroError.decodeMissingRecordField(field.name, typeName)
-                        }
-                      }
-                    }
+          free.foldMap {
+            new (Field[A, *] ~> Either[AvroError, *]) {
+              def apply[B](field: Field[A, B]) = {
+                val schemaField = recordSchema.getField(field.name)
+                if (schemaField != null) {
+                  val value = record.get(recordFields.indexOf(schemaField))
+                  field.codec.decode(value, schemaField.schema())
+                } else {
+                  field.default.toRight {
+                    AvroError.decodeMissingRecordField(field.name, typeName)
                   }
                 }
-
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "IndexedRecord", typeName))
+              }
             }
+          }
 
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  typeName,
-                  schemaType,
-                  Schema.Type.RECORD
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "IndexedRecord", typeName))
       }
     )
   }
@@ -1327,60 +1179,37 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final val unit: Codec[Unit] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.NULL,
+      "Unit",
       Right(SchemaBuilder.builder().nullType()),
       _ => Right(null),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.NULL =>
-            if (value == null) Right(())
-            else Left(AvroError.decodeUnexpectedType(value, "null", "Unit"))
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Unit",
-                  schemaType,
-                  Schema.Type.NULL
-                )
-            }
-        }
-      }
+      (value, _) =>
+        if (value == null) Right(())
+        else Left(AvroError.decodeUnexpectedType(value, "null", "Unit"))
     )
 
   /**
     * @group JavaUtil
     */
   implicit final val uuid: Codec[UUID] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.STRING,
+      "UUID",
       Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
       uuid => Right(new Utf8(uuid.toString())),
       (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.STRING =>
-            val logicalType = schema.getLogicalType()
-            if (logicalType == LogicalTypes.uuid()) {
-              value match {
-                case utf8: Utf8 =>
-                  AvroError.catchNonFatal {
-                    Right(UUID.fromString(utf8.toString()))
-                  }
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Utf8", "UUID"))
+        val logicalType = schema.getLogicalType()
+        if (logicalType == LogicalTypes.uuid()) {
+          value match {
+            case utf8: Utf8 =>
+              AvroError.catchNonFatal {
+                Right(UUID.fromString(utf8.toString()))
               }
-            } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "UUID"))
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "UUID",
-                  schemaType,
-                  Schema.Type.STRING
-                )
-            }
-        }
+            case other =>
+              Left(AvroError.decodeUnexpectedType(other, "Utf8", "UUID"))
+          }
+        } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "UUID"))
       }
     )
 
@@ -1388,31 +1217,16 @@ object Codec extends CodecCompanionCompat {
     * @group Collection
     */
   implicit final def vector[A](implicit codec: Codec[A]): Codec[Vector[A]] =
-    Codec.instance(
+    Codec.instanceForSchemaType(
+      Schema.Type.ARRAY,
+      "Vector",
       codec.schema.map(Schema.createArray),
-      _.traverse(codec.encode).map(_.asJava),
-      (value, schema) => {
-        schema.getType() match {
-          case Schema.Type.ARRAY =>
-            val elementType = schema.getElementType()
-            value match {
-              case collection: java.util.Collection[_] =>
-                collection.asScala.toVector.traverse(codec.decode(_, elementType))
+      _.traverse(codec.encode).map(_.asJava), {
+        case (collection: java.util.Collection[_], schema) =>
+          collection.asScala.toVector.traverse(codec.decode(_, schema.getElementType()))
 
-              case other =>
-                Left(AvroError.decodeUnexpectedType(other, "Collection", "Vector"))
-            }
-
-          case schemaType =>
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  "Vector",
-                  schemaType,
-                  Schema.Type.ARRAY
-                )
-            }
-        }
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Collection", "Vector"))
       }
     )
 
