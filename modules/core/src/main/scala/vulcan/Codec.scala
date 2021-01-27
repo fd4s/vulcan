@@ -642,17 +642,14 @@ object Codec extends CodecCompanionCompat {
       Schema.Type.LONG,
       "Instant",
       Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
-      instant => Right(java.lang.Long.valueOf(instant.toEpochMilli)),
-      (value, schema) => {
-        val logicalType = schema.getLogicalType()
-        if (logicalType == LogicalTypes.timestampMillis()) {
-          value match {
-            case long: java.lang.Long =>
-              Right(Instant.ofEpochMilli(long))
-            case other =>
-              Left(AvroError.decodeUnexpectedType(other, "Long", "Instant"))
-          }
-        } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "Instant"))
+      instant => Right(java.lang.Long.valueOf(instant.toEpochMilli)), {
+        case (long: java.lang.Long, schema) =>
+          val logicalType = schema.getLogicalType()
+          if (logicalType == LogicalTypes.timestampMillis()) {
+            Right(Instant.ofEpochMilli(long))
+          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "Instant"))
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Long", "Instant"))
       }
     )
 
@@ -703,18 +700,14 @@ object Codec extends CodecCompanionCompat {
       Schema.Type.INT,
       "LocalDate",
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
-      localDate => Right(java.lang.Integer.valueOf(localDate.toEpochDay.toInt)),
-      (value, schema) => {
-        val logicalType = schema.getLogicalType()
-        if (logicalType == LogicalTypes.date()) {
-          value match {
-            case int: java.lang.Integer =>
-              Right(LocalDate.ofEpochDay(int.toLong))
-            case other =>
-              Left(AvroError.decodeUnexpectedType(other, "Integer", "LocalDate"))
-          }
-        } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "LocalDate"))
-
+      localDate => Right(java.lang.Integer.valueOf(localDate.toEpochDay.toInt)), {
+        case (int: java.lang.Integer, schema) =>
+          val logicalType = schema.getLogicalType()
+          if (logicalType == LogicalTypes.date()) {
+            Right(LocalDate.ofEpochDay(int.toLong))
+          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType, "LocalDate"))
+        case (other, _) =>
+          Left(AvroError.decodeUnexpectedType(other, "Integer", "LocalDate"))
       }
     )
 
