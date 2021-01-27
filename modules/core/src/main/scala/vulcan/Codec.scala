@@ -144,7 +144,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val boolean: Codec[Boolean] =
     Codec.instanceForTypes(
-      Schema.Type.BOOLEAN,
       "Boolean",
       "Boolean",
       Right(SchemaBuilder.builder().booleanType()),
@@ -207,7 +206,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def chain[A](implicit codec: Codec[A]): Codec[Chain[A]] =
     Codec.instanceForTypes(
-      Schema.Type.ARRAY,
       "Collection",
       "Chain",
       codec.schema.map(Schema.createArray),
@@ -224,7 +222,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val char: Codec[Char] =
     Codec.instanceForTypes(
-      Schema.Type.STRING,
       "Utf8",
       "Char",
       Right(SchemaBuilder.builder().stringType()),
@@ -253,7 +250,6 @@ object Codec extends CodecCompanionCompat {
       }
     }
     Codec.instanceForTypes(
-      Schema.Type.BYTES,
       "ByteBuffer",
       "BigDecimal",
       schema,
@@ -395,7 +391,6 @@ object Codec extends CodecCompanionCompat {
       }
     }
     Codec.instanceForTypes(
-      Schema.Type.ENUM,
       "GenericEnumSymbol",
       typeName,
       schema,
@@ -467,7 +462,6 @@ object Codec extends CodecCompanionCompat {
     }
     Codec
       .instanceForTypes(
-        Schema.Type.FIXED,
         "GenericFixed",
         typeName,
         schema,
@@ -597,40 +591,42 @@ object Codec extends CodecCompanionCompat {
   }
 
   private[vulcan] final def instanceForTypes[A](
-    schemaType: Schema.Type,
     expectedValueType: String,
     decodingTypeName: String,
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, Any],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
-  ): Codec[A] =
+  ): Codec[A] = {
     instance(
       schema,
       encode,
-      (value, schema) =>
-        if (schema.getType() == schemaType)
-          decode
-            .lift((value, schema))
-            .getOrElse(
-              Left(AvroError.decodeUnexpectedType(value, expectedValueType, decodingTypeName))
-            )
-        else
-          Left {
-            AvroError
-              .decodeUnexpectedSchemaType(
-                decodingTypeName,
-                schema.getType(),
-                schemaType
+      (value, writerSchema) =>
+        schema.flatMap { readerSchema =>
+          val schemaType = readerSchema.getType()
+          if (writerSchema.getType() == schemaType)
+            decode
+              .lift((value, writerSchema))
+              .getOrElse(
+                Left(AvroError.decodeUnexpectedType(value, expectedValueType, decodingTypeName))
               )
-          }
+          else
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(
+                  decodingTypeName,
+                  writerSchema.getType(),
+                  schemaType
+                )
+            }
+        }
     )
+  }
 
   /**
     * @group JavaTime
     */
   implicit final val instant: Codec[Instant] =
     Codec.instanceForTypes(
-      Schema.Type.LONG,
       "Long",
       "Instant",
       Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
@@ -648,7 +644,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val int: Codec[Int] =
     Codec.instanceForTypes(
-      Schema.Type.INT,
       "Int",
       "Int",
       Right(SchemaBuilder.builder().intType()),
@@ -669,7 +664,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def list[A](implicit codec: Codec[A]): Codec[List[A]] =
     Codec.instanceForTypes(
-      Schema.Type.ARRAY,
       "Collection",
       "List",
       codec.schema.map(Schema.createArray),
@@ -684,7 +678,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val localDate: Codec[LocalDate] =
     Codec.instanceForTypes(
-      Schema.Type.INT,
       "Integer",
       "LocalDate",
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
@@ -734,7 +727,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def map[A](implicit codec: Codec[A]): Codec[Map[String, A]] =
     Codec.instanceForTypes(
-      Schema.Type.MAP,
       "java.util.Map",
       "Map",
       codec.schema.map(Schema.createMap),
@@ -765,7 +757,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val none: Codec[None.type] =
     Codec.instanceForTypes(
-      Schema.Type.NULL,
       "null",
       "None",
       Right(SchemaBuilder.builder().nullType()),
@@ -907,7 +898,6 @@ object Codec extends CodecCompanionCompat {
       }
     }
     Codec.instanceForTypes(
-      Schema.Type.RECORD,
       "IndexedRecord",
       typeName,
       schema,
@@ -1154,7 +1144,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val unit: Codec[Unit] =
     Codec.instanceForTypes(
-      Schema.Type.NULL,
       "null",
       "Unit",
       Right(SchemaBuilder.builder().nullType()),
@@ -1167,7 +1156,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val uuid: Codec[UUID] =
     Codec.instanceForTypes(
-      Schema.Type.STRING,
       "Utf8",
       "UUID",
       Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
@@ -1187,7 +1175,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def vector[A](implicit codec: Codec[A]): Codec[Vector[A]] =
     Codec.instanceForTypes(
-      Schema.Type.ARRAY,
       "Collection",
       "Vector",
       codec.schema.map(Schema.createArray),
