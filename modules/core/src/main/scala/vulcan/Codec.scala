@@ -172,39 +172,17 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val byte: Codec[Byte] =
-    Codec.instance(
-      Right(SchemaBuilder.builder().intType()),
-      byte => Right(java.lang.Integer.valueOf(byte.toInt)), {
-        val min: Int = Byte.MinValue.toInt
-        val max: Int = Byte.MaxValue.toInt
-        (value, schema) => {
-          schema.getType() match {
-            case Schema.Type.INT =>
-              value match {
-                case integer: java.lang.Integer =>
-                  if (min <= integer && integer <= max)
-                    Right(integer.toByte)
-                  else Left(AvroError.unexpectedByte(integer))
-
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Int", "Byte"))
-
-              }
-
-            case schemaType =>
-              Left {
-                AvroError
-                  .decodeUnexpectedSchemaType(
-                    "Byte",
-                    schemaType,
-                    Schema.Type.INT
-                  )
-              }
-          }
-        }
-      }
-    )
+  implicit final lazy val byte: Codec[Byte] = {
+    val min: Int = Byte.MinValue.toInt
+    val max: Int = Byte.MaxValue.toInt
+    Codec.int
+      .imapError { integer =>
+        if (min <= integer && integer <= max)
+          Right(integer.toByte)
+        else Left(AvroError.unexpectedByte(integer))
+      }(_.toInt)
+      .withDecodingTypeName("Byte")
+  }
 
   /**
     * @group General
