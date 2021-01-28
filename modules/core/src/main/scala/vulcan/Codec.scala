@@ -401,7 +401,7 @@ object Codec extends CodecCompanionCompat {
         else
           Left(AvroError.encodeSymbolNotInSchema(symbol, symbols, typeName))
       }, {
-        case (genericEnum: GenericEnumSymbol[_], schema) =>
+        case (genericEnum: GenericEnumSymbol[_], _) =>
           val symbol = genericEnum.toString()
 
           if (symbols.contains(symbol))
