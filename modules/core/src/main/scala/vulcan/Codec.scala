@@ -211,7 +211,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def chain[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[Chain[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[Chain[A], java.util.List[codec.Repr]] =
     Codec.instanceForTypes(
       "Collection",
       "Chain",
@@ -674,7 +674,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def list[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[List[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[List[A], java.util.List[codec.Repr]] =
     Codec.instanceForTypes(
       "Collection",
       "List",
@@ -783,7 +783,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def nonEmptyChain[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[NonEmptyChain[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[NonEmptyChain[A], java.util.List[codec.Repr]] =
     Codec
       .chain[A]
       .imapError(
@@ -796,7 +796,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def nonEmptyList[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[NonEmptyList[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[NonEmptyList[A], java.util.List[codec.Repr]] =
     Codec
       .list[A]
       .imapError(
@@ -810,7 +810,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def nonEmptySet[A](
     implicit codec: Codec[A],
     ordering: Ordering[A]
-  ): Codec.Aux[NonEmptySet[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[NonEmptySet[A], java.util.List[codec.Repr]] =
     Codec
       .list[A]
       .imapError(
@@ -826,7 +826,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def nonEmptyVector[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[NonEmptyVector[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[NonEmptyVector[A], java.util.List[codec.Repr]] =
     Codec
       .vector[A]
       .imapError(
@@ -973,7 +973,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def seq[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[Seq[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[Seq[A], java.util.List[codec.Repr]] =
     Codec
       .list[A]
       .imap[Seq[A]](_.toSeq)(_.toList)
@@ -984,7 +984,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def set[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[Set[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[Set[A], java.util.List[codec.Repr]] =
     Codec
       .list[A]
       .imap(_.toSet)(_.toList)
@@ -1166,7 +1166,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val unit: Codec[Unit] =
+  implicit final val unit: Codec.Aux[Unit, Null] =
     Codec.instanceForTypes(
       "null",
       "Unit",
@@ -1199,7 +1199,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def vector[A](
     implicit codec: Codec[A]
-  ): Codec.Aux[Vector[A], java.util.Collection[codec.Repr]] =
+  ): Codec.Aux[Vector[A], java.util.List[codec.Repr]] =
     Codec.instanceForTypes(
       "Collection",
       "Vector",
