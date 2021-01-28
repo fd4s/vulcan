@@ -41,7 +41,7 @@ sealed abstract class Codec[A] {
   def schema: Either[AvroError, Schema]
 
   /** Attempts to encode the specified value using the provided schema. */
-  def encode(a: A): Either[AvroError, Any]
+  def encode(a: A): Either[AvroError, AnyRef]
 
   /** Attempts to decode the specified value using the provided schema. */
   def decode(value: Any, schema: Schema): Either[AvroError, A]
@@ -565,7 +565,7 @@ object Codec extends CodecCompanionCompat {
     */
   final def instance[A](
     schema: Either[AvroError, Schema],
-    encode: A => Either[AvroError, Any],
+    encode: A => Either[AvroError, AnyRef],
     decode: (Any, Schema) => Either[AvroError, A]
   ): Codec[A] = {
     val _schema = schema
@@ -576,7 +576,7 @@ object Codec extends CodecCompanionCompat {
       override final val schema: Either[AvroError, Schema] =
         _schema
 
-      override final def encode(a: A): Either[AvroError, Any] =
+      override final def encode(a: A): Either[AvroError, AnyRef] =
         _encode(a)
 
       override final def decode(value: Any, schema: Schema): Either[AvroError, A] =
@@ -594,7 +594,7 @@ object Codec extends CodecCompanionCompat {
     expectedValueType: String,
     decodingTypeName: String,
     schema: Either[AvroError, Schema],
-    encode: A => Either[AvroError, Any],
+    encode: A => Either[AvroError, AnyRef],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
   ): Codec[A] = {
     instance(
