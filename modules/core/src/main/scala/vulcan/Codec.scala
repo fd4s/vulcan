@@ -571,7 +571,7 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Create
     */
-  final def instance[A, Repr0 <: AnyRef](
+  final def instance[Repr0 <: AnyRef, A](
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, Repr0],
     decode: (Any, Schema) => Either[AvroError, A]
@@ -600,7 +600,7 @@ object Codec extends CodecCompanionCompat {
     }
   }
 
-  private[vulcan] final def instanceForTypes[A, Repr <: AnyRef](
+  private[vulcan] final def instanceForTypes[Repr <: AnyRef, A](
     expectedValueType: String,
     decodingTypeName: String,
     schema: Either[AvroError, Schema],
