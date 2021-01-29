@@ -221,9 +221,9 @@ package object generic {
     final def derive[A]: Codec[A] =
       macro Magnolia.gen[A]
 
-    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec[A] = {
+    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[AnyRef, A] = {
       val typeName = sealedTrait.typeName.full
-      Codec.instance(
+      Codec.instance[AnyRef, A](
         AvroError.catchNonFatal {
           sealedTrait.subtypes.toList
             .traverse(_.typeclass.schema)

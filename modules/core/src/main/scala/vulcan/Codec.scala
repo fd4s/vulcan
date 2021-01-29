@@ -1097,7 +1097,7 @@ object Codec extends CodecCompanionCompat {
         .map(schemas => Schema.createUnion(schemas.asJava))
     }
 
-    Codec.instance(
+    Codec.instance[AnyRef, A](
       schema,
       a =>
         alts
