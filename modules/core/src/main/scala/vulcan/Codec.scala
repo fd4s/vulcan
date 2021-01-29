@@ -373,13 +373,11 @@ object Codec extends CodecCompanionCompat {
         else
           Left(AvroError.encodeSymbolNotInSchema(symbol, symbols, typeName))
       }, {
-        case Avro.Enum(symbol, schema) =>
-          val symbols = schema.getEnumSymbols().asScala.toList
-
+        case Avro.Enum(symbol, _) =>
           if (symbols.contains(symbol))
             decode(symbol)
           else
-            Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, typeName))
+            default.toRight(AvroError.decodeSymbolNotInSchema(symbol, symbols, typeName))
 
         case other =>
           Left(AvroError.decodeUnexpectedType(other, "GenericEnumSymbol", typeName))
