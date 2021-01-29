@@ -172,7 +172,7 @@ package object generic {
 
     final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec[A] = {
       val typeName = sealedTrait.typeName.full
-      Codec.instance(
+      Codec.instance[A, Avro](
         AvroError.catchNonFatal {
           sealedTrait.subtypes.toList
             .traverse(_.typeclass.schema)

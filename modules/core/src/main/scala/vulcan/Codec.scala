@@ -959,7 +959,7 @@ object Codec extends CodecCompanionCompat {
         .map(schemas => Schema.createUnion(schemas.asJava))
     }
 
-    Codec.instance(
+    Codec.instance[A, Avro](
       schema,
       a =>
         alts
