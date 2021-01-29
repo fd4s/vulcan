@@ -753,12 +753,10 @@ object Codec extends CodecCompanionCompat {
         }
         .map(_.toMap.asJava), {
         case (map: java.util.Map[_, _], schema) =>
-          val valueSchema = schema.getValueType()
-
           map.asScala.toList
             .traverse {
               case (key: Utf8, value) =>
-                codec.decode(value, valueSchema).tupleLeft(key.toString)
+                codec.decode(value, schema.getValueType()).tupleLeft(key.toString)
               case (key, _) =>
                 Left(AvroError.decodeUnexpectedMapKey(key))
             }
