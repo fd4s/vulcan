@@ -118,7 +118,7 @@ sealed abstract class Codec[A] {
   * @groupprio Utilities 7
   * @groupdesc Utilities Miscellaneous utility functions.
   */
-object Codec extends CodecCompanionCompat {
+object Codec {
 
   /**
     * Returns the [[Codec]] for the specified type.
@@ -509,19 +509,6 @@ object Codec extends CodecCompanionCompat {
       }
     )
   }
-
-  @deprecated("Use Codec.enumeration - enum is a keyword in Scala 3", "1.3.0")
-  final def `enum`[A](
-    name: String,
-    namespace: String,
-    symbols: Seq[String],
-    encode: A => String,
-    decode: String => Either[AvroError, A],
-    default: Option[A] = None,
-    doc: Option[String] = None,
-    aliases: Seq[String] = Seq.empty,
-    props: Props = Props.empty
-  ): Codec[A] = enumeration(name, namespace, symbols, encode, decode, default, doc, aliases, props)
 
   /**
     * Returns a new fixed [[Codec]] for type `A`.
