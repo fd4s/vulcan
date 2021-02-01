@@ -248,9 +248,11 @@ lazy val publishSettings =
 
 lazy val mimaSettings = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value && !isDotty.value) {
-      Set(organization.value %% moduleName.value % (previousStableVersion in ThisBuild).value.get)
-    } else Set()
+// restore after releasing 2.0
+//    if (publishArtifact.value && !isDotty.value) {
+//      Set(organization.value %% moduleName.value % (previousStableVersion in ThisBuild).value.get)
+//    } else Set()
+    Set()
   },
   mimaBinaryIssueFilters ++= {
     import com.typesafe.tools.mima.core._
@@ -399,7 +401,7 @@ addCommandsAlias(
   List(
     "+clean",
     "+test",
-    //"+mimaReportBinaryIssues",
+    "+mimaReportBinaryIssues",
     "+scalafmtCheck",
     "scalafmtSbtCheck",
     "+headerCheck",
