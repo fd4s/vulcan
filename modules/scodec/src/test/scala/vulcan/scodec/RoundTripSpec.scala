@@ -36,6 +36,10 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
     implicitly[Arbitrary[String]].arbitrary.map(new Utf8(_))
   )
 
+  implicit val arbBool: Arbitrary[java.lang.Boolean] = Arbitrary(
+    implicitly[Arbitrary[Boolean]].arbitrary.map(java.lang.Boolean.valueOf(_))
+  )
+
   implicit val arbRecord: Arbitrary[GenericRecord] = Arbitrary(
     arbitrary[CaseClassThreeFields]
       .map(Codec.encode(_).value.asInstanceOf[GenericRecord])
@@ -75,10 +79,16 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
     }
   }
 
+  describe("boolean") {
+    it("roundtrip") {
+      roundtrip[java.lang.Boolean](SchemaBuilder.builder().booleanType())
+    }
+  }
+
   describe("array") {
     it("roundtrip") {
-      roundtrip[java.util.List[java.lang.Double]](
-        SchemaBuilder.builder().array().items(SchemaBuilder.builder().doubleType())
+      roundtrip[java.util.List[java.lang.Long]](
+        SchemaBuilder.builder().array().items(SchemaBuilder.builder().longType())
       )
     }
   }

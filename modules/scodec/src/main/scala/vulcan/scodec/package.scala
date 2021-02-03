@@ -1,5 +1,5 @@
 package vulcan
-
+import shapeless.HList
 import _root_.scodec.bits.{BitVector, ByteVector}
 import _root_.scodec.interop.cats._
 import _root_.scodec.{
@@ -47,15 +47,16 @@ package object scodec {
       .xmap(bytes => new Utf8(bytes.toArray), utf8 => ByteVector(utf8.getBytes))
 
   val boolScodec: Scodec[java.lang.Boolean] =
-    codecs.bool.xmap(java.lang.Boolean.valueOf(_), _.booleanValue)
+    codecs.byte
+      .xmap(b => java.lang.Boolean.valueOf(b == 1), b => if (b.booleanValue) 1: Byte else 0: Byte)
 
   def recordEncoder(writerSchema: Schema): Encoder[GenericRecord] =
     Encoder { record =>
       writerSchema.getFields.asScala.toList.zipWithIndex
-        .map { case (field, idx) => (field.schema, record.get(idx)) }
+        .map { case (field, idx) => (forWriterSchema(field.schema), record.get(idx)) }
         .traverse {
-          case (schema, value) =>
-            forWriterSchema(schema).encode(value)
+          case (codec, value) =>
+            codec.encode(value)
         }
         .map(_.reduce(_ ++ _))
     }
@@ -159,6 +160,11 @@ package object scodec {
       stringScodec.widen[Any](identity, {
         case d: Utf8 => Attempt.successful(d)
         case other   => Attempt.failure(Err(s"$other is not a Utf8"))
+      })
+    case Schema.Type.BOOLEAN =>
+      boolScodec.widen[Any](identity, {
+        case d: java.lang.Boolean => Attempt.successful(d)
+        case other                => Attempt.failure(Err(s"$other is not a Boolean"))
       })
     case Schema.Type.NULL =>
       nullScodec.widen[Any](identity, { n =>
