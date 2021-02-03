@@ -61,7 +61,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             coproductCodec[Int, CNil](
               Codec.int,
               shapeless.Lazy {
-                Codec.instance[CNil](
+                Codec.instance[Null, CNil](
                   Right(SchemaBuilder.builder().nullType()),
                   _ => Left(AvroError("encode")),
                   (_, _) => Left(AvroError("decode"))

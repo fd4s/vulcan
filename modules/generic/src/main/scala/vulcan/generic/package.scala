@@ -19,7 +19,7 @@ import vulcan.internal.converters.collection._
 package object generic {
   import vulcan.generic.internal.tags._
 
-  implicit final val cnilCodec: Codec[CNil] =
+  implicit final val cnilCodec: Codec.Aux[Nothing, CNil] =
     Codec.instance(
       Right(Schema.createUnion()),
       cnil => Left(AvroError.encodeExhaustedAlternatives(cnil, Some("Coproduct"))),
@@ -46,8 +46,8 @@ package object generic {
         }
       },
       _.eliminate(
-        headCodec.encode,
-        tailCodec.value.encode
+        headCodec.encode(_),
+        tailCodec.value.encode(_)
       ),
       (value, schema) => {
         val schemaTypes =
@@ -222,9 +222,9 @@ package object generic {
     final def derive[A]: Codec[A] =
       macro Magnolia.gen[A]
 
-    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec[A] = {
+    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[AnyRef, A] = {
       val typeName = sealedTrait.typeName.full
-      Codec.instance(
+      Codec.instance[AnyRef, A](
         AvroError.catchNonFatal {
           sealedTrait.subtypes.toList
             .traverse(_.typeclass.schema)
@@ -299,7 +299,7 @@ package object generic {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec[A] =
+  )(implicit tag: WeakTypeTag[A]): Codec.Aux[AnyRef, A] =
     Codec.enumeration(
       name = nameFrom(tag),
       symbols = symbols,
@@ -320,7 +320,7 @@ package object generic {
     size: Int,
     encode: A => Array[Byte],
     decode: Array[Byte] => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec[A] =
+  )(implicit tag: WeakTypeTag[A]): Codec.Aux[GenericFixed, A] =
     Codec.fixed(
       name = nameFrom(tag),
       size = size,

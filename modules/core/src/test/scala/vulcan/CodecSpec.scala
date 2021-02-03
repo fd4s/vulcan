@@ -597,14 +597,26 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           )
         }
 
-        it("should error if encoded value is not a schema symbol") {
-          assertDecodeError[SealedTraitEnum](
+        it("should return default value if encoded value is not a schema symbol") {
+          assertDecodeIs[SealedTraitEnum](
             new GenericData.EnumSymbol(
               SchemaFactory.enumeration("vulcan.examples.SealedTraitEnum", Array("symbol")),
               "symbol"
             ),
+            Right(FirstInSealedTraitEnum),
+            Some(unsafeSchema[SealedTraitEnum])
+          )
+        }
+
+        it("should error if encoded value is not a schema symbol and there is no default value") {
+          assertDecodeError[SealedTraitEnumNoDefault](
+            new GenericData.EnumSymbol(
+              SchemaFactory
+                .enumeration("vulcan.examples.SealedTraitEnumNoDefault", Array("symbol")),
+              "symbol"
+            ),
             unsafeSchema[SealedTraitEnum],
-            "symbol is not part of schema symbols [first, second] for type vulcan.examples.SealedTraitEnum"
+            "symbol is not part of schema symbols [first, second] for type vulcan.examples.SealedTraitEnumNoDefault"
           )
         }
 

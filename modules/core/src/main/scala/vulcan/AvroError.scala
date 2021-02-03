@@ -25,6 +25,30 @@ sealed abstract class AvroError {
   def throwable: Throwable
 }
 
+sealed abstract class AvroDecodingError extends AvroError {
+  def withDecodingTypeName(decodingTypeName: String): AvroDecodingError
+}
+
+object AvroDecodingError {
+  final def apply(decodingTypeName: String, message: String => String): AvroDecodingError = {
+    val _message = message
+
+    new AvroDecodingError {
+      override final val message: String =
+        _message(decodingTypeName)
+
+      override final def throwable: Throwable =
+        AvroException(message)
+
+      override final def toString: String =
+        s"AvroError($message)"
+
+      override final def withDecodingTypeName(_decodingTypeName: String) =
+        apply(_decodingTypeName, _message)
+    }
+  }
+}
+
 object AvroError {
   final def apply(message: => String): AvroError = {
     val _message = () => message
@@ -73,37 +97,47 @@ object AvroError {
     fixedSize: Int,
     decodingTypeName: String
   ): AvroError =
-    AvroError(s"Got $length bytes while decoding $decodingTypeName, expected fixed size $fixedSize")
+    AvroDecodingError(
+      decodingTypeName,
+      dtn => s"Got $length bytes while decoding $dtn, expected fixed size $fixedSize"
+    )
 
   private[vulcan] final def decodeMissingRecordField(
     fieldName: String,
     decodingTypeName: String
   ): AvroError =
-    AvroError {
-      s"Record writer schema is missing field '$fieldName' while decoding $decodingTypeName"
-    }
+    AvroDecodingError(
+      decodingTypeName,
+      dtn => s"Record writer schema is missing field '$fieldName' while decoding $dtn"
+    )
 
   private[vulcan] final def decodeMissingUnionSchema(
     subtypeName: String,
     decodingTypeName: Option[String]
   ): AvroError =
-    AvroError(decodingTypeName match {
+    (decodingTypeName match {
       case Some(decodingTypeName) =>
-        s"Missing schema $subtypeName in union for type $decodingTypeName"
+        AvroDecodingError(
+          decodingTypeName,
+          dtn => s"Missing schema $subtypeName in union for type $dtn"
+        )
       case None =>
-        s"Missing schema $subtypeName in union"
+        AvroError(s"Missing schema $subtypeName in union")
     })
 
   private[vulcan] final def decodeMissingUnionAlternative(
     alternativeName: String,
     decodingTypeName: Option[String]
   ): AvroError =
-    AvroError(decodingTypeName match {
+    decodingTypeName match {
       case Some(decodingTypeName) =>
-        s"Missing alternative $alternativeName in union for type $decodingTypeName"
+        AvroDecodingError(
+          decodingTypeName,
+          dtn => s"Missing alternative $alternativeName in union for type $dtn"
+        )
       case None =>
-        s"Missing alternative $alternativeName in union"
-    })
+        AvroError(s"Missing alternative $alternativeName in union")
+    }
 
   private[vulcan] final def decodeNameMismatch(
     fullName: String,
@@ -118,20 +152,24 @@ object AvroError {
     symbols: Seq[String],
     decodingTypeName: String
   ): AvroError =
-    AvroError(
-      s"$symbol is not part of schema symbols ${symbols.mkString("[", ", ", "]")} for type $decodingTypeName"
+    AvroDecodingError(
+      decodingTypeName,
+      dtn =>
+        s"$symbol is not part of schema symbols ${symbols.mkString("[", ", ", "]")} for type $dtn"
     )
 
   private[vulcan] final def decodeUnexpectedLogicalType(
     actualLogicalType: LogicalType,
     decodingTypeName: String
   ): AvroError =
-    AvroError {
-      if (actualLogicalType == null)
-        s"Got unexpected missing logical type while decoding $decodingTypeName"
-      else
-        s"Got unexpected logical type ${actualLogicalType.getName()} while decoding $decodingTypeName"
-    }
+    AvroDecodingError(
+      decodingTypeName,
+      dtn =>
+        if (actualLogicalType == null)
+          s"Got unexpected missing logical type while decoding $dtn"
+        else
+          s"Got unexpected logical type ${actualLogicalType.getName()} while decoding $dtn"
+    )
 
   private[vulcan] final def decodeUnexpectedMapKey(key: Any): AvroError =
     AvroError {
@@ -143,18 +181,21 @@ object AvroError {
     recordName: String,
     decodingTypeName: String
   ): AvroError =
-    AvroError {
-      s"Got record writer schema with name $recordName, expected name $decodingTypeName"
-    }
+    AvroDecodingError(
+      decodingTypeName,
+      dtn => s"Got record writer schema with name $recordName, expected name $dtn"
+    )
 
   private[vulcan] final def decodeUnexpectedSchemaType(
     decodingTypeName: String,
     actualSchemaType: Schema.Type,
     expectedSchemaType: Schema.Type
   ): AvroError =
-    AvroError {
-      s"Got unexpected schema type $actualSchemaType while decoding $decodingTypeName, expected schema type $expectedSchemaType"
-    }
+    AvroDecodingError(
+      decodingTypeName,
+      dtn =>
+        s"Got unexpected schema type $actualSchemaType while decoding $dtn, expected schema type $expectedSchemaType"
+    )
 
   private[vulcan] final def decodeUnexpectedType(
     value: Any,
@@ -172,26 +213,31 @@ object AvroError {
     expectedTypes: NonEmptyList[String],
     decodingTypeName: String
   ): AvroError =
-    AvroError {
-      val expected = expectedTypes.toList.mkString(", ")
-      val types = if (expectedTypes.size > 1) "types" else "type"
-      val typeName = if (value != null) value.getClass().getTypeName() else "null"
-      s"Got unexpected type $typeName while decoding $decodingTypeName, expected $types $expected"
-    }
+    AvroDecodingError(
+      decodingTypeName,
+      dtn => {
+        val expected = expectedTypes.toList.mkString(", ")
+        val types = if (expectedTypes.size > 1) "types" else "type"
+        val typeName = if (value != null) value.getClass().getTypeName() else "null"
+        s"Got unexpected type $typeName while decoding $dtn, expected $types $expected"
+      }
+    )
 
   private[vulcan] final def decodeExhaustedAlternatives(
     value: Any,
     decodingTypeName: Option[String]
-  ): AvroError =
-    AvroError {
-      val typeName = if (value != null) value.getClass().getTypeName() else "null"
-      decodingTypeName match {
-        case Some(decodingTypeName) =>
-          s"Exhausted alternatives for type $typeName while decoding $decodingTypeName"
-        case None =>
-          s"Exhausted alternatives for type $typeName"
-      }
+  ): AvroError = {
+    val typeName = if (value != null) value.getClass().getTypeName() else "null"
+    decodingTypeName match {
+      case Some(decodingTypeName) =>
+        AvroDecodingError(
+          decodingTypeName,
+          dtn => s"Exhausted alternatives for type $typeName while decoding $dtn"
+        )
+      case None =>
+        AvroError(s"Exhausted alternatives for type $typeName")
     }
+  }
 
   private[vulcan] final def unexpectedChar(
     length: Int
