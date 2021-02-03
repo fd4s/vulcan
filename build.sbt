@@ -103,6 +103,24 @@ lazy val refined = project
   )
   .dependsOn(core)
 
+lazy val scodec = project
+  .in(file("modules/scodec"))
+  .settings(
+    moduleName := "vulcan-scodec",
+    name := moduleName.value,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "org.scodec" %% "scodec-core" % "1.11.7",
+        "org.scodec" %% "scodec-cats" % "1.1.0-M3"
+      )
+    ),
+    publishSettings,
+    mimaSettings,
+    scalaSettings,
+    testSettings
+  )
+  .dependsOn(core)
+
 lazy val docs = project
   .in(file("docs"))
   .settings(
@@ -280,7 +298,7 @@ lazy val scalaSettings = Seq(
         "UTF-8",
         "-feature",
         "-unchecked",
-        "-Xfatal-warnings",
+//        "-Xfatal-warnings",
         "-language:implicitConversions"
       )
 
