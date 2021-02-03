@@ -167,7 +167,7 @@
 <span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Second</span>(<span class="hljs-params">value: <span class="hljs-type">String</span></span>) <span class="hljs-keyword">extends</span> <span class="hljs-title">FirstOrSecond</span></span>
 
 <span class="hljs-type">Codec</span>.derive[<span class="hljs-type">FirstOrSecond</span>]
-<span class="hljs-comment">// res5: Codec[FirstOrSecond] = Codec([ {</span>
+<span class="hljs-comment">// res5: Codec.Aux[AnyRef, FirstOrSecond] = Codec([ {</span>
 <span class="hljs-comment">//   "type" : "record",</span>
 <span class="hljs-comment">//   "name" : "First",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -216,7 +216,7 @@ deriveEnum[<span class="hljs-type">Fruit</span>](
     <span class="hljs-keyword">case</span> other    =&gt; <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$other</span> is not a Fruit"</span>))
   }
 )
-<span class="hljs-comment">// res7: Codec[Fruit] = Codec({</span>
+<span class="hljs-comment">// res7: Codec.Aux[AnyRef, Fruit] = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Fruit",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -240,7 +240,7 @@ deriveFixed[<span class="hljs-type">Pence</span>](
   encode = pence =&gt; <span class="hljs-type">Array</span>[<span class="hljs-type">Byte</span>](pence.value),
   decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head)
 )
-<span class="hljs-comment">// res8: Codec[Pence] = Codec({</span>
+<span class="hljs-comment">// res8: Codec.Aux[org.apache.avro.generic.GenericFixed, Pence] = Codec({</span>
 <span class="hljs-comment">//   "type" : "fixed",</span>
 <span class="hljs-comment">//   "name" : "Pence",</span>
 <span class="hljs-comment">//   "namespace" : "repl.MdocSession.App0",</span>
@@ -255,7 +255,7 @@ deriveFixed[<span class="hljs-type">Pence</span>](
 <span class="hljs-keyword">import</span> vulcan.refined._
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">PosInt</span>]
-<span class="hljs-comment">// res9: Codec[PosInt] = Codec("int")</span>
+<span class="hljs-comment">// res9: Codec[eu.timepit.refined.api.Refined[Int, eu.timepit.refined.numeric.Positive]] = Codec("int")</span>
 
 <span class="hljs-type">Codec</span>.encode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">1</span>)
 <span class="hljs-comment">// res10: Either[AvroError, Any] = Right(value = 1)</span>
