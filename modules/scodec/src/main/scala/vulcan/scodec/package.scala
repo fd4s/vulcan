@@ -12,6 +12,7 @@ import _root_.scodec.{
   codecs,
   Codec => Scodec
 }
+import cats.data.Chain
 import cats.syntax.all._
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericRecord}
@@ -19,6 +20,7 @@ import org.apache.avro.util.Utf8
 import vulcan.internal.converters.collection._
 
 import java.nio.{ByteBuffer, ByteOrder}
+import java.util
 import scala.annotation.tailrec
 
 package object scodec {
@@ -77,6 +79,65 @@ package object scodec {
   val nullScodec: Scodec[Null] =
     codecs.ignore(0).xmap(_ => null, _ => ())
 
+  def blockScodec[A](codec: Scodec[A]): Scodec[List[A]] = new Scodec[List[A]] {
+    override def encode(value: List[A]): Attempt[BitVector] =
+      intScodec.encode(value.size).flatMap { bits =>
+        codecs
+          .list(codec)
+          .encode(value)
+          .map(bits ++ _)
+      }
+
+    override def sizeBound: SizeBound = SizeBound.unknown
+
+    override def decode(bits: BitVector): Attempt[DecodeResult[List[A]]] =
+      intScodec.decode(bits).flatMap {
+        case DecodeResult(size, bits) => codecs.listOfN(codecs.provide(size), codec).decode(bits)
+      }
+  }
+//    codecs.listOfN(intScodec.xmap(_.intValue, java.lang.Integer.valueOf(_)), codec)
+
+  def arrayEncoder[A](codec: Scodec[A]): Encoder[java.util.List[A]] =
+    new Encoder[java.util.List[A]] {
+      //     list
+      //    } => blockScodec(codec).encode(list.asScala.toList))
+      override def encode(value: util.List[A]): Attempt[BitVector] = {
+        println(value.size)
+        val encodedSize = intScodec.encode(value.size)
+
+        encodedSize.flatMap { bits =>
+          println(bits)
+          val output =
+            codecs
+              .list(codec)
+              .encode(value.asScala.toList)
+              .map(bits ++ _)
+              .flatMap(
+                bits =>
+                  (if (value.size != 0) intScodec.encode(0)
+                   else Attempt.successful(BitVector.empty)).map(bits ++ _)
+              )
+          println(output)
+          output
+        }
+      }
+
+      override def sizeBound: SizeBound = SizeBound.unknown
+    }
+
+  def arrayDecoder[A](codec: Scodec[A]): Decoder[java.util.List[A]] = Decoder { bits =>
+    def decodeBlock(bits: BitVector) = blockScodec(codec).decode(bits)
+
+    def loop(remaining: BitVector, acc: Chain[A]): Attempt[DecodeResult[Chain[A]]] =
+      decodeBlock(remaining).flatMap {
+        case DecodeResult(value, remainder) =>
+          if (value.isEmpty) Attempt.successful(DecodeResult(acc, remainder))
+          else loop(remainder, acc ++ Chain.fromSeq(value))
+      }
+
+    loop(bits, Chain.empty).map(_.map(_.toList.asJava))
+  }
+
   def forWriterSchema(schema: Schema): Scodec[Any] = schema.getType match {
     case Schema.Type.FLOAT =>
       floatScodec.widen[Any](identity, {
@@ -104,6 +165,15 @@ package object scodec {
           case d: GenericRecord => Attempt.successful(d)
           case other            => Attempt.failure(Err(s"$other is not a GenericRecord"))
         })
+    case Schema.Type.ARRAY =>
+      val elementCodec = forWriterSchema(schema.getElementType)
+      Scodec[java.util.List[Any]](arrayEncoder(elementCodec), arrayDecoder(elementCodec))
+        .widen[Any](
+          identity, {
+            case d: java.util.List[_] => Attempt.successful(d.asInstanceOf[java.util.List[Any]])
+            case other                => Attempt.failure(Err(s"$other is not a java.util.List"))
+          }
+        )
     case Schema.Type.STRING =>
       stringScodec.widen[Any](identity, {
         case d: Utf8 => Attempt.successful(d)

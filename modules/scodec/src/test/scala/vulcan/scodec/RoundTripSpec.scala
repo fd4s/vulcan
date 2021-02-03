@@ -10,6 +10,7 @@ import scodec.DecodeResult
 import scodec.bits.BitVector
 import org.scalacheck.Arbitrary.arbitrary
 import vulcan.Codec
+import vulcan.internal.converters.collection._
 import vulcan.scodec.examples.CaseClassThreeFields
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
@@ -40,6 +41,10 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
       .map(Codec.encode(_).value.asInstanceOf[GenericRecord])
   )
 
+  implicit def arbList[A: Arbitrary]: Arbitrary[java.util.List[A]] = Arbitrary(
+    arbitrary[List[A]].map(_.asJava)
+  )
+
   describe("float") {
     it("roundtrip") {
       roundtrip[java.lang.Float](SchemaBuilder.builder().floatType())
@@ -67,6 +72,14 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
   describe("string") {
     it("roundtrip") {
       roundtrip[Utf8](SchemaBuilder.builder().stringType())
+    }
+  }
+
+  describe("array") {
+    it("roundtrip") {
+      roundtrip[java.util.List[java.lang.Double]](
+        SchemaBuilder.builder().array().items(SchemaBuilder.builder().doubleType())
+      )
     }
   }
 
