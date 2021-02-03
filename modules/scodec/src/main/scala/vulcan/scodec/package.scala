@@ -24,14 +24,16 @@ import java.util
 import scala.annotation.tailrec
 
 package object scodec {
-  val intScodec: Scodec[java.lang.Integer] =
-    (new ZigZagVarIntCodec).xmap(java.lang.Integer.valueOf(_), _.intValue)
+  lazy val intScodec: Scodec[java.lang.Integer] =
+    ZigZagVarIntCodec.xmap(java.lang.Integer.valueOf(_), _.intValue)
+
+  private val zigZagVarLong: Scodec[Long] = new VarLongCodec().xmap(
+    zz => (zz >>> 1L) ^ -(zz & 1L),
+    i => (i << 1L) ^ (i >> 63L)
+  )
 
   val longScodec: Scodec[java.lang.Long] =
-    new VarLongCodec().xmap(
-      zz => java.lang.Long.valueOf((zz >>> 1L) ^ -(zz & 1L)),
-      i => (i.longValue << 1L) ^ (i.longValue >> 63L)
-    )
+    zigZagVarLong.xmap(java.lang.Long.valueOf(_), _.longValue)
 
   val floatScodec: Scodec[java.lang.Float] =
     codecs.floatL.xmap(java.lang.Float.valueOf(_), _.floatValue)
@@ -41,8 +43,11 @@ package object scodec {
 
   val stringScodec: Scodec[Utf8] =
     codecs
-      .variableSizeBytesLong(longScodec.xmap(_.longValue, java.lang.Long.valueOf(_)), codecs.bytes)
+      .variableSizeBytesLong(zigZagVarLong, codecs.bytes)
       .xmap(bytes => new Utf8(bytes.toArray), utf8 => ByteVector(utf8.getBytes))
+
+  val boolScodec: Scodec[java.lang.Boolean] =
+    codecs.bool.xmap(java.lang.Boolean.valueOf(_), _.booleanValue)
 
   def recordEncoder(writerSchema: Schema): Encoder[GenericRecord] =
     Encoder { record =>
@@ -79,50 +84,26 @@ package object scodec {
   val nullScodec: Scodec[Null] =
     codecs.ignore(0).xmap(_ => null, _ => ())
 
-  def blockScodec[A](codec: Scodec[A]): Scodec[List[A]] = new Scodec[List[A]] {
-    override def encode(value: List[A]): Attempt[BitVector] =
-      intScodec.encode(value.size).flatMap { bits =>
-        codecs
-          .list(codec)
-          .encode(value)
-          .map(bits ++ _)
-      }
-
-    override def sizeBound: SizeBound = SizeBound.unknown
-
-    override def decode(bits: BitVector): Attempt[DecodeResult[List[A]]] =
-      intScodec.decode(bits).flatMap {
-        case DecodeResult(size, bits) => codecs.listOfN(codecs.provide(size), codec).decode(bits)
-      }
-  }
-//    codecs.listOfN(intScodec.xmap(_.intValue, java.lang.Integer.valueOf(_)), codec)
+  def blockScodec[A](codec: Scodec[A]): Scodec[List[A]] =
+    codecs.listOfN(ZigZagVarIntCodec, codec)
 
   def arrayEncoder[A](codec: Scodec[A]): Encoder[java.util.List[A]] =
     new Encoder[java.util.List[A]] {
-      //     list
-      //    } => blockScodec(codec).encode(list.asScala.toList))
       override def encode(value: util.List[A]): Attempt[BitVector] = {
-        println(value.size)
-        val encodedSize = intScodec.encode(value.size)
-
-        encodedSize.flatMap { bits =>
-          println(bits)
-          val output =
-            codecs
-              .list(codec)
-              .encode(value.asScala.toList)
-              .map(bits ++ _)
-              .flatMap(
-                bits =>
-                  (if (value.size != 0) intScodec.encode(0)
-                   else Attempt.successful(BitVector.empty)).map(bits ++ _)
-              )
-          println(output)
-          output
+        intScodec.encode(value.size).flatMap { bits =>
+          codecs
+            .list(codec)
+            .encode(value.asScala.toList)
+            .map(bits ++ _)
+            .flatMap(
+              bits =>
+                (if (value.size != 0) intScodec.encode(0)
+                 else Attempt.successful(BitVector.empty)).map(bits ++ _)
+            )
         }
       }
 
-      override def sizeBound: SizeBound = SizeBound.unknown
+      override def sizeBound: SizeBound = SizeBound.atLeast(1L)
     }
 
   def arrayDecoder[A](codec: Scodec[A]): Decoder[java.util.List[A]] = Decoder { bits =>
@@ -188,7 +169,16 @@ package object scodec {
 
 }
 
-private final class ZigZagVarIntCodec extends Scodec[Int] {
+object ZigZagVarIntCodec extends Scodec[Int] {
+  private val toPositiveLong = (i: Int) => {
+    (i.toLong << 1) ^ (i.toLong >> 31)
+  }
+
+  private val fromPositiveLong = (l: Long) => {
+    val i = l.toInt
+    (i >>> 1) ^ -(i & 1)
+  }
+
   private[this] val long =
     new VarLongCodec()
       .xmap(ZigZagVarIntCodec.fromPositiveLong, ZigZagVarIntCodec.toPositiveLong)
@@ -203,16 +193,6 @@ private final class ZigZagVarIntCodec extends Scodec[Int] {
     long.decode(buffer)
 
   override def toString = "variable-length integer"
-}
-object ZigZagVarIntCodec {
-  private val toPositiveLong = (i: Int) => {
-    (i.toLong << 1) ^ (i.toLong >> 31)
-  }
-
-  private val fromPositiveLong = (l: Long) => {
-    val i = l.toInt
-    (i >>> 1) ^ -(i & 1)
-  }
 
 }
 final class VarLongCodec extends Scodec[Long] {
