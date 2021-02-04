@@ -6,18 +6,19 @@
 
 package vulcan
 
-import scala.language.experimental.macros
-import scala.reflect.runtime.universe.WeakTypeTag
 import cats.implicits._
 import magnolia._
 import org.apache.avro.Schema
-import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import shapeless.ops.coproduct.{Inject, Selector}
+import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import vulcan.internal.converters.collection._
 import vulcan.internal.tags._
 
+import scala.language.experimental.macros
+import scala.reflect.runtime.universe.WeakTypeTag
+
 package object generic {
-  implicit final val cnilCodec: Codec[CNil] =
+  implicit final val cnilCodec: Codec.Aux[Nothing, CNil] =
     Codec.instance(
       Right(Schema.createUnion()),
       cnil => Left(AvroError.encodeExhaustedAlternatives(cnil, Some("Coproduct"))),
@@ -170,9 +171,9 @@ package object generic {
     final def derive[A]: Codec[A] =
       macro Magnolia.gen[A]
 
-    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec[A] = {
+    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[Avro, A] = {
       val typeName = sealedTrait.typeName.full
-      Codec.instance[A, Avro](
+      Codec.instance[Avro, A](
         AvroError.catchNonFatal {
           sealedTrait.subtypes.toList
             .traverse(_.typeclass.schema)
@@ -205,7 +206,7 @@ package object generic {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec[A] =
+  )(implicit tag: WeakTypeTag[A]): Codec.Aux[Avro.Enum, A] =
     Codec.enumeration(
       name = nameFrom(tag),
       symbols = symbols,
@@ -226,7 +227,7 @@ package object generic {
     size: Int,
     encode: A => Array[Byte],
     decode: Array[Byte] => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec[A] =
+  )(implicit tag: WeakTypeTag[A]): Codec.Aux[Avro.Fixed, A] =
     Codec.fixed(
       name = nameFrom(tag),
       size = size,

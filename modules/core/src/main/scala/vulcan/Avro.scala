@@ -59,13 +59,7 @@ object Avro {
           }
           .map(fields => Record(fields.toMap, schema))
       case (Schema.Type.ENUM, genericEnum: GenericEnumSymbol[_]) =>
-        val symbols = schema.getEnumSymbols().asScala.toList
-        val symbol = genericEnum.toString()
-
-        if (symbols.contains(symbol))
-          Right(Enum(symbol, schema))
-        else
-          Left(AvroError.decodeSymbolNotInSchema(symbol, symbols, "foo"))
+        Right(Enum(genericEnum.toString, schema))
       case (Schema.Type.ARRAY, collection: java.util.Collection[_]) => {
         val element = schema.getElementType
         collection.asScala.toVector.traverse(fromJava(_, element)).map(Array(_))
