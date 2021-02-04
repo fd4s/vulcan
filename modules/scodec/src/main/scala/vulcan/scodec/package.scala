@@ -15,7 +15,7 @@ import _root_.scodec.{
 import cats.data.Chain
 import cats.syntax.all._
 import org.apache.avro.Schema
-import org.apache.avro.generic.{GenericData, GenericRecord}
+import org.apache.avro.generic.{GenericData, GenericEnumSymbol, GenericRecord}
 import org.apache.avro.util.Utf8
 import vulcan.internal.converters.collection._
 
@@ -49,6 +49,12 @@ package object scodec {
   val boolScodec: Scodec[java.lang.Boolean] =
     codecs.byte
       .xmap(b => java.lang.Boolean.valueOf(b == 1), b => if (b.booleanValue) 1: Byte else 0: Byte)
+
+  def enumScodec(writerSchema: Schema): Codec[GenericData.EnumSymbol] =
+    ZigZagVarIntCodec.xmap(
+      i => new GenericData.EnumSymbol(writerSchema, writerSchema.getEnumSymbols.get(i)),
+      symbol => writerSchema.getEnumOrdinal(symbol.toString)
+    )
 
   def recordEncoder(writerSchema: Schema): Encoder[GenericRecord] =
     Encoder { record =>
