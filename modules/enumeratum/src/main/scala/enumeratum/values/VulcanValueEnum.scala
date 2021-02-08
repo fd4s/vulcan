@@ -23,7 +23,7 @@ trait ByteVulcanEnum[EntryType <: ByteEnumEntry] extends VulcanValueEnum[Byte, E
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[Integer, EntryType] =
+  ): Codec.Aux[java.lang.Integer, EntryType] =
     Vulcan.codec(this)
 }
 
