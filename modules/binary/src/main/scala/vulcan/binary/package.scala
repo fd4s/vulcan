@@ -13,6 +13,7 @@ import vulcan.internal.converters.collection._
 import java.nio.{ByteBuffer, ByteOrder}
 import java.util
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
 package object binary {
   lazy val intScodec: Scodec[java.lang.Integer] =
@@ -117,52 +118,28 @@ package object binary {
     loop(bits, Chain.empty).map(_.map(_.toList.asJava))
   }
 
+  private def widenToAny[A](codec: Scodec[A])(implicit ct: ClassTag[A]): Scodec[Any] =
+    codec.widen[Any](
+      identity, {
+        case a if ct.runtimeClass.isInstance(a) => Attempt.successful(a.asInstanceOf[A])
+        case other                              => Attempt.failure(Err(s"$other is not a ${ct.runtimeClass.getName}"))
+      }
+    )
+
   def forWriterSchema(schema: Schema): Scodec[Any] = schema.getType match {
-    case Schema.Type.FLOAT =>
-      floatScodec.widen[Any](identity, {
-        case i: java.lang.Float => Attempt.successful(i)
-        case other              => Attempt.failure(Err(s"$other is not a Float"))
-      })
-    case Schema.Type.DOUBLE =>
-      doubleScodec.widen[Any](identity, {
-        case d: java.lang.Double => Attempt.successful(d)
-        case other               => Attempt.failure(Err(s"$other is not a Double"))
-      })
-    case Schema.Type.INT =>
-      intScodec.widen[Any](identity, {
-        case d: java.lang.Integer => Attempt.successful(d)
-        case other                => Attempt.failure(Err(s"$other is not a int"))
-      })
-    case Schema.Type.LONG =>
-      longScodec.widen[Any](identity, {
-        case d: java.lang.Long => Attempt.successful(d)
-        case other             => Attempt.failure(Err(s"$other is not a Long"))
-      })
+    case Schema.Type.FLOAT  => widenToAny(floatScodec)
+    case Schema.Type.DOUBLE => widenToAny(doubleScodec)
+    case Schema.Type.INT    => widenToAny(intScodec)
+    case Schema.Type.LONG   => widenToAny(longScodec)
     case Schema.Type.RECORD =>
-      Scodec[GenericRecord](recordEncoder(schema), recordDecoder(schema))
-        .widen[Any](identity, {
-          case d: GenericRecord => Attempt.successful(d)
-          case other            => Attempt.failure(Err(s"$other is not a GenericRecord"))
-        })
+      widenToAny(Scodec[GenericRecord](recordEncoder(schema), recordDecoder(schema)))
     case Schema.Type.ARRAY =>
       val elementCodec = forWriterSchema(schema.getElementType)
-      Scodec[java.util.List[Any]](arrayEncoder(elementCodec), arrayDecoder(elementCodec))
-        .widen[Any](
-          identity, {
-            case d: java.util.List[_] => Attempt.successful(d.asInstanceOf[java.util.List[Any]])
-            case other                => Attempt.failure(Err(s"$other is not a java.util.List"))
-          }
-        )
-    case Schema.Type.STRING =>
-      stringScodec.widen[Any](identity, {
-        case d: Utf8 => Attempt.successful(d)
-        case other   => Attempt.failure(Err(s"$other is not a Utf8"))
-      })
-    case Schema.Type.BOOLEAN =>
-      boolScodec.widen[Any](identity, {
-        case d: java.lang.Boolean => Attempt.successful(d)
-        case other                => Attempt.failure(Err(s"$other is not a Boolean"))
-      })
+      widenToAny(
+        Scodec[java.util.List[Any]](arrayEncoder(elementCodec), arrayDecoder(elementCodec))
+      )
+    case Schema.Type.STRING  => widenToAny(stringScodec)
+    case Schema.Type.BOOLEAN => widenToAny(boolScodec)
     case Schema.Type.NULL =>
       nullScodec.widen[Any](identity, { n =>
         if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
