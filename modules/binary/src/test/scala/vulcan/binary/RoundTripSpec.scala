@@ -1,6 +1,6 @@
 package vulcan.binary
 
-import org.apache.avro.generic.{GenericDatumReader, GenericDatumWriter, GenericRecord}
+import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter, GenericRecord}
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
 import org.apache.avro.{Schema, SchemaBuilder}
@@ -11,7 +11,7 @@ import scodec.bits.BitVector
 import org.scalacheck.Arbitrary.arbitrary
 import vulcan.Codec
 import vulcan.internal.converters.collection._
-import vulcan.binary.examples.CaseClassThreeFields
+import vulcan.binary.examples.{CaseClassThreeFields, SealedTraitEnum}
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
@@ -47,6 +47,10 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   implicit def arbList[A: Arbitrary]: Arbitrary[java.util.List[A]] = Arbitrary(
     arbitrary[List[A]].map(_.asJava)
+  )
+
+  implicit val arbEnumSymbol: Arbitrary[GenericData.EnumSymbol] = Arbitrary(
+    arbitrary[SealedTraitEnum].map(entry => Codec[SealedTraitEnum].encode(entry).value)
   )
 
   describe("float") {
@@ -102,6 +106,10 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   describe("Record") {
     it("roundtrip") { roundtrip[GenericRecord](Codec[CaseClassThreeFields].schema.value) }
+  }
+
+  describe("Enum") {
+    it("roundtrip") {}
   }
 }
 

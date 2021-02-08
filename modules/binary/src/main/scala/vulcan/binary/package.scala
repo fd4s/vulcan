@@ -144,7 +144,7 @@ package object binary {
       nullScodec.widen[Any](identity, { n =>
         if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
       })
-    case Schema.Type.ENUM  => ???
+    case Schema.Type.ENUM  => widenToAny(enumScodec(schema))
     case Schema.Type.UNION => ???
     case Schema.Type.BYTES => ???
     case Schema.Type.FIXED => ???
