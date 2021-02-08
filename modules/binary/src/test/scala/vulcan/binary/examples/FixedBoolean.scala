@@ -1,4 +1,4 @@
-package vulcan.scodec.examples
+package vulcan.binary.examples
 
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}

@@ -1,4 +1,4 @@
-package vulcan.scodec
+package vulcan.binary
 
 trait EitherValues {
   implicit final class EitherValuesSyntax[A, B](val e: Either[A, B]) {

@@ -1,4 +1,4 @@
-package vulcan.scodec
+package vulcan.binary
 
 import org.apache.avro.generic.{GenericDatumReader, GenericDatumWriter, GenericRecord}
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
@@ -11,7 +11,7 @@ import scodec.bits.BitVector
 import org.scalacheck.Arbitrary.arbitrary
 import vulcan.Codec
 import vulcan.internal.converters.collection._
-import vulcan.scodec.examples.CaseClassThreeFields
+import vulcan.binary.examples.CaseClassThreeFields
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 

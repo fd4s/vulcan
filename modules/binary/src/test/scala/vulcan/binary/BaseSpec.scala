@@ -1,4 +1,4 @@
-package vulcan.scodec
+package vulcan.binary
 
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks

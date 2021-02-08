@@ -1,29 +1,20 @@
 package vulcan
-import shapeless.HList
-import _root_.scodec.bits.{BitVector, ByteVector}
-import _root_.scodec.interop.cats._
-import _root_.scodec.{
-  Attempt,
-  DecodeResult,
-  Decoder,
-  Encoder,
-  Err,
-  SizeBound,
-  codecs,
-  Codec => Scodec
-}
+
 import cats.data.Chain
 import cats.syntax.all._
 import org.apache.avro.Schema
-import org.apache.avro.generic.{GenericData, GenericEnumSymbol, GenericRecord}
+import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.avro.util.Utf8
+import scodec.bits.{BitVector, ByteVector}
+import scodec.interop.cats._
+import scodec.{Attempt, DecodeResult, Decoder, Encoder, Err, SizeBound, codecs, Codec => Scodec}
 import vulcan.internal.converters.collection._
 
 import java.nio.{ByteBuffer, ByteOrder}
 import java.util
 import scala.annotation.tailrec
 
-package object scodec {
+package object binary {
   lazy val intScodec: Scodec[java.lang.Integer] =
     ZigZagVarIntCodec.xmap(java.lang.Integer.valueOf(_), _.intValue)
 
@@ -50,7 +41,7 @@ package object scodec {
     codecs.byte
       .xmap(b => java.lang.Boolean.valueOf(b == 1), b => if (b.booleanValue) 1: Byte else 0: Byte)
 
-  def enumScodec(writerSchema: Schema): Codec[GenericData.EnumSymbol] =
+  def enumScodec(writerSchema: Schema): Scodec[GenericData.EnumSymbol] =
     ZigZagVarIntCodec.xmap(
       i => new GenericData.EnumSymbol(writerSchema, writerSchema.getEnumSymbols.get(i)),
       symbol => writerSchema.getEnumOrdinal(symbol.toString)
@@ -176,7 +167,11 @@ package object scodec {
       nullScodec.widen[Any](identity, { n =>
         if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
       })
-    case _ => ???
+    case Schema.Type.ENUM  => ???
+    case Schema.Type.UNION => ???
+    case Schema.Type.BYTES => ???
+    case Schema.Type.FIXED => ???
+    case Schema.Type.MAP   => ???
   }
 
 }

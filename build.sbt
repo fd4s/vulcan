@@ -103,10 +103,10 @@ lazy val refined = project
   )
   .dependsOn(core)
 
-lazy val scodec = project
-  .in(file("modules/scodec"))
+lazy val binary = project
+  .in(file("modules/binary"))
   .settings(
-    moduleName := "vulcan-scodec",
+    moduleName := "vulcan-binary",
     name := moduleName.value,
     dependencySettings ++ Seq(
       libraryDependencies ++= Seq(
