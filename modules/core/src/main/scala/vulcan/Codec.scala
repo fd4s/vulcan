@@ -374,7 +374,7 @@ object Codec {
     doc: Option[String] = None,
     aliases: Seq[String] = Seq.empty,
     props: Props = Props.empty
-  ): Codec.Aux[AnyRef, A] = {
+  ): Codec.Aux[GenericData.EnumSymbol, A] = {
     val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
     val schema = AvroError.catchNonFatal {
       props.toChain.map { props =>
@@ -404,7 +404,7 @@ object Codec {
       a => {
         val symbol = encode(a)
         if (symbols.contains(symbol))
-          schema.map(GenericData.get().createEnum(symbol, _))
+          schema.map(new GenericData.EnumSymbol(_, symbol))
         else
           Left(AvroError.encodeSymbolNotInSchema(symbol, symbols, typeName))
       }, {
