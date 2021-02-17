@@ -41,6 +41,14 @@ For [enumeratum](modules.md#enumeratum) support, add the following line to your 
 libraryDependencies += "@ORGANIZATION@" %% "@ENUMERATUM_MODULE_NAME@" % "@LATEST_VERSION@"
 ```
 
+#### FUUID
+
+For [fuuid](modules.md#fuuid) support, add the following line to your `build.sbt` file.
+
+```scala
+libraryDependencies += "@ORGANIZATION@" %% "@FUUID_MODULE_NAME@" % "@LATEST_VERSION@"
+```
+
 #### Generic
 
 For [generic derivation](modules.md#generic) support, add the following line to your `build.sbt` file.

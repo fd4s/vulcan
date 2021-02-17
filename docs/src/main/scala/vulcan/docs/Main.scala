@@ -42,6 +42,8 @@ object Main {
           "CORE_CROSS_SCALA_VERSIONS" -> scalaVersionsString(coreCrossScalaVersions),
           "ENUMERATUM_MODULE_NAME" -> enumeratumModuleName,
           "ENUMERATUM_CROSS_SCALA_VERSIONS" -> scalaVersionsString(enumeratumCrossScalaVersions),
+          "FUUID_MODULE_NAME" -> fuuidModuleName,
+          "FUUID_CROSS_SCALA_VERSIONS" -> scalaVersionsString(fuuidCrossScalaVersions),
           "GENERIC_MODULE_NAME" -> genericModuleName,
           "GENERIC_CROSS_SCALA_VERSIONS" -> scalaVersionsString(genericCrossScalaVersions),
           "REFINED_MODULE_NAME" -> refinedModuleName,
@@ -55,6 +57,7 @@ object Main {
           "AVRO_VERSION" -> avroVersion,
           "CATS_VERSION" -> catsVersion,
           "ENUMERATUM_VERSION" -> enumeratumVersion,
+          "FUUID_VERSION" -> fuuidVersion,
           "MAGNOLIA_VERSION" -> magnoliaVersion,
           "REFINED_VERSION" -> refinedVersion,
           "SHAPELESS_VERSION" -> shapelessVersion
