@@ -126,7 +126,7 @@ lazy val dependencySettings = Seq(
     if (isDotty.value) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.1" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.2" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
       )
   }),
