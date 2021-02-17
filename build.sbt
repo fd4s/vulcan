@@ -4,6 +4,8 @@ val catsVersion = "2.4.1"
 
 val enumeratumVersion = "1.6.1"
 
+val fuuidVersion = "0.5.0"
+
 val magnoliaVersion = "0.17.0"
 
 val refinedVersion = "0.9.20"
@@ -25,7 +27,7 @@ lazy val vulcan = project
     console := (console in (core, Compile)).value,
     console in Test := (console in (core, Test)).value
   )
-  .aggregate(core, enumeratum, generic, refined)
+  .aggregate(core, enumeratum, fuuid, generic, refined)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -83,6 +85,25 @@ lazy val generic = project
   )
   .dependsOn(core % "compile->compile;test->test")
 
+lazy val fuuid = project
+  .in(file("modules/fuuid"))
+  .settings(
+    moduleName := "vulcan-fuuid",
+    name := moduleName.value,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "io.chrisdavenport" %% "fuuid" % fuuidVersion
+      )
+    ),
+    publishSettings,
+    mimaSettings,
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
+    testSettings
+  )
+  .dependsOn(core)
+
 lazy val refined = project
   .in(file("modules/refined"))
   .settings(
@@ -114,7 +135,7 @@ lazy val docs = project
     mdocSettings,
     buildInfoSettings
   )
-  .dependsOn(core, enumeratum, generic, refined)
+  .dependsOn(core, enumeratum, fuuid, generic, refined)
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
@@ -148,7 +169,13 @@ lazy val mdocSettings = Seq(
   mdoc := run.in(Compile).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
   crossScalaVersions := Seq(scalaVersion.value),
-  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, enumeratum, generic, refined),
+  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
+    core,
+    enumeratum,
+    fuuid,
+    generic,
+    refined
+  ),
   target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
   cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
   docusaurusCreateSite := docusaurusCreateSite
@@ -194,6 +221,12 @@ lazy val buildInfoSettings = Seq(
     BuildInfoKey.map(crossScalaVersions in enumeratum) {
       case (k, v) => "enumeratum" ++ k.capitalize -> v
     },
+    BuildInfoKey.map(moduleName in fuuid) {
+      case (k, v) => "fuuid" ++ k.capitalize -> v
+    },
+    BuildInfoKey.map(crossScalaVersions in fuuid) {
+      case (k, v) => "fuuid" ++ k.capitalize -> v
+    },
     BuildInfoKey.map(moduleName in generic) {
       case (k, v) => "generic" ++ k.capitalize -> v
     },
@@ -211,6 +244,7 @@ lazy val buildInfoSettings = Seq(
     BuildInfoKey("avroVersion" -> avroVersion),
     BuildInfoKey("catsVersion" -> catsVersion),
     BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
+    BuildInfoKey("fuuidVersion" -> fuuidVersion),
     BuildInfoKey("magnoliaVersion" -> magnoliaVersion),
     BuildInfoKey("refinedVersion" -> refinedVersion),
     BuildInfoKey("shapelessVersion" -> shapelessVersion)

@@ -77,6 +77,21 @@ object Day extends IntEnum[Day] with IntVulcanEnum[Day] {
 Codec[Day]
 ```
 
+## FUUID
+The `@FUUID_MODULE_NAME@` module provides [`Codec`][codec] for [FUUID](https://github.com/davenverse/fuuid) Functional UUIDs.
+
+FUUIDs are encoded as UUIDs using the UUID `Codec` in core.
+
+```scala mdoc
+import io.chrisdavenport.fuuid.FUUID
+import cats.effect.IO
+import vulcan.fuuid._
+
+val fuuid: IO[FUUID] = FUUID.randomFUUID[IO]
+
+fuuid.map(Codec[FUUId].encode)
+```
+
 ## Generic
 
 The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s using [Magnolia](https://github.com/propensive/magnolia) for records and unions, and reflection for enumerations and fixed types.
