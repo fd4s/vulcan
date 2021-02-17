@@ -97,9 +97,6 @@ lazy val fuuid = project
     ),
     publishSettings,
     mimaSettings,
-    scalaSettings ++ Seq(
-      crossScalaVersions += scala3
-    ),
     testSettings
   )
   .dependsOn(core)
