@@ -877,7 +877,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val short: Codec[Short] = {
+  implicit final val short: Codec.Aux[Avro.Int, Short] = {
     val min: Int = Short.MinValue.toInt
     val max: Int = Short.MaxValue.toInt
     Codec.int
