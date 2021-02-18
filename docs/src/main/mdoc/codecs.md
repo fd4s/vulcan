@@ -21,7 +21,7 @@ Codec[Option[Option[Instant]]]
 Encoding and decoding with a [`Codec`][codec] might also be unsuccessful, so results are wrapped in `Either` with error type [`AvroError`][avroerror]. Encoding accepts a value to be encoded according to the schema defined by the [`Codec`][codec], and decoding accepts a value and a schema to decode the value against. For example, what happens if we try to decode `Int`s using a `Boolean` schema?
 
 ```scala mdoc
-import org.apache.avro.SchemaBuilder
+import vulcan.Avro
 
 Codec[Int].decode(Avro.Int(10))
 ```
