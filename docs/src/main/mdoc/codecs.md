@@ -23,7 +23,7 @@ Encoding and decoding with a [`Codec`][codec] might also be unsuccessful, so res
 ```scala mdoc
 import org.apache.avro.SchemaBuilder
 
-Codec[Int].decode(10, SchemaBuilder.builder.booleanType)
+Codec[Int].decode(Avro.Int(10))
 ```
 
 Since the Apache Avro library encodes and decodes using `Object`, [`Codec`][codec]s encode and decode between Scala types and `Any`. This means type safety is lost and tests should be used to ensure [`Codec`][codec]s work as intended. This becomes important when we define [`Codec`][codec]s from scratch. Note `Schema`s are treated as effectively immutable, even though they're in fact mutable.
