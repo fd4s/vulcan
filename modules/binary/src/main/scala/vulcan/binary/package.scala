@@ -3,7 +3,7 @@ package vulcan
 import cats.data.Chain
 import cats.syntax.all._
 import org.apache.avro.Schema
-import org.apache.avro.generic.{GenericData, GenericRecord}
+import org.apache.avro.generic.{GenericData, GenericEnumSymbol, GenericFixed, GenericRecord}
 import org.apache.avro.util.Utf8
 import scodec.bits.{BitVector, ByteVector}
 import scodec.interop.cats._
@@ -144,11 +144,40 @@ package object binary {
       nullScodec.widen[Any](identity, { n =>
         if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
       })
-    case Schema.Type.ENUM  => widenToAny(enumScodec(schema))
-    case Schema.Type.UNION => ???
-    case Schema.Type.BYTES => ???
-    case Schema.Type.FIXED => ???
-    case Schema.Type.MAP   => ???
+    case Schema.Type.ENUM => widenToAny(enumScodec(schema))
+    case Schema.Type.UNION =>
+      val types = schema.getTypes.asScala.toList
+      ZigZagVarIntCodec.consume(schemaIdx => forWriterSchema(types(schemaIdx))) { value =>
+        val check: Schema => Boolean =
+          if (value == null) _.getType == Schema.Type.NULL
+          else
+            value match {
+              case _: java.lang.Float         => _.getType == Schema.Type.FLOAT
+              case _: java.lang.Double        => _.getType == Schema.Type.DOUBLE
+              case _: java.lang.Integer       => _.getType == Schema.Type.INT
+              case _: java.lang.Long          => _.getType == Schema.Type.LONG
+              case _: java.lang.Boolean       => _.getType == Schema.Type.BOOLEAN
+              case _: Utf8                    => _.getType == Schema.Type.STRING
+              case _: java.util.Map[_, _]     => _.getType == Schema.Type.MAP
+              case _: java.util.Collection[_] => _.getType == Schema.Type.ARRAY
+              case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
+              case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
+              case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
+            }
+        types.indexWhere(check)
+      }
+    case Schema.Type.BYTES =>
+      widenToAny {
+        codecs.bytes.xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
+      }
+    case Schema.Type.FIXED =>
+      widenToAny {
+        codecs.fixedSizeBytes(
+          schema.getFixedSize.toLong,
+          codecs.bytes.xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
+        )
+      }
+    case Schema.Type.MAP => ???
   }
 
 }
