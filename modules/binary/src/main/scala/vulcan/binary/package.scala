@@ -8,6 +8,7 @@ import org.apache.avro.util.Utf8
 import scodec.bits.{BitVector, ByteVector}
 import scodec.interop.cats._
 import scodec.{Attempt, DecodeResult, Decoder, Encoder, Err, SizeBound, codecs, Codec => Scodec}
+import vulcan.binary.internal.{VarLongCodec, ZigZagVarIntCodec}
 import vulcan.internal.converters.collection._
 
 import java.nio.{ByteBuffer, ByteOrder}
@@ -16,13 +17,14 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 package object binary {
-  lazy val intScodec: Scodec[java.lang.Integer] =
-    ZigZagVarIntCodec.xmap(java.lang.Integer.valueOf(_), _.intValue)
 
-  private val zigZagVarLong: Scodec[Long] = new VarLongCodec().xmap(
+  private[binary] val zigZagVarLong: Scodec[Long] = VarLongCodec.xmap(
     zz => (zz >>> 1L) ^ -(zz & 1L),
     i => (i << 1L) ^ (i >> 63L)
   )
+
+  lazy val intScodec: Scodec[java.lang.Integer] =
+    ZigZagVarIntCodec.xmap(java.lang.Integer.valueOf(_), _.intValue)
 
   val longScodec: Scodec[java.lang.Long] =
     zigZagVarLong.xmap(java.lang.Long.valueOf(_), _.longValue)
@@ -86,38 +88,6 @@ package object binary {
   def blockScodec[A](codec: Scodec[A]): Scodec[List[A]] =
     codecs.listOfN(ZigZagVarIntCodec, codec)
 
-  def arrayEncoder[A](codec: Scodec[A]): Encoder[java.util.List[A]] =
-    new Encoder[java.util.List[A]] {
-      override def encode(value: util.List[A]): Attempt[BitVector] = {
-        intScodec.encode(value.size).flatMap { bits =>
-          codecs
-            .list(codec)
-            .encode(value.asScala.toList)
-            .map(bits ++ _)
-            .flatMap(
-              bits =>
-                (if (value.size != 0) intScodec.encode(0)
-                 else Attempt.successful(BitVector.empty)).map(bits ++ _)
-            )
-        }
-      }
-
-      override def sizeBound: SizeBound = SizeBound.atLeast(1L)
-    }
-
-  def arrayDecoder[A](codec: Scodec[A]): Decoder[java.util.List[A]] = Decoder { bits =>
-    def decodeBlock(bits: BitVector) = blockScodec(codec).decode(bits)
-
-    def loop(remaining: BitVector, acc: Chain[A]): Attempt[DecodeResult[Chain[A]]] =
-      decodeBlock(remaining).flatMap {
-        case DecodeResult(value, remainder) =>
-          if (value.isEmpty) Attempt.successful(DecodeResult(acc, remainder))
-          else loop(remainder, acc ++ Chain.fromSeq(value))
-      }
-
-    loop(bits, Chain.empty).map(_.map(_.toList.asJava))
-  }
-
   private def widenToAny[A](codec: Scodec[A])(implicit ct: ClassTag[A]): Scodec[Any] =
     codec.widen[Any](
       identity, {
@@ -134,10 +104,7 @@ package object binary {
     case Schema.Type.RECORD =>
       widenToAny(Scodec[GenericRecord](recordEncoder(schema), recordDecoder(schema)))
     case Schema.Type.ARRAY =>
-      val elementCodec = forWriterSchema(schema.getElementType)
-      widenToAny(
-        Scodec[java.util.List[Any]](arrayEncoder(elementCodec), arrayDecoder(elementCodec))
-      )
+      widenToAny(ArrayScodec(forWriterSchema(schema.getElementType)))
     case Schema.Type.STRING  => widenToAny(stringScodec)
     case Schema.Type.BOOLEAN => widenToAny(boolScodec)
     case Schema.Type.NULL =>
@@ -180,91 +147,4 @@ package object binary {
     case Schema.Type.MAP => ???
   }
 
-}
-
-object ZigZagVarIntCodec extends Scodec[Int] {
-  private val toPositiveLong = (i: Int) => {
-    (i.toLong << 1) ^ (i.toLong >> 31)
-  }
-
-  private val fromPositiveLong = (l: Long) => {
-    val i = l.toInt
-    (i >>> 1) ^ -(i & 1)
-  }
-
-  private[this] val long =
-    new VarLongCodec()
-      .xmap(ZigZagVarIntCodec.fromPositiveLong, ZigZagVarIntCodec.toPositiveLong)
-
-  override def sizeBound =
-    SizeBound.bounded(1L, 5L)
-
-  override def encode(i: Int) =
-    long.encode(i)
-
-  override def decode(buffer: BitVector) =
-    long.decode(buffer)
-
-  override def toString = "variable-length integer"
-
-}
-final class VarLongCodec extends Scodec[Long] {
-  import VarLongCodec._
-
-  override def sizeBound = SizeBound.bounded(1L, 11L)
-
-  override def encode(i: Long) = {
-    val buffer = ByteBuffer.allocate(11).order(ByteOrder.BIG_ENDIAN)
-    val encoder = BEEncoder
-    val written = encoder(i, buffer)
-    buffer.flip()
-    val relevantBits = BitVector.view(buffer).take(written.toLong)
-    Attempt.successful(relevantBits)
-  }
-
-  override def decode(buffer: BitVector) = {
-    BEDecoder(buffer)
-  }
-
-  override def toString = "variable-length integer"
-
-  private val BEEncoder = (value: Long, buffer: ByteBuffer) => runEncodingBE(value, buffer, 8)
-  @tailrec
-  private def runEncodingBE(value: Long, buffer: ByteBuffer, size: Int): Int =
-    if ((value & MoreBytesMask) != 0) {
-      buffer.put((value & RelevantDataBits | MostSignificantBit).toByte)
-      runEncodingBE(value >>> BitsPerByte, buffer, size + 8)
-    } else {
-      buffer.put(value.toByte)
-      size
-    }
-
-  private val BEDecoder = (buffer: BitVector) =>
-    runDecodingBE(buffer, MostSignificantBit.toByte, 0L, 0)
-
-  @tailrec
-  private def runDecodingBE(
-    buffer: BitVector,
-    byte: Byte,
-    value: Long,
-    shift: Int
-  ): Attempt[DecodeResult[Long]] =
-    if ((byte & MostSignificantBit) != 0) {
-      if (buffer.sizeLessThan(8L)) {
-        Attempt.failure(Err.InsufficientBits(8L, buffer.size, Nil))
-      } else {
-        val nextByte = buffer.take(8L).toByte(false)
-        val nextValue = value | (nextByte & RelevantDataBits) << shift
-        runDecodingBE(buffer.drop(8L), nextByte, nextValue, shift + BitsPerByte)
-      }
-    } else {
-      Attempt.successful(DecodeResult(value, buffer))
-    }
-
-}
-object VarLongCodec {
-  private val RelevantDataBits = 0x7FL
-  private val MoreBytesMask = ~RelevantDataBits.toInt
-  private val MostSignificantBit = 0x80
-  private val BitsPerByte = 7
 }
