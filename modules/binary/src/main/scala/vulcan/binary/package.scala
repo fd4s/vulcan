@@ -1,19 +1,16 @@
 package vulcan
 
-import cats.data.Chain
 import cats.syntax.all._
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericEnumSymbol, GenericFixed, GenericRecord}
 import org.apache.avro.util.Utf8
-import scodec.bits.{BitVector, ByteVector}
+import scodec.bits.ByteVector
 import scodec.interop.cats._
-import scodec.{Attempt, DecodeResult, Decoder, Encoder, Err, SizeBound, codecs, Codec => Scodec}
+import scodec.{Attempt, DecodeResult, Decoder, Encoder, Err, codecs, Codec => Scodec}
 import vulcan.binary.internal.{VarLongCodec, ZigZagVarIntCodec}
 import vulcan.internal.converters.collection._
 
-import java.nio.{ByteBuffer, ByteOrder}
-import java.util
-import scala.annotation.tailrec
+import java.nio.ByteBuffer
 import scala.reflect.ClassTag
 
 package object binary {
@@ -130,6 +127,7 @@ package object binary {
               case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
               case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
               case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
+              case _ => throw new AssertionError("match should have been exhaustive")
             }
         types.indexWhere(check)
       }

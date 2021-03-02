@@ -12,7 +12,7 @@ object VarLongCodec extends Scodec[Long] {
 
   override def encode(i: Long): Attempt[BitVector] = {
     val buffer = ByteBuffer.allocate(11).order(ByteOrder.BIG_ENDIAN)
-    val written = runEncodingBE(value, buffer, 8)
+    val written = runEncodingBE(i, buffer, 8)
     buffer.flip()
     val relevantBits = BitVector.view(buffer).take(written.toLong)
     Attempt.successful(relevantBits)
