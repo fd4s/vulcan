@@ -25,7 +25,7 @@ lazy val vulcan = project
     console := (console in (core, Compile)).value,
     console in Test := (console in (core, Test)).value
   )
-  .aggregate(core, enumeratum, generic, refined)
+  .aggregate(core, binary, enumeratum, generic, refined)
 
 lazy val core = project
   .in(file("modules/core"))

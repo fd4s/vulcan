@@ -133,7 +133,7 @@ package object binary {
       }
     case Schema.Type.BYTES =>
       widenToAny {
-        codecs.bytes.xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
+        codecs.variableSizeBytesLong(zigZagVarLong, codecs.bytes).xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
       }
     case Schema.Type.FIXED =>
       widenToAny {

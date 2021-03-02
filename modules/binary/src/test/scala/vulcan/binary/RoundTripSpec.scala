@@ -9,11 +9,13 @@ import org.scalatest.Assertion
 import scodec.DecodeResult
 import scodec.bits.BitVector
 import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen
 import vulcan.Codec
 import vulcan.internal.converters.collection._
 import vulcan.binary.examples.{CaseClassThreeFields, SealedTraitEnum}
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.nio.ByteBuffer
 
 class RoundTripSpec extends BaseSpec with RoundTripHelpers {
   implicit val arbFloat: Arbitrary[java.lang.Float] = Arbitrary(
@@ -52,6 +54,9 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
   implicit val arbEnumSymbol: Arbitrary[GenericData.EnumSymbol] = Arbitrary(
     arbitrary[SealedTraitEnum].map(entry => SealedTraitEnum.codec.encode(entry).value)
   )
+
+  def genBytes(length: Int): Gen[ByteBuffer] =
+    Gen.listOfN(length, arbitrary[Byte]).map(bytes => ByteBuffer.wrap(bytes.toArray))
 
   describe("float") {
     it("roundtrip") {
@@ -111,6 +116,15 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
   describe("Enum") {
     it("roundtrip") {
       roundtrip[GenericData.EnumSymbol](Codec[SealedTraitEnum].schema.value)
+    }
+  }
+
+  describe("Bytes") {
+    it("roundtrip") {
+      implicit val arb: Arbitrary[ByteBuffer] = Arbitrary(
+        Gen.chooseNum(0, 1024).flatMap(genBytes)
+      )
+      roundtrip[ByteBuffer](Codec.bytes.schema.value)
     }
   }
 }
