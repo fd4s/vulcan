@@ -6,7 +6,6 @@ import org.apache.avro.util.Utf8
 import org.apache.avro.{Schema, SchemaBuilder}
 import org.scalacheck.Arbitrary
 import org.scalatest.Assertion
-import scodec.DecodeResult
 import scodec.bits.BitVector
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
@@ -16,6 +15,9 @@ import vulcan.binary.examples.{CaseClassThreeFields, SealedTraitEnum}
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
+import org.apache.avro.generic.GenericFixed
+import cats.kernel.Eq
+import vulcan.binary.examples.SealedTraitCaseClass
 
 class RoundTripSpec extends BaseSpec with RoundTripHelpers {
   implicit val arbFloat: Arbitrary[java.lang.Float] = Arbitrary(
@@ -55,47 +57,54 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
     arbitrary[SealedTraitEnum].map(entry => SealedTraitEnum.codec.encode(entry).value)
   )
 
-  def genBytes(length: Int): Gen[ByteBuffer] =
-    Gen.listOfN(length, arbitrary[Byte]).map(bytes => ByteBuffer.wrap(bytes.toArray))
+  def genBytes(length: Int): Gen[Array[Byte]] =
+    Gen.listOfN(length, arbitrary[Byte]).map(_.toArray)
 
   describe("float") {
     it("roundtrip") {
+      implicit val eq: Eq[java.lang.Float] = Eq.fromUniversalEquals
       roundtrip[java.lang.Float](SchemaBuilder.builder().floatType())
     }
   }
 
   describe("double") {
     it("roundtrip") {
+      implicit val eq: Eq[java.lang.Double] = Eq.fromUniversalEquals
       roundtrip[java.lang.Double](SchemaBuilder.builder().doubleType())
     }
   }
 
   describe("int") {
     it("roundtrip") {
+      implicit val eq: Eq[java.lang.Integer] = Eq.fromUniversalEquals
       roundtrip[java.lang.Integer](SchemaBuilder.builder().intType())
     }
   }
 
   describe("long") {
     it("roundtrip") {
+      implicit val eq: Eq[java.lang.Long] = Eq.fromUniversalEquals
       roundtrip[java.lang.Long](SchemaBuilder.builder().longType())
     }
   }
 
   describe("string") {
     it("roundtrip") {
+      implicit val eq: Eq[Utf8] = Eq.fromUniversalEquals
       roundtrip[Utf8](SchemaBuilder.builder().stringType())
     }
   }
 
   describe("boolean") {
     it("roundtrip") {
+      implicit val eq: Eq[java.lang.Boolean] = Eq.fromUniversalEquals
       roundtrip[java.lang.Boolean](SchemaBuilder.builder().booleanType())
     }
   }
 
   describe("array") {
     it("roundtrip") {
+      implicit val eq: Eq[java.util.List[java.lang.Long]] = Eq.fromUniversalEquals
       roundtrip[java.util.List[java.lang.Long]](
         SchemaBuilder.builder().array().items(SchemaBuilder.builder().longType())
       )
@@ -104,16 +113,19 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   describe("null") {
     it("roundtrip") {
+      implicit val eq: Eq[Null] = Eq.fromUniversalEquals
       scodecThenJava(null, SchemaBuilder.builder().nullType)
       javaThenScodec(null, SchemaBuilder.builder().nullType)
     }
   }
 
   describe("Record") {
+    implicit val eq: Eq[GenericRecord] = Eq.fromUniversalEquals
     it("roundtrip") { roundtrip[GenericRecord](Codec[CaseClassThreeFields].schema.value) }
   }
 
   describe("Enum") {
+    implicit val eq: Eq[GenericData.EnumSymbol] = Eq.fromUniversalEquals
     it("roundtrip") {
       roundtrip[GenericData.EnumSymbol](Codec[SealedTraitEnum].schema.value)
     }
@@ -121,10 +133,40 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   describe("Bytes") {
     it("roundtrip") {
+      implicit val eq: Eq[ByteBuffer] = Eq.fromUniversalEquals
       implicit val arb: Arbitrary[ByteBuffer] = Arbitrary(
-        Gen.chooseNum(0, 1024).flatMap(genBytes)
+        Gen.chooseNum(0, 1024).flatMap(genBytes).map(ByteBuffer.wrap)
       )
       roundtrip[ByteBuffer](Codec.bytes.schema.value)
+    }
+  }
+
+  describe("Fixed") { 
+    it("roundtrip") {
+      val fixedSchema = Schema.createFixed("foo", null, "com.example", 10)
+      implicit val arbitrary: Arbitrary[GenericFixed] = Arbitrary(genBytes(10).map{ b =>
+        new GenericFixed {
+          def getSchema() = fixedSchema
+          def bytes = b
+        }
+      })
+
+      implicit val eqS: Eq[Schema] = Eq.fromUniversalEquals
+      implicit val eq: Eq[GenericFixed] = Eq.and(Eq.by(_.getSchema), Eq.by(_.bytes().toVector))
+
+      roundtrip[GenericFixed](fixedSchema)
+    }
+  }
+
+  describe("Union") { 
+    it("roundtrip") {
+      implicit val arb: Arbitrary[AnyRef] = Arbitrary(
+        arbitrary[SealedTraitCaseClass].map(Codec[SealedTraitCaseClass].encode(_).value)
+      )
+
+      implicit val eq: Eq[AnyRef] = Eq.fromUniversalEquals
+
+      roundtrip[AnyRef](SealedTraitCaseClass.sealedTraitCaseClassCodec.schema.value)
     }
   }
 }
@@ -132,7 +174,7 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 trait RoundTripHelpers {
   self: BaseSpec =>
 
-  def roundtrip[A](schema: Schema)(
+  def roundtrip[A: Eq](schema: Schema)(
     implicit arbitrary: Arbitrary[A]
   ): Assertion = {
     forAll { (a: A) =>
@@ -142,23 +184,25 @@ trait RoundTripHelpers {
     }
   }
 
-  def scodecThenScodec(value: Any, schema: Schema) = {
+  def scodecThenScodec[A: Eq](value: A, schema: Schema) = {
     val encoded = forWriterSchema(schema).encode(value).fold(err => fail(err.toString), identity)
     val result = forWriterSchema(schema).decode(encoded).fold(err => fail(err.toString), identity)
 
-    assert(result === DecodeResult(value, BitVector.empty))
+    
+    assert(Eq[A].eqv(result.value.asInstanceOf[A], value))
+    assert(result.remainder.isEmpty)
   }
 
-  def scodecThenJava(value: Any, schema: Schema) = {
+  def scodecThenJava[A: Eq](value: A, schema: Schema): Assertion = {
     val encoded = forWriterSchema(schema).encode(value).fold(err => fail(err.toString), identity)
     val bais = new ByteArrayInputStream(encoded.toByteArray)
     val decoder = DecoderFactory.get.binaryDecoder(bais, null)
     val result = new GenericDatumReader[Any](schema).read(null, decoder)
 
-    assert(result === value)
+    assert(Eq[A].eqv(result.asInstanceOf[A], value))
   }
 
-  def javaThenScodec(value: Any, schema: Schema) = {
+  def javaThenScodec[A: Eq](value: A, schema: Schema) = {
     val baos = new ByteArrayOutputStream
     val encoder = EncoderFactory.get.binaryEncoder(baos, null)
     new GenericDatumWriter[Any](schema).write(value, encoder)
@@ -166,6 +210,8 @@ trait RoundTripHelpers {
     val encoded = baos.toByteArray
 
     val result = forWriterSchema(schema).decode(BitVector(encoded)).getOrElse(fail())
-    assert(result === DecodeResult(value, BitVector.empty))
+
+    assert(Eq[A].eqv(result.value.asInstanceOf[A], value))
+    assert(result.remainder.isEmpty)
   }
 }

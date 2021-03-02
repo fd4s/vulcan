@@ -139,7 +139,13 @@ package object binary {
       widenToAny {
         codecs.fixedSizeBytes(
           schema.getFixedSize.toLong,
-          codecs.bytes.xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
+          codecs.bytes.xmapc[GenericFixed]{ b =>
+            val _schema = schema
+            new GenericFixed {
+              override def getSchema() = _schema
+              override val bytes = b.toArray
+            }
+          }(gf => ByteVector(gf.bytes))
         )
       }
     case Schema.Type.MAP => ???
