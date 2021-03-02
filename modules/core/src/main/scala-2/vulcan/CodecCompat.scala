@@ -9,6 +9,7 @@ package vulcan
 import org.apache.avro.generic.GenericFixed
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.tags._
+import org.apache.avro.generic.GenericData
 
 private[vulcan] trait CodecCompanionCompat {
 
@@ -21,7 +22,7 @@ private[vulcan] trait CodecCompanionCompat {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec.Aux[AnyRef, A] =
+  )(implicit tag: WeakTypeTag[A]): Codec.Aux[GenericData.EnumSymbol, A] =
     Codec.enumeration(
       name = nameFrom(tag),
       symbols = symbols,

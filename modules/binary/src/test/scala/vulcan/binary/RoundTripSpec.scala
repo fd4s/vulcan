@@ -50,7 +50,7 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
   )
 
   implicit val arbEnumSymbol: Arbitrary[GenericData.EnumSymbol] = Arbitrary(
-    arbitrary[SealedTraitEnum].map(entry => Codec[SealedTraitEnum].encode(entry).value)
+    arbitrary[SealedTraitEnum].map(entry => SealedTraitEnum.codec.encode(entry).value)
   )
 
   describe("float") {
@@ -109,7 +109,9 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
   }
 
   describe("Enum") {
-    it("roundtrip") {}
+    it("roundtrip") {
+      roundtrip[GenericData.EnumSymbol](Codec[SealedTraitEnum].schema.value)
+    }
   }
 }
 

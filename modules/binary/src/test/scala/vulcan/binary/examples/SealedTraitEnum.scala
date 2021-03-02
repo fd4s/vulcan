@@ -3,8 +3,9 @@ package vulcan.binary.examples
 import cats.Eq
 import org.scalacheck.{Arbitrary, Gen}
 import vulcan.{AvroError, Codec, Props}
+import org.apache.avro.generic.GenericData
 
-sealed trait SealedTraitEnum
+sealed trait SealedTraitEnum extends Product with Serializable
 
 object SealedTraitEnum {
   implicit final val arbitrary: Arbitrary[SealedTraitEnum] =
@@ -13,7 +14,7 @@ object SealedTraitEnum {
   implicit final val eq: Eq[SealedTraitEnum] =
     Eq.fromUniversalEquals
 
-  implicit final val codec: Codec[SealedTraitEnum] =
+  implicit final val codec: Codec.Aux[ GenericData.EnumSymbol, SealedTraitEnum] =
     Codec.enumeration(
       name = "SealedTraitEnum",
       namespace = "vulcan.examples",
@@ -21,10 +22,10 @@ object SealedTraitEnum {
       aliases = List("first", "second"),
       doc = Some("documentation"),
       default = Some(FirstInSealedTraitEnum),
-      encode = {
+      encode = (e: SealedTraitEnum) => (e match {
         case FirstInSealedTraitEnum  => "first"
         case SecondInSealedTraitEnum => "second"
-      },
+      }),
       decode = {
         case "first"  => Right(FirstInSealedTraitEnum)
         case "second" => Right(SecondInSealedTraitEnum)
