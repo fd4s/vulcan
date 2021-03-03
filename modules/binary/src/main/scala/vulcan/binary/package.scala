@@ -60,6 +60,8 @@ package object binary {
 
   def recordDecoder(writerSchema: Schema): Decoder[GenericRecord] =
     Decoder { bytes =>
+      val record = new GenericData.Record(writerSchema)
+
       writerSchema.getFields.asScala.toList
         .map(field => forWriterSchema(field.schema).map((field.name, _)))
         .scanLeft[Attempt[DecodeResult[(String, Any)]]](
@@ -71,7 +73,6 @@ package object binary {
         }
         .sequence
         .map { l =>
-          val record = new GenericData.Record(writerSchema)
           l.tail.foreach {
             case DecodeResult((name, value), _) => record.put(name, value)
           }
@@ -81,9 +82,6 @@ package object binary {
 
   val nullScodec: Scodec[Null] =
     codecs.ignore(0).xmap(_ => null, _ => ())
-
-  def blockScodec[A](codec: Scodec[A]): Scodec[List[A]] =
-    codecs.listOfN(ZigZagVarIntCodec, codec)
 
   private def widenToAny[A](codec: Scodec[A])(implicit ct: ClassTag[A]): Scodec[Any] =
     codec.widen[Any](
@@ -127,19 +125,21 @@ package object binary {
               case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
               case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
               case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
-              case _ => throw new AssertionError("match should have been exhaustive")
+              case _                          => throw new AssertionError("match should have been exhaustive")
             }
         types.indexWhere(check)
       }
     case Schema.Type.BYTES =>
       widenToAny {
-        codecs.variableSizeBytesLong(zigZagVarLong, codecs.bytes).xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
+        codecs
+          .variableSizeBytesLong(zigZagVarLong, codecs.bytes)
+          .xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
       }
     case Schema.Type.FIXED =>
       widenToAny {
         codecs.fixedSizeBytes(
           schema.getFixedSize.toLong,
-          codecs.bytes.xmapc[GenericFixed]{ b =>
+          codecs.bytes.xmapc[GenericFixed] { b =>
             val _schema = schema
             new GenericFixed {
               override def getSchema() = _schema
