@@ -35,7 +35,8 @@ lazy val core = project
     dependencySettings ++ Seq(
       libraryDependencies ++= Seq(
         "org.apache.avro" % "avro" % avroVersion,
-        "org.typelevel" %% "cats-free" % catsVersion
+        "org.typelevel" %% "cats-free" % catsVersion,
+        "org.scodec" %% "scodec-core" % "1.11.7"
       ) ++ {
         if (isDotty.value) Nil
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
@@ -48,6 +49,16 @@ lazy val core = project
     ),
     testSettings
   )
+
+lazy val tests = project
+  .in(file("modules/tests"))
+  .settings(
+    dependencySettings,
+    noPublishSettings,
+    scalaSettings,
+    testSettings
+  )
+  .dependsOn(core, binary)
 
 lazy val enumeratum = project
   .in(file("modules/enumeratum"))
