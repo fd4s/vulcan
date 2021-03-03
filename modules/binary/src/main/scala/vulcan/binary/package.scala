@@ -151,4 +151,61 @@ package object binary {
     case Schema.Type.MAP => ???
   }
 
+  def resolve(writerSchema: Schema, readerSchema: Schema): Decoder[Any] =
+    writerSchema.getType match {
+      case Schema.Type.FLOAT  => floatScodec
+      case Schema.Type.DOUBLE => doubleScodec
+      case Schema.Type.INT    => intScodec
+      case Schema.Type.LONG   => longScodec
+      case Schema.Type.RECORD =>
+        Scodec[GenericRecord](recordEncoder(writerSchema), recordDecoder(writerSchema))
+      case Schema.Type.ARRAY =>
+        ArrayScodec(forWriterSchema(writerSchema.getElementType))
+      case Schema.Type.STRING  => stringScodec
+      case Schema.Type.BOOLEAN => boolScodec
+      case Schema.Type.NULL =>
+        nullScodec.widen[Any](identity, { n =>
+          if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
+        })
+      case Schema.Type.ENUM => enumScodec(writerSchema)
+      case Schema.Type.UNION =>
+        val types = writerSchema.getTypes.asScala.toList
+        ZigZagVarIntCodec.consume(writerSchemaIdx => forWriterSchema(types(writerSchemaIdx))) {
+          value =>
+            val check: Schema => Boolean =
+              if (value == null) _.getType == Schema.Type.NULL
+              else
+                value match {
+                  case _: java.lang.Float         => _.getType == Schema.Type.FLOAT
+                  case _: java.lang.Double        => _.getType == Schema.Type.DOUBLE
+                  case _: java.lang.Integer       => _.getType == Schema.Type.INT
+                  case _: java.lang.Long          => _.getType == Schema.Type.LONG
+                  case _: java.lang.Boolean       => _.getType == Schema.Type.BOOLEAN
+                  case _: Utf8                    => _.getType == Schema.Type.STRING
+                  case _: java.util.Map[_, _]     => _.getType == Schema.Type.MAP
+                  case _: java.util.Collection[_] => _.getType == Schema.Type.ARRAY
+                  case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
+                  case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
+                  case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
+                  case _                          => throw new AssertionError("match should have been exhaustive")
+                }
+            types.indexWhere(check)
+        }
+      case Schema.Type.BYTES =>
+        codecs
+          .variableSizeBytesLong(zigZagVarLong, codecs.bytes)
+          .xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
+      case Schema.Type.FIXED =>
+        codecs.fixedSizeBytes(
+          writerSchema.getFixedSize.toLong,
+          codecs.bytes.xmapc[GenericFixed] { b =>
+            val _schema = writerSchema
+            new GenericFixed {
+              override def getSchema() = _schema
+              override val bytes = b.toArray
+            }
+          }(gf => ByteVector(gf.bytes))
+        )
+      case Schema.Type.MAP => ???
+    }
 }
