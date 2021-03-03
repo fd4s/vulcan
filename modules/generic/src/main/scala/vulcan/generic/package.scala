@@ -28,7 +28,7 @@ package object generic {
   implicit final def coproductCodec[H, T <: Coproduct](
     implicit headCodec: Codec[H],
     tailCodec: Lazy[Codec[T]]
-  ): Codec[H :+: T] =
+  ): Codec.Aux[AnyRef, H :+: T] =
     Codec.instance(
       AvroError.catchNonFatal {
         headCodec.schema.flatMap { first =>
@@ -298,7 +298,7 @@ package object generic {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec.Aux[AnyRef, A] =
+  )(implicit tag: WeakTypeTag[A]): Codec.Aux[GenericData.EnumSymbol, A] =
     Codec.enumeration(
       name = nameFrom(tag),
       symbols = symbols,

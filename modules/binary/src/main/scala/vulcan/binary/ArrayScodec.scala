@@ -6,17 +6,19 @@ import scodec.{Attempt, DecodeResult, SizeBound, codecs, Codec => Scodec}
 import vulcan.internal.converters.collection._
 
 import java.util
+import scala.annotation.tailrec
 
 class ArrayScodec[A](codec: Scodec[A]) extends Scodec[util.List[A]] {
   override def decode(bits: BitVector): Attempt[DecodeResult[util.List[A]]] = {
     def decodeBlock(bits: BitVector): Attempt[DecodeResult[List[A]]] =
       blockScodec(codec).decode(bits)
 
-    def loop(remaining: BitVector, acc: Chain[A]): Attempt[DecodeResult[Chain[A]]] =
-      decodeBlock(remaining).flatMap {
-        case DecodeResult(value, remainder) =>
+    @tailrec def loop(remaining: BitVector, acc: Chain[A]): Attempt[DecodeResult[Chain[A]]] =
+      decodeBlock(remaining) match {
+        case Attempt.Successful(DecodeResult(value, remainder)) =>
           if (value.isEmpty) Attempt.successful(DecodeResult(acc, remainder))
           else loop(remainder, acc ++ Chain.fromSeq(value))
+        case f: Attempt.Failure => f
       }
 
     loop(bits, Chain.empty).map(_.map(_.toList.asJava))
