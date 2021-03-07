@@ -128,7 +128,8 @@ package object generic {
                     schema,
                     param.annotations.collectFirst {
                       case AvroDoc(doc) => doc
-                    }.orNull
+                    }.orNull,
+                    if (schema.isNullable) Schema.Field.NULL_DEFAULT_VALUE else null
                   )
                 }
               }
