@@ -9,7 +9,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import scala.util.Try
 
 final class CodecInvariantSpec extends CatsSuite with EitherValues {
-  val schemaGen: Gen[Either[AvroError, Schema]] =
+  val schemaGen: Gen[Schema] =
     Gen.oneOf(
       Left(AvroError("error")),
       Codec[Int].schema,
