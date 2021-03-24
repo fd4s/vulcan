@@ -228,12 +228,11 @@ trait RoundtripHelpers {
     eq: Eq[A]
   ): Assertion = {
     val avroSchema = codec.schema
-    assert(avroSchema.isRight)
 
     val encoded = codec.encode(a)
     assert(encoded.isRight)
 
-    val decoded: Either[AvroError, A] = codec.decode(encoded.value, avroSchema.value)
+    val decoded: Either[AvroError, A] = codec.decode(encoded.value, avroSchema)
     withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
       assert(decoded === Right(a))
     }
@@ -246,7 +245,7 @@ trait RoundtripHelpers {
     val binary = Codec.toBinary(a)
     assert(binary.isRight)
 
-    val decoded = codec.schema.flatMap(Codec.fromBinary[A](binary.value, _))
+    val decoded = Codec.fromBinary[A](binary.value, codec.schema)
     withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
       assert(decoded === Right(a))
     }
@@ -259,7 +258,7 @@ trait RoundtripHelpers {
     val json = Codec.toJson(a)
     assert(json.isRight)
 
-    val decoded = codec.schema.flatMap(Codec.fromJson[A](json.value, _))
+    val decoded = Codec.fromJson[A](json.value, codec.schema)
     withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
       assert(decoded === Right(a))
     }

@@ -51,27 +51,27 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         }
 
         it("should capture errors on nested unions") {
-          assertSchemaError[Int :+: Option[String] :+: CNil] {
+          assertSchemaError[Int :+: Option[String] :+: CNil](Codec[Int :+: Option[String] :+: CNil]) {
             """org.apache.avro.AvroRuntimeException: Nested union: [["null","string"]]"""
           }
         }
 
         it("should fail if CNil schema is not union") {
-          val codec: Codec[Int :+: CNil] =
+          def codec: Codec[Int :+: CNil] =
             coproductCodec[Int, CNil](
               Codec.int,
               shapeless.Lazy {
                 Codec.instance[Null, CNil](
-                  Right(SchemaBuilder.builder().nullType()),
+                  SchemaBuilder.builder().nullType(),
                   _ => Left(AvroError("encode")),
                   (_, _) => Left(AvroError("decode"))
                 )
               }
             )
 
-          assertSchemaError[Int :+: CNil] {
+          assertSchemaError(codec) {
             """Unexpected schema type NULL in Coproduct"""
-          }(codec)
+          }
         }
       }
 
@@ -212,7 +212,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           }
 
           it("should capture errors on invalid names") {
-            assertSchemaError[CaseClassFieldInvalidName] {
+            assertSchemaError(Codec[CaseClassFieldInvalidName]) {
               """org.apache.avro.SchemaParseException: Illegal initial character: -value"""
             }
           }
@@ -323,7 +323,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           }
 
           it("should capture errors on nested unions") {
-            assertSchemaError[SealedTraitNestedUnion] {
+            assertSchemaError(Codec[SealedTraitNestedUnion]) {
               """org.apache.avro.AvroRuntimeException: Nested union: [["null","int"]]"""
             }
           }
@@ -399,16 +399,16 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
   }
 
   def unsafeSchema[A](implicit codec: Codec[A]): Schema =
-    codec.schema.value
+    codec.schema
 
   def unsafeEncode[A](a: A)(implicit codec: Codec[A]): Any =
     codec.encode(a).value
 
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
-    codec.schema.flatMap(codec.decode(value, _)).value
+    codec.decode(value, codec.schema).value
 
   def assertSchemaIs[A](expectedSchema: String)(implicit codec: Codec[A]): Assertion =
-    assert(codec.schema.value.toString == expectedSchema)
+    assert(codec.schema.toString == expectedSchema)
 
   def assertEncodeIs[A](
     a: A,
@@ -430,10 +430,17 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
       decode === decoded.value
     }
 
-  def assertSchemaError[A](
+  def assertSchemaError[A](codec: => Codec[A])(
     expectedErrorMessage: String
-  )(implicit codec: Codec[A]): Assertion =
-    assert(codec.schema.swap.value.message == expectedErrorMessage)
+  ): Assertion =
+    assert(
+      Either
+        .catchNonFatal(codec)
+        .swap
+        .value
+        .asInstanceOf[AvroException]
+        .message == expectedErrorMessage
+    )
 
   def assertDecodeError[A](
     value: Any,

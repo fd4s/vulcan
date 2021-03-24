@@ -251,7 +251,11 @@ object Codec {
   ): Codec.Aux[ByteBuffer, BigDecimal] = {
     val conversion = new Conversions.DecimalConversion()
     val logicalType = LogicalTypes.decimal(precision, scale)
-    val schema = logicalType.addToSchema(SchemaBuilder.builder().bytesType())
+    val schema =
+      AvroError
+        .catchNonFatal(Right(logicalType.addToSchema(SchemaBuilder.builder().bytesType())))
+        .leftMap[Schema](err => throw err.throwable)
+        .merge
     Codec.instanceForTypes(
       "ByteBuffer",
       "BigDecimal",
@@ -372,29 +376,31 @@ object Codec {
     props: Props = Props.empty
   ): Codec.Aux[GenericData.EnumSymbol, A] = {
     val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
-    val schema =
-      props.toChain
-        .map { props =>
-          val schema =
-            Schema.createEnum(
-              name,
-              doc.orNull,
-              namespace,
-              symbols.asJava,
-              default.map(encode).orNull
-            )
+    val schema = AvroError
+      .catchNonFatal {
+        props.toChain
+          .map { props =>
+            val schema =
+              Schema.createEnum(
+                name,
+                doc.orNull,
+                namespace,
+                symbols.asJava,
+                default.map(encode).orNull
+              )
 
-          aliases.foreach(schema.addAlias)
+            aliases.foreach(schema.addAlias)
 
-          props.foldLeft(()) {
-            case ((), (name, value)) =>
-              schema.addProp(name, value)
+            props.foldLeft(()) {
+              case ((), (name, value)) =>
+                schema.addProp(name, value)
+            }
+
+            schema
           }
-
-          schema
-        }
-        .leftMap[Schema](err => throw err.throwable)
-        .merge
+      }
+      .leftMap[Schema](err => throw err.throwable)
+      .merge
     Codec.instanceForTypes(
       "GenericEnumSymbol",
       typeName,
@@ -438,21 +444,25 @@ object Codec {
     props: Props = Props.empty
   ): Codec.Aux[GenericFixed, A] = {
     val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
-    val schema =
-      props.toChain
-        .map { props =>
-          val schema =
-            SchemaFactory.fixed(name, namespace, aliases.toArray, doc.orNull, size)
+    val schema = {
+      AvroError
+        .catchNonFatal {
+          props.toChain
+            .map { props =>
+              val schema =
+                SchemaFactory.fixed(name, namespace, aliases.toArray, doc.orNull, size)
 
-          props.foldLeft(()) {
-            case ((), (name, value)) =>
-              schema.addProp(name, value)
-          }
+              props.foldLeft(()) {
+                case ((), (name, value)) =>
+                  schema.addProp(name, value)
+              }
 
-          schema
+              schema
+            }
         }
         .leftMap[Schema](err => throw err.throwable)
         .merge
+    }
     Codec
       .instanceForTypes(
         "GenericFixed",
@@ -833,7 +843,7 @@ object Codec {
     val typeName = if (namespace.isEmpty) name else s"$namespace.$name"
     val free = f(FieldBuilder.instance)
     val schema = {
-      val fields =
+      val fields = AvroError.catchNonFatal {
         free.analyze {
           new (Field[A, *] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]) {
             def apply[B](field: Field[A, B]) = {
@@ -872,6 +882,7 @@ object Codec {
             }
           }
         }
+      }
 
       fields.flatMap { fields =>
         props.toChain.map { props =>
@@ -1067,11 +1078,18 @@ object Codec {
   final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[AnyRef, A] = {
     val alts = f(AltBuilder.instance)
     val schema =
-      Schema.createUnion(
-        alts.toList
-          .map(_.codec.schema)
-          .asJava
-      )
+      AvroError
+        .catchNonFatal {
+          Right(
+            Schema.createUnion(
+              alts.toList
+                .map(_.codec.schema)
+                .asJava
+            )
+          )
+        }
+        .leftMap[Schema](err => throw err.throwable)
+        .merge
 
     Codec.instance[AnyRef, A](
       schema,

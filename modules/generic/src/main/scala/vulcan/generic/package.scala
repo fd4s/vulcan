@@ -31,17 +31,20 @@ package object generic {
     tailCodec: Lazy[Codec[T]]
   ): Codec[H :+: T] =
     Codec.instance(
-      {
-        val first = headCodec.schema
-        val rest = tailCodec.value.schema
-        rest.getType() match {
-          case Schema.Type.UNION =>
-            val schemas = first :: rest.getTypes().asScala.toList
-            Schema.createUnion(schemas.asJava)
-          case schemaType =>
-            throw AvroError(s"Unexpected schema type $schemaType in Coproduct").throwable
+      AvroError
+        .catchNonFatal {
+          val first = headCodec.schema
+          val rest = tailCodec.value.schema
+          rest.getType() match {
+            case Schema.Type.UNION =>
+              val schemas = first :: rest.getTypes().asScala.toList
+              Right(Schema.createUnion(schemas.asJava))
+            case schemaType =>
+              Left(AvroError(s"Unexpected schema type $schemaType in Coproduct"))
+          }
         }
-      },
+        .leftMap[Schema](err => throw err.throwable)
+        .merge,
       _.eliminate(
         headCodec.encode(_),
         tailCodec.value.encode(_)
@@ -113,31 +116,37 @@ package object generic {
 
       val typeName =
         s"$namespace.${caseClass.typeName.short}"
-      val schema =
-        if (caseClass.isValueClass) {
-          caseClass.parameters.head.typeclass.schema
-        } else {
-          val fields =
-            caseClass.parameters.toList.map { param =>
-              new Schema.Field(
-                param.label,
-                param.typeclass.schema,
-                param.annotations.collectFirst {
+      val schema = AvroError
+        .catchNonFatal {
+          Right {
+            if (caseClass.isValueClass) {
+              caseClass.parameters.head.typeclass.schema
+            } else {
+              val fields =
+                caseClass.parameters.toList.map { param =>
+                  new Schema.Field(
+                    param.label,
+                    param.typeclass.schema,
+                    param.annotations.collectFirst {
+                      case AvroDoc(doc) => doc
+                    }.orNull
+                  )
+                }
+
+              Schema.createRecord(
+                caseClass.typeName.short,
+                caseClass.annotations.collectFirst {
                   case AvroDoc(doc) => doc
-                }.orNull
+                }.orNull,
+                namespace,
+                false,
+                fields.asJava
               )
             }
-
-          Schema.createRecord(
-            caseClass.typeName.short,
-            caseClass.annotations.collectFirst {
-              case AvroDoc(doc) => doc
-            }.orNull,
-            namespace,
-            false,
-            fields.asJava
-          )
+          }
         }
+        .leftMap[Schema](err => throw err.throwable)
+        .merge
       Codec.instance(
         schema,
         if (caseClass.isValueClass) { a =>
@@ -215,11 +224,18 @@ package object generic {
     final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[AnyRef, A] = {
       val typeName = sealedTrait.typeName.full
       Codec.instance[AnyRef, A](
-        Schema.createUnion(
-          sealedTrait.subtypes.toList
-            .map(_.typeclass.schema)
-            .asJava
-        ),
+        AvroError
+          .catchNonFatal(
+            Right(
+              Schema.createUnion(
+                sealedTrait.subtypes.toList
+                  .map(_.typeclass.schema)
+                  .asJava
+              )
+            )
+          )
+          .leftMap(err => throw err.throwable)
+          .merge,
         a =>
           sealedTrait.dispatch(a) { subtype =>
             subtype.typeclass.encode(subtype.cast(a))

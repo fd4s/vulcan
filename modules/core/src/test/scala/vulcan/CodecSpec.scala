@@ -298,7 +298,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should capture errors on invalid precision and scale") {
-          implicit val avroSchema: Codec[BigDecimal] =
+          implicit def avroSchema: Codec[BigDecimal] =
             Codec.decimal(precision = -1, scale = -1)
 
           assertSchemaError[BigDecimal] {
@@ -336,7 +336,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               new Conversions.DecimalConversion().toBytes(
                 value.underlying(),
                 unsafeSchema[BigDecimal],
-                unsafeSchema[BigDecimal].getLogicalType()
+                unsafeSchema[BigDecimal].getLogicalType
               )
             }
           )
@@ -639,17 +639,20 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should fail for negative size") {
           assert {
-            Codec
-              .fixed[Array[Byte]](
-                name = "Name",
-                size = -1,
-                encode = bytes => bytes,
-                decode = bytes => Right(bytes),
-                namespace = ""
+            Either
+              .catchNonFatal(
+                Codec
+                  .fixed[Array[Byte]](
+                    name = "Name",
+                    size = -1,
+                    encode = bytes => bytes,
+                    decode = bytes => Right(bytes),
+                    namespace = ""
+                  )
               )
-              .schema
               .swap
               .value
+              .asInstanceOf[AvroException]
               .message ==
               "java.lang.IllegalArgumentException: Invalid fixed size: -1"
           }
@@ -1504,14 +1507,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should support null as first schema type in union") {
           implicit val codec: Codec[Option[Int]] =
             Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .nullType()
-                  .and()
-                  .intType()
-                  .endUnion()
-              },
+              SchemaBuilder
+                .unionOf()
+                .nullType()
+                .and()
+                .intType()
+                .endUnion(),
               Codec.option[Int].encode,
               Codec.option[Int].decode
             )
@@ -1525,14 +1526,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should support null as second schema type in union") {
           implicit val codec: Codec[Option[Int]] =
             Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .intType()
-                  .and()
-                  .nullType()
-                  .endUnion()
-              },
+              SchemaBuilder
+                .unionOf()
+                .intType()
+                .and()
+                .nullType()
+                .endUnion(),
               Codec.option[Int].encode,
               Codec.option[Int].decode
             )
@@ -1595,14 +1594,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should support null as first schema type in union") {
           implicit val codec: Codec[Option[Int]] =
             Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .nullType()
-                  .and()
-                  .intType()
-                  .endUnion()
-              },
+              SchemaBuilder
+                .unionOf()
+                .nullType()
+                .and()
+                .intType()
+                .endUnion(),
               Codec.option[Int].encode,
               Codec.option[Int].decode
             )
@@ -1616,14 +1613,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should support null as second schema type in union") {
           implicit val codec: Codec[Option[Int]] =
             Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .intType()
-                  .and()
-                  .nullType()
-                  .endUnion()
-              },
+              SchemaBuilder
+                .unionOf()
+                .intType()
+                .and()
+                .nullType()
+                .endUnion(),
               Codec.option[Int].encode,
               Codec.option[Int].decode
             )
@@ -1712,7 +1707,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       describe("schema") {
         it("should have the expected schema") {
           assert {
-            Codec[CaseClassTwoFields].schema.value.toString() ==
+            Codec[CaseClassTwoFields].schema.toString() ==
               """{"type":"record","name":"CaseClassTwoFields","namespace":"vulcan.examples","doc":"some documentation for example","fields":[{"name":"name","type":"string","doc":"some doc","default":"default name","order":"descending","aliases":["TheAlias"],"custom":"value"},{"name":"age","type":"int"}],"custom":[1,2,3],"aliases":["FirstAlias","SecondAlias"]}"""
           }
         }
@@ -1725,12 +1720,19 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               (_, _) => Left(AvroError("error"))
             )
 
-          implicit val caseClassFieldCodec: Codec[CaseClassField] =
+          def caseClassFieldCodec: Codec[CaseClassField] =
             Codec.record[CaseClassField]("CaseClassField", "") { field =>
               field("value", _.value, default = Some(10)).map(CaseClassField(_))
             }
 
-          assert(caseClassFieldCodec.schema.swap.value.message == "error")
+          assert(
+            Either
+              .catchNonFatal(caseClassFieldCodec)
+              .swap
+              .value
+              .asInstanceOf[AvroException]
+              .message == "error"
+          )
         }
 
         it("should error if default value is not valid for field") {
@@ -1741,13 +1743,18 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               (_, _) => Left(AvroError("error"))
             )
 
-          implicit val caseClassFieldCodec: Codec[CaseClassField] =
+          def caseClassFieldCodec: Codec[CaseClassField] =
             Codec.record[CaseClassField]("CaseClassField", "") { field =>
               field("value", _.value, default = Some(10)).map(CaseClassField(_))
             }
 
           assert {
-            caseClassFieldCodec.schema.swap.value.message ==
+            Either
+              .catchNonFatal(caseClassFieldCodec)
+              .swap
+              .value
+              .asInstanceOf[AvroException]
+              .message ==
               """org.apache.avro.AvroTypeException: Invalid default for field value: "invalid" not a "int""""
           }
         }
@@ -2437,21 +2444,9 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
     }
 
     describe("show") {
-      it("should include the schema if available") {
+      it("should include the schema") {
         assert {
           Codec[Int].show == """Codec("int")"""
-        }
-      }
-
-      it("should show the error if schema is unavailable") {
-        assert {
-          Codec
-            .instance(
-              Left(AvroError("error")),
-              Codec.int.encode,
-              Codec.int.decode
-            )
-            .show == "AvroError(error)"
         }
       }
 
@@ -2893,16 +2888,16 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 trait CodecSpecHelpers {
   self: BaseSpec =>
   def unsafeSchema[A](implicit codec: Codec[A]): Schema =
-    codec.schema.value
+    codec.schema
 
   def unsafeEncode[A](a: A)(implicit codec: Codec[A]): Any =
     codec.encode(a).value
 
   def unsafeDecode[A](value: Any)(implicit codec: Codec[A]): A =
-    codec.schema.flatMap(codec.decode(value, _)).value
+    codec.decode(value, codec.schema).value
 
   def assertSchemaIs[A](expectedSchema: String)(implicit codec: Codec[A]): Assertion =
-    assert(codec.schema.value.toString == expectedSchema)
+    assert(codec.schema.toString == expectedSchema)
 
   def assertEncodeIs[A](
     a: A,
@@ -2929,8 +2924,15 @@ trait CodecSpecHelpers {
 
   def assertSchemaError[A](
     expectedErrorMessage: String
-  )(implicit codec: Codec[A]): Assertion =
-    assert(codec.schema.swap.value.message == expectedErrorMessage)
+  )(implicit codec: => Codec[A]): Assertion =
+    assert(
+      Either
+        .catchNonFatal(codec)
+        .swap
+        .value
+        .asInstanceOf[AvroException]
+        .message == expectedErrorMessage
+    )
 
   def assertDecodeError[A](
     value: Any,

@@ -11,7 +11,6 @@ import scala.util.Try
 final class CodecInvariantSpec extends CatsSuite with EitherValues {
   val schemaGen: Gen[Schema] =
     Gen.oneOf(
-      Left(AvroError("error")),
       Codec[Int].schema,
       Codec[String].schema
     )
@@ -58,8 +57,8 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
 
           assert(e1.isRight == e2.isRight)
           if (e1.isRight && e2.isRight) {
-            val d1 = c1.schema.flatMap(c1.decode(e1.value, _))
-            val d2 = c2.schema.flatMap(c2.decode(e2.value, _))
+            val d1 = c1.decode(e1.value, c1.schema)
+            val d2 = c2.decode(e2.value, c2.schema)
             assert(d1 === d2)
           }
         }
