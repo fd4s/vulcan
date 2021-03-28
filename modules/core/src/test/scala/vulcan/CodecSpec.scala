@@ -43,7 +43,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Boolean](
             unsafeEncode(false),
             unsafeSchema[Long],
-            "Got unexpected schema type LONG while decoding Boolean, expected schema type BOOLEAN"
+            "Error decoding Boolean: Got unexpected schema type LONG, expected schema type BOOLEAN"
           )
         }
 
@@ -51,7 +51,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Boolean](
             unsafeEncode(10L),
             unsafeSchema[Boolean],
-            "Got unexpected type java.lang.Long while decoding Boolean, expected type Boolean"
+            "Error decoding Boolean: Got unexpected type java.lang.Long, expected type Boolean"
           )
         }
 
@@ -59,7 +59,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Boolean](
             null,
             unsafeSchema[Boolean],
-            "Got unexpected type null while decoding Boolean, expected type Boolean"
+            "Error decoding Boolean: Got unexpected type null, expected type Boolean"
           )
         }
 
@@ -97,7 +97,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Byte](
             unsafeEncode(1.toByte),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Byte, expected schema type INT"
+            "Error decoding Byte: Error decoding Int: Got unexpected schema type STRING, expected schema type INT"
           )
         }
 
@@ -105,7 +105,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Byte](
             unsafeEncode("value"),
             unsafeSchema[Byte],
-            "Got unexpected type org.apache.avro.util.Utf8 while decoding Byte, expected type Int"
+            "Error decoding Byte: Error decoding Int: Got unexpected type org.apache.avro.util.Utf8, expected type Int"
           )
         }
 
@@ -120,7 +120,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             assertDecodeError[Byte](
               unsafeEncode(nonByte),
               unsafeSchema[Byte],
-              s"Got unexpected Byte value $nonByte, expected value in range -128 to 127"
+              s"Error decoding Byte: Got unexpected Int value $nonByte, expected value in range -128 to 127"
             )
           }
         }
@@ -159,7 +159,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Array[Byte]](
             unsafeEncode[Array[Byte]](Array(1)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Array[Byte], expected schema type BYTES"
+            "Error decoding Array[Byte]: Got unexpected schema type INT, expected schema type BYTES"
           )
         }
 
@@ -167,7 +167,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Array[Byte]](
             10,
             unsafeSchema[Array[Byte]],
-            "Got unexpected type java.lang.Integer while decoding Array[Byte], expected type ByteBuffer"
+            "Error decoding Array[Byte]: Got unexpected type java.lang.Integer, expected type ByteBuffer"
           )
         }
 
@@ -210,7 +210,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(Chain(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Chain, expected schema type ARRAY"
+            "Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -218,7 +218,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(10),
             unsafeSchema[Chain[Int]],
-            "Got unexpected type java.lang.Integer while decoding Chain, expected type Collection"
+            "Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -256,7 +256,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Char](
             unsafeEncode('a'),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Char, expected schema type STRING"
+            "Error decoding Char: Got unexpected schema type INT, expected schema type STRING"
           )
         }
 
@@ -264,7 +264,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Char](
             unsafeEncode(10),
             unsafeSchema[String],
-            "Got unexpected type java.lang.Integer while decoding Char, expected type Utf8"
+            "Error decoding Char: Got unexpected type java.lang.Integer, expected type Utf8"
           )
         }
 
@@ -272,7 +272,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Char](
             unsafeEncode(""),
             unsafeSchema[String],
-            "Got unexpected String with length 0 while decoding Char, expected length 1"
+            "Error decoding Char: Got unexpected String with length 0, expected length 1"
           )
         }
 
@@ -280,7 +280,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Char](
             unsafeEncode("ab"),
             unsafeSchema[String],
-            "Got unexpected String with length 2 while decoding Char, expected length 1"
+            "Error decoding Char: Got unexpected String with length 2, expected length 1"
           )
         }
       }
@@ -351,7 +351,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[BigDecimal](
             unsafeEncode(BigDecimal("123.45678")),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding BigDecimal, expected schema type BYTES"
+            "Error decoding BigDecimal: Got unexpected schema type STRING, expected schema type BYTES"
           )
         }
 
@@ -359,7 +359,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[BigDecimal](
             unsafeEncode(10),
             unsafeSchema[BigDecimal],
-            "Got unexpected type java.lang.Integer while decoding BigDecimal, expected type ByteBuffer"
+            "Error decoding BigDecimal: Got unexpected type java.lang.Integer, expected type ByteBuffer"
           )
         }
 
@@ -367,7 +367,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[BigDecimal](
             unsafeEncode(BigDecimal("123.45678")),
             SchemaBuilder.builder().bytesType(),
-            "Got unexpected missing logical type while decoding BigDecimal"
+            "Error decoding BigDecimal: Got unexpected missing logical type"
           )
         }
 
@@ -377,7 +377,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               val bytes = SchemaBuilder.builder().bytesType()
               LogicalTypes.uuid().addToSchema(bytes)
             },
-            "Got unexpected logical type uuid while decoding BigDecimal"
+            "Error decoding BigDecimal: Got unexpected logical type uuid"
           )
         }
 
@@ -387,7 +387,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               val bytes = SchemaBuilder.builder().bytesType()
               LogicalTypes.decimal(6, 5).addToSchema(bytes)
             },
-            "Unable to decode decimal with precision 8 exceeding schema precision 6"
+            "Error decoding BigDecimal: Unable to decode decimal with precision 8 exceeding schema precision 6"
           )
         }
 
@@ -436,7 +436,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Double](
             unsafeEncode(123d),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Double, expected schema type DOUBLE"
+            "Error decoding Double: Got unexpected schema type STRING, expected schema type DOUBLE"
           )
         }
 
@@ -444,7 +444,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Double](
             unsafeEncode("foo"),
             unsafeSchema[Double],
-            "Got unexpected type org.apache.avro.util.Utf8 while decoding Double, expected type Double"
+            "Error decoding Double: Got unexpected type org.apache.avro.util.Utf8, expected types Double, Float, Integer, Long"
           )
         }
 
@@ -512,7 +512,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Either[Int, Double]](
             unsafeEncode[Either[Int, Double]](Right(1d)),
             unsafeSchema[String],
-            "Exhausted alternatives for type java.lang.Double"
+            "Error decoding Either: Error decoding union: Exhausted alternatives for type java.lang.Double"
           )
         }
 
@@ -585,7 +585,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[SealedTraitEnum](
             unsafeEncode[SealedTraitEnum](FirstInSealedTraitEnum),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding vulcan.examples.SealedTraitEnum, expected schema type ENUM"
+            "Error decoding vulcan.examples.SealedTraitEnum: Got unexpected schema type STRING, expected schema type ENUM"
           )
         }
 
@@ -593,7 +593,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[SealedTraitEnum](
             unsafeEncode(10),
             unsafeSchema[SealedTraitEnum],
-            "Got unexpected type java.lang.Integer while decoding vulcan.examples.SealedTraitEnum, expected type GenericEnumSymbol"
+            "Error decoding vulcan.examples.SealedTraitEnum: Got unexpected type java.lang.Integer, expected type GenericEnumSymbol"
           )
         }
 
@@ -616,7 +616,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               "symbol"
             ),
             unsafeSchema[SealedTraitEnum],
-            "symbol is not part of schema symbols [first, second] for type vulcan.examples.SealedTraitEnumNoDefault"
+            "Error decoding vulcan.examples.SealedTraitEnumNoDefault: symbol is not one of schema symbols [first, second]"
           )
         }
 
@@ -677,7 +677,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[FixedBoolean](
             unsafeEncode[FixedBoolean](FalseFixedBoolean),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding vulcan.examples.FixedBoolean, expected schema type FIXED"
+            "Error decoding vulcan.examples.FixedBoolean: Got unexpected schema type STRING, expected schema type FIXED"
           )
         }
 
@@ -685,7 +685,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[FixedBoolean](
             123,
             unsafeSchema[FixedBoolean],
-            "Got unexpected type java.lang.Integer while decoding vulcan.examples.FixedBoolean, expected type GenericFixed"
+            "Error decoding vulcan.examples.FixedBoolean: Got unexpected type java.lang.Integer, expected type GenericFixed"
           )
         }
 
@@ -699,7 +699,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
                 SchemaFactory.fixed("FixedBoolean", "vulcan.examples", Array(), null, 2)
               ),
             unsafeSchema[FixedBoolean],
-            "Got 2 bytes while decoding vulcan.examples.FixedBoolean, expected fixed size 1"
+            "Error decoding vulcan.examples.FixedBoolean: Got 2 bytes, expected fixed size 1"
           )
         }
 
@@ -736,7 +736,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Float](
             unsafeEncode(123f),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Float, expected schema type FLOAT"
+            "Error decoding Float: Got unexpected schema type STRING, expected schema type FLOAT"
           )
         }
 
@@ -744,7 +744,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Float](
             unsafeEncode("foo"),
             unsafeSchema[Float],
-            "Got unexpected type org.apache.avro.util.Utf8 while decoding Float, expected type Float"
+            "Error decoding Float: Got unexpected type org.apache.avro.util.Utf8, expected type Float"
           )
         }
 
@@ -825,7 +825,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Instant](
             unsafeEncode(Instant.now()),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Instant, expected schema type LONG"
+            "Error decoding Instant: Got unexpected schema type INT, expected schema type LONG"
           )
         }
 
@@ -833,7 +833,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Instant](
             unsafeEncode(Instant.now()),
             unsafeSchema[Long],
-            "Got unexpected missing logical type while decoding Instant"
+            "Error decoding Instant: Got unexpected missing logical type"
           )
         }
 
@@ -844,7 +844,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
                 SchemaBuilder.builder().longType()
               }
             },
-            "Got unexpected logical type timestamp-micros while decoding Instant"
+            "Error decoding Instant: Got unexpected logical type timestamp-micros"
           )
         }
 
@@ -852,7 +852,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Instant](
             unsafeEncode(123),
             unsafeSchema[Instant],
-            "Got unexpected type java.lang.Integer while decoding Instant, expected type Long"
+            "Error decoding Instant: Got unexpected type java.lang.Integer, expected type Long"
           )
         }
 
@@ -994,7 +994,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Int](
             unsafeEncode(123),
             unsafeSchema[Long],
-            "Got unexpected schema type LONG while decoding Int, expected schema type INT"
+            "Error decoding Int: Got unexpected schema type LONG, expected schema type INT"
           )
         }
 
@@ -1002,7 +1002,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Int](
             unsafeEncode(10L),
             unsafeSchema[Int],
-            "Got unexpected type java.lang.Long while decoding Int, expected type Int"
+            "Error decoding Int: Got unexpected type java.lang.Long, expected type Int"
           )
         }
 
@@ -1039,7 +1039,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[List[Int]](
             unsafeEncode(List(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding List, expected schema type ARRAY"
+            "Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1047,7 +1047,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[List[Int]](
             unsafeEncode(10),
             unsafeSchema[List[Int]],
-            "Got unexpected type java.lang.Integer while decoding List, expected type Collection"
+            "Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -1085,7 +1085,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[LocalDate](
             unsafeEncode(LocalDate.now()),
             unsafeSchema[Long],
-            "Got unexpected schema type LONG while decoding LocalDate, expected schema type INT"
+            "Error decoding LocalDate: Got unexpected schema type LONG, expected schema type INT"
           )
         }
 
@@ -1093,7 +1093,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[LocalDate](
             unsafeEncode(LocalDate.now()),
             unsafeSchema[Int],
-            "Got unexpected missing logical type while decoding LocalDate"
+            "Error decoding LocalDate: Got unexpected missing logical type"
           )
         }
 
@@ -1101,7 +1101,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[LocalDate](
             unsafeEncode(123L),
             unsafeSchema[LocalDate],
-            "Got unexpected type java.lang.Long while decoding LocalDate, expected type Integer"
+            "Error decoding LocalDate: Got unexpected type java.lang.Long, expected type Integer"
           )
         }
 
@@ -1139,7 +1139,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Long](
             unsafeEncode(123L),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Long, expected schema type LONG"
+            "Error decoding Long: Got unexpected schema type STRING, expected schema type LONG"
           )
         }
 
@@ -1147,7 +1147,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Long](
             unsafeEncode(123.0),
             unsafeSchema[Long],
-            "Got unexpected type java.lang.Double while decoding Long, expected type Long"
+            "Error decoding Long: Got unexpected type java.lang.Double, expected type Long"
           )
         }
 
@@ -1192,7 +1192,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Map[String, Int]](
             unsafeEncode[Map[String, Int]](Map("key" -> 1)),
             SchemaBuilder.builder().intType(),
-            "Got unexpected schema type INT while decoding Map, expected schema type MAP"
+            "Error decoding Map: Got unexpected schema type INT, expected schema type MAP"
           )
         }
 
@@ -1200,7 +1200,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Map[String, Int]](
             123,
             unsafeSchema[Map[String, Int]],
-            "Got unexpected type java.lang.Integer while decoding Map, expected type java.util.Map"
+            "Error decoding Map: Got unexpected type java.lang.Integer, expected type java.util.Map"
           )
         }
 
@@ -1208,7 +1208,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Map[String, Int]](
             Map(1 -> 2).asJava,
             unsafeSchema[Map[String, Int]],
-            "Got unexpected map key with type java.lang.Integer while decoding Map, expected Utf8"
+            "Error decoding Map: Got unexpected map key with type java.lang.Integer, expected Utf8"
           )
         }
 
@@ -1216,7 +1216,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Map[String, Int]](
             Map((null, 2)).asJava,
             unsafeSchema[Map[String, Int]],
-            "Got unexpected map key with type null while decoding Map, expected Utf8"
+            "Error decoding Map: Got unexpected map key with type null, expected Utf8"
           )
         }
 
@@ -1252,7 +1252,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[None.type](
             unsafeEncode(None),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding None, expected schema type NULL"
+            "Error decoding None: Got unexpected schema type INT, expected schema type NULL"
           )
         }
 
@@ -1260,7 +1260,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[None.type](
             unsafeEncode(10),
             unsafeSchema[None.type],
-            "Got unexpected type java.lang.Integer while decoding None, expected type null"
+            "Error decoding None: Got unexpected type java.lang.Integer, expected type null"
           )
         }
 
@@ -1296,7 +1296,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(NonEmptyChain(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding NonEmptyChain, expected schema type ARRAY"
+            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1304,7 +1304,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(10),
             unsafeSchema[NonEmptyChain[Int]],
-            "Got unexpected type java.lang.Integer while decoding NonEmptyChain, expected type Collection"
+            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -1312,7 +1312,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(Chain.empty[Int]),
             unsafeSchema[NonEmptyChain[Int]],
-            "Got unexpected empty collection while decoding NonEmptyChain"
+            "Error decoding NonEmptyChain: Got unexpected empty collection"
           )
         }
 
@@ -1349,7 +1349,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyList[Int]](
             unsafeEncode(NonEmptyList.of(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding NonEmptyList, expected schema type ARRAY"
+            "Error decoding NonEmptyList: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1357,7 +1357,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyList[Int]](
             unsafeEncode(10),
             unsafeSchema[NonEmptyList[Int]],
-            "Got unexpected type java.lang.Integer while decoding NonEmptyList, expected type Collection"
+            "Error decoding NonEmptyList: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -1365,7 +1365,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyList[Int]](
             unsafeEncode(List.empty[Int]),
             unsafeSchema[NonEmptyList[Int]],
-            "Got unexpected empty collection while decoding NonEmptyList"
+            "Error decoding NonEmptyList: Got unexpected empty collection"
           )
         }
 
@@ -1402,7 +1402,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptySet[Int]](
             unsafeEncode(NonEmptySet.of(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding NonEmptySet, expected schema type ARRAY"
+            "Error decoding NonEmptySet: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1410,7 +1410,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptySet[Int]](
             unsafeEncode(10),
             unsafeSchema[NonEmptySet[Int]],
-            "Got unexpected type java.lang.Integer while decoding NonEmptySet, expected type Collection"
+            "Error decoding NonEmptySet: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -1418,7 +1418,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptySet[Int]](
             unsafeEncode(Set.empty[Int]),
             unsafeSchema[NonEmptySet[Int]],
-            "Got unexpected empty collection while decoding NonEmptySet"
+            "Error decoding NonEmptySet: Got unexpected empty collection"
           )
         }
 
@@ -1455,7 +1455,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyVector[Int]](
             unsafeEncode(NonEmptyVector.of(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding NonEmptyVector, expected schema type ARRAY"
+            "Error decoding NonEmptyVector: Error decoding Vector: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1463,7 +1463,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyVector[Int]](
             unsafeEncode(10),
             unsafeSchema[NonEmptyVector[Int]],
-            "Got unexpected type java.lang.Integer while decoding NonEmptyVector, expected type Collection"
+            "Error decoding NonEmptyVector: Error decoding Vector: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -1471,7 +1471,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyVector[Int]](
             unsafeEncode(Vector.empty[Int]),
             unsafeSchema[NonEmptyVector[Int]],
-            "Got unexpected empty collection while decoding NonEmptyVector"
+            "Error decoding NonEmptyVector: Got unexpected empty collection"
           )
         }
 
@@ -1556,7 +1556,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Option[Int]](
             unsafeEncode(Option(1)),
             unsafeSchema[String],
-            "Exhausted alternatives for type java.lang.Integer"
+            "Error decoding Option: Error decoding union: Exhausted alternatives for type java.lang.Integer"
           )
         }
 
@@ -2291,7 +2291,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[CaseClassTwoFields](
             unsafeEncode(CaseClassTwoFields("name", 123)),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding vulcan.examples.CaseClassTwoFields, expected schema type RECORD"
+            "Error decoding vulcan.examples.CaseClassTwoFields: Got unexpected schema type STRING, expected schema type RECORD"
           )
         }
 
@@ -2299,7 +2299,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[CaseClassTwoFields](
             unsafeEncode(123),
             unsafeSchema[CaseClassTwoFields],
-            "Got unexpected type java.lang.Integer while decoding vulcan.examples.CaseClassTwoFields, expected type IndexedRecord"
+            "Error decoding vulcan.examples.CaseClassTwoFields: Got unexpected type java.lang.Integer, expected type IndexedRecord"
           )
         }
 
@@ -2324,7 +2324,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               record
             },
             unsafeSchema[CaseClassTwoFields],
-            "Record writer schema is missing field 'age' while decoding vulcan.examples.CaseClassTwoFields"
+            "Error decoding vulcan.examples.CaseClassTwoFields: Record writer schema is missing field 'age'"
           )
         }
 
@@ -2414,7 +2414,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Seq[Int]](
             unsafeEncode(Seq(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Seq, expected schema type ARRAY"
+            "Error decoding Seq: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -2422,7 +2422,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Seq[Int]](
             unsafeEncode(10),
             unsafeSchema[Seq[Int]],
-            "Got unexpected type java.lang.Integer while decoding Seq, expected type Collection"
+            "Error decoding Seq: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -2486,7 +2486,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Set[Int]](
             unsafeEncode(Set(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Set, expected schema type ARRAY"
+            "Error decoding Set: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -2494,7 +2494,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Set[Int]](
             unsafeEncode(10),
             unsafeSchema[Set[Int]],
-            "Got unexpected type java.lang.Integer while decoding Set, expected type Collection"
+            "Error decoding Set: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -2532,7 +2532,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Short](
             unsafeEncode(1.toShort),
             unsafeSchema[String],
-            "Got unexpected schema type STRING while decoding Short, expected schema type INT"
+            "Error decoding Short: Error decoding Int: Got unexpected schema type STRING, expected schema type INT"
           )
         }
 
@@ -2540,7 +2540,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Short](
             unsafeEncode("value"),
             unsafeSchema[Short],
-            "Got unexpected type org.apache.avro.util.Utf8 while decoding Short, expected type Int"
+            "Error decoding Short: Error decoding Int: Got unexpected type org.apache.avro.util.Utf8, expected type Int"
           )
         }
 
@@ -2555,7 +2555,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             assertDecodeError[Short](
               unsafeEncode(nonShort),
               unsafeSchema[Short],
-              s"Got unexpected Short value $nonShort, expected value in range -32768 to 32767"
+              s"Error decoding Short: Got unexpected Int value $nonShort, expected value in range -32768 to 32767"
             )
           }
         }
@@ -2595,7 +2595,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[String](
             unsafeEncode("abc"),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding String, expected schema type STRING"
+            "Error decoding String: Got unexpected schema type INT, expected schema type STRING"
           )
         }
 
@@ -2603,7 +2603,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[String](
             unsafeEncode(10),
             unsafeSchema[String],
-            "Got unexpected type java.lang.Integer while decoding String, expected types String, Utf8"
+            "Error decoding String: Got unexpected type java.lang.Integer, expected types String, Utf8"
           )
         }
 
@@ -2684,7 +2684,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
             unsafeSchema[String],
-            "Missing schema FirstInSealedTraitCaseClass in union"
+            "Error decoding union: Missing schema FirstInSealedTraitCaseClass in union"
           )
         }
 
@@ -2700,7 +2700,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode(123d),
             unsafeSchema[SealedTraitCaseClass],
-            "Exhausted alternatives for type java.lang.Double"
+            "Error decoding union: Exhausted alternatives for type java.lang.Double"
           )
         }
 
@@ -2708,7 +2708,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[SealedTraitCaseClass](
             null,
             unsafeSchema[SealedTraitCaseClass],
-            "Exhausted alternatives for type null"
+            "Error decoding union: Exhausted alternatives for type null"
           )
         }
 
@@ -2716,7 +2716,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[SealedTraitCaseClassSingle](
             unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
             unsafeSchema[SealedTraitCaseClass],
-            "Missing schema CaseClassInSealedTraitCaseClassSingle in union"
+            "Error decoding union: Missing schema CaseClassInSealedTraitCaseClassSingle in union"
           )
         }
 
@@ -2724,7 +2724,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClassSingle](CaseClassInSealedTraitCaseClassSingle(0)),
             unsafeSchema[SealedTraitCaseClassSingle],
-            "Missing alternative CaseClassInSealedTraitCaseClassSingle in union"
+            "Error decoding union: Missing alternative CaseClassInSealedTraitCaseClassSingle in union"
           )
         }
 
@@ -2761,7 +2761,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Unit](
             unsafeEncode(()),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Unit, expected schema type NULL"
+            "Error decoding Unit: Got unexpected schema type INT, expected schema type NULL"
           )
         }
 
@@ -2769,7 +2769,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Unit](
             unsafeEncode(10),
             unsafeSchema[Unit],
-            "Got unexpected type java.lang.Integer while decoding Unit, expected type null"
+            "Error decoding Unit: Got unexpected type java.lang.Integer, expected type null"
           )
         }
 
@@ -2806,7 +2806,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[UUID](
             unsafeEncode(UUID.randomUUID()),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding UUID, expected schema type STRING"
+            "Error decoding UUID: Got unexpected schema type INT, expected schema type STRING"
           )
         }
 
@@ -2814,7 +2814,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[UUID](
             unsafeEncode(UUID.randomUUID()),
             unsafeSchema[String],
-            "Got unexpected missing logical type while decoding UUID"
+            "Error decoding UUID: Got unexpected missing logical type"
           )
         }
 
@@ -2822,7 +2822,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[UUID](
             10,
             unsafeSchema[UUID],
-            "Got unexpected type java.lang.Integer while decoding UUID, expected type Utf8"
+            "Error decoding UUID: Got unexpected type java.lang.Integer, expected type Utf8"
           )
         }
 
@@ -2830,7 +2830,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[UUID](
             new Utf8("not-uuid"),
             unsafeSchema[UUID],
-            "java.lang.IllegalArgumentException: Invalid UUID string: not-uuid"
+            "Error decoding UUID: java.lang.IllegalArgumentException: Invalid UUID string: not-uuid"
           )
         }
 
@@ -2867,7 +2867,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Vector[Int]](
             unsafeEncode(Vector(1, 2, 3)),
             unsafeSchema[Int],
-            "Got unexpected schema type INT while decoding Vector, expected schema type ARRAY"
+            "Error decoding Vector: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -2875,7 +2875,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Vector[Int]](
             unsafeEncode(10),
             unsafeSchema[Vector[Int]],
-            "Got unexpected type java.lang.Integer while decoding Vector, expected type Collection"
+            "Error decoding Vector: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
