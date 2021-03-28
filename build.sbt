@@ -1,12 +1,12 @@
 val avroVersion = "1.10.1"
 
-val catsVersion = "2.4.1"
+val catsVersion = "2.4.2"
 
 val enumeratumVersion = "1.6.1"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.20"
+val refinedVersion = "0.9.21"
 
 val shapelessVersion = "2.3.3"
 
@@ -14,7 +14,7 @@ val scala212 = "2.12.13"
 
 val scala213 = "2.13.4"
 
-val scala3 = "3.0.0-M3"
+val scala3 = "3.0.0-RC1"
 
 lazy val vulcan = project
   .in(file("."))
@@ -119,14 +119,14 @@ lazy val docs = project
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= (Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.1",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.2",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test) ++ {
     if (isDotty.value) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.1" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.2" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
       )
   }),
