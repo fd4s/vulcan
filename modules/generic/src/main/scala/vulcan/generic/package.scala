@@ -120,15 +120,28 @@ package object generic {
           caseClass.parameters.head.typeclass.schema
         } else {
           AvroError.catchNonFatal {
+            val nullDefaultBase = caseClass.annotations
+              .collectFirst { case AvroNullDefault(enabled) => enabled }
+              .getOrElse(false)
+
             val fields =
               caseClass.parameters.toList.traverse { param =>
                 param.typeclass.schema.map { schema =>
+                  def nullDefaultField =
+                    param.annotations
+                      .collectFirst {
+                        case AvroNullDefault(nullDefault) => nullDefault
+                      }
+                      .getOrElse(nullDefaultBase)
+
                   new Schema.Field(
                     param.label,
                     schema,
                     param.annotations.collectFirst {
                       case AvroDoc(doc) => doc
-                    }.orNull
+                    }.orNull,
+                    if (schema.isNullable && nullDefaultField) Schema.Field.NULL_DEFAULT_VALUE
+                    else null
                   )
                 }
               }
