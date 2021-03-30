@@ -1,6 +1,6 @@
 val avroVersion = "1.10.2"
 
-val catsVersion = "2.4.2"
+val catsVersion = "2.5.0"
 
 val enumeratumVersion = "1.6.1"
 
