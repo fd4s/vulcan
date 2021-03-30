@@ -11,6 +11,7 @@ import cats.data.NonEmptyList
 import cats.instances.string._
 import org.apache.avro.{Schema, LogicalType}
 import scala.util.control.NonFatal
+import java.io.{StringWriter, PrintWriter}
 
 /**
   * Error which occurred while generating a schema, or
@@ -235,7 +236,7 @@ object AvroError {
           dtn => s"Exhausted alternatives for type $typeName while decoding $dtn"
         )
       case None =>
-        AvroError(s"Exhausted alternatives for type $typeName")
+        AvroError(s"Exhausted alternatives for type $typeName while decoding")
     }
   }
 
@@ -287,7 +288,7 @@ object AvroError {
         case Some(encodingTypeName) =>
           s"Exhausted alternatives for type $typeName while encoding $encodingTypeName"
         case None =>
-          s"Exhausted alternatives for type $typeName"
+          s"Exhausted alternatives for type $typeName while encoding"
       }
     }
 
@@ -300,6 +301,11 @@ object AvroError {
       s"Symbol $symbol is not part of schema symbols [${symbols.mkString(", ")}] for type $encodingTypeName"
     }
 
-  private[vulcan] final def fromThrowable(throwable: Throwable): AvroError =
-    AvroError(throwable.toString)
+  private[vulcan] final def fromThrowable(throwable: Throwable): AvroError = {
+    val sw = new StringWriter()
+    val pw = new PrintWriter(sw)
+    throwable.printStackTrace(pw)
+    val sStackTrace = sw.toString()
+    AvroError(sStackTrace)
+  }
 }

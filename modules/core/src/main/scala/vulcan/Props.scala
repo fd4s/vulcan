@@ -76,7 +76,7 @@ object Props {
   private[this] final def encodeForSchema[A](a: A)(
     implicit codec: Codec[A]
   ): Either[AvroError, Any] =
-    Codec.encode(a).map(adaptForSchema)
+    Codec.encode(a).flatMap(Avro.toJava).map(adaptForSchema)
 
   /**
     * Returns a new [[Props]] instance including a
