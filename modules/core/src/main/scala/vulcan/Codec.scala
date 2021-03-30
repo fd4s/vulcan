@@ -457,7 +457,12 @@ object Codec extends CodecCompanionCompat {
     val schema = AvroError.catchNonFatal {
       props.toChain.map { props =>
         val schema =
-          SchemaFactory.fixed(name, namespace, aliases.toArray, doc.orNull, size)
+          SchemaBuilder
+            .builder(namespace)
+            .fixed(name)
+            .aliases(aliases: _*)
+            .doc(doc.orNull)
+            .size(size)
 
         props.foldLeft(()) {
           case ((), (name, value)) =>
