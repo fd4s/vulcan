@@ -41,6 +41,7 @@ lazy val core = project
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
       }
     ),
+    scalatestSettings,
     publishSettings,
     mimaSettings,
     scalaSettings ++ Seq(
@@ -57,6 +58,7 @@ lazy val enumeratum = project
     dependencySettings ++ Seq(
       libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
     ),
+    scalatestSettings,
     publishSettings,
     mimaSettings,
     scalaSettings,
@@ -76,6 +78,7 @@ lazy val generic = project
         "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
       )
     ),
+    scalatestSettings,
     publishSettings,
     mimaSettings,
     scalaSettings,
@@ -94,6 +97,9 @@ lazy val refined = project
         "eu.timepit" %% "refined-scalacheck" % refinedVersion % Test
       )
     ),
+    // uses munit because Scalatest and Refined for Scala 3.0.0-RC2 have 
+    // incompatible scala-xml dependencies
+    munitSettings,
     publishSettings,
     mimaSettings,
     scalaSettings ++ Seq(
@@ -118,18 +124,14 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
-  libraryDependencies ++= (Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.3",
-    "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.30"
-  ).map(_ % Test) ++ {
+  libraryDependencies ++= {
     if (isDotty.value) Nil
     else
       Seq(
         "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
       )
-  }),
+  },
   pomPostProcess := { (node: xml.Node) =>
     new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
       def scopedDependency(e: xml.Elem): Boolean =
@@ -142,6 +144,23 @@ lazy val dependencySettings = Seq(
         }
     }).transform(node).head
   }
+)
+
+lazy val scalatestSettings = Seq(
+  libraryDependencies ++= (Seq(
+    "org.typelevel" %% "discipline-scalatest" % "2.1.3",
+    "org.typelevel" %% "cats-testkit" % catsVersion,
+    "org.slf4j" % "slf4j-nop" % "1.7.30"
+  ).map(_ % Test))
+)
+
+lazy val munitSettings = Seq(
+  libraryDependencies ++= (Seq(
+    "org.scalameta" %% "munit" % "0.7.23",
+    "org.scalameta" %% "munit-scalacheck" % "0.7.23",
+    "org.slf4j" % "slf4j-nop" % "1.7.30"
+  ).map(_ % Test)),
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val mdocSettings = Seq(
