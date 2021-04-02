@@ -97,7 +97,7 @@ lazy val refined = project
         "eu.timepit" %% "refined-scalacheck" % refinedVersion % Test
       )
     ),
-    // uses munit because Scalatest and Refined for Scala 3.0.0-RC2 have 
+    // uses munit because Scalatest and Refined for Scala 3.0.0-RC2 have
     // incompatible scala-xml dependencies
     munitSettings,
     publishSettings,
