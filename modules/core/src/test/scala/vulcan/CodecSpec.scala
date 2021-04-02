@@ -600,7 +600,9 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should return default value if encoded value is not a schema symbol") {
           assertDecodeIs[SealedTraitEnum](
             new GenericData.EnumSymbol(
-              SchemaFactory.enumeration("vulcan.examples.SealedTraitEnum", Array("symbol")),
+              SchemaBuilder
+                .enumeration("vulcan.examples.SealedTraitEnum")
+                .symbols("symbol"),
               "symbol"
             ),
             Right(FirstInSealedTraitEnum),
@@ -611,8 +613,9 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should error if encoded value is not a schema symbol and there is no default value") {
           assertDecodeError[SealedTraitEnumNoDefault](
             new GenericData.EnumSymbol(
-              SchemaFactory
-                .enumeration("vulcan.examples.SealedTraitEnumNoDefault", Array("symbol")),
+              SchemaBuilder
+                .enumeration("vulcan.examples.SealedTraitEnumNoDefault")
+                .symbols("symbol"),
               "symbol"
             ),
             unsafeSchema[SealedTraitEnum],
@@ -696,7 +699,10 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               .createFixed(
                 null,
                 Array(0.toByte, 1.toByte),
-                SchemaFactory.fixed("FixedBoolean", "vulcan.examples", Array(), null, 2)
+                SchemaBuilder
+                  .builder("vulcan.examples")
+                  .fixed("FixedBoolean")
+                  .size(2)
               ),
             unsafeSchema[FixedBoolean],
             "Got 2 bytes while decoding vulcan.examples.FixedBoolean, expected fixed size 1"
