@@ -12,7 +12,7 @@ val shapelessVersion = "2.3.3"
 
 val scala212 = "2.12.13"
 
-val scala213 = "2.13.4"
+val scala213 = "2.13.5"
 
 val scala3 = "3.0.0-RC2"
 
@@ -119,7 +119,7 @@ lazy val docs = project
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= (Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.2",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.3",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test) ++ {
