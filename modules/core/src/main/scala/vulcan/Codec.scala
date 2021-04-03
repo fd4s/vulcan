@@ -603,14 +603,6 @@ object Codec extends CodecCompanionCompat {
     }
   }
 
-  private[vulcan] final def instance_[Repr0 <: AnyRef, A](
-    decodingTypeName: String,
-    schema: Either[AvroError, Schema],
-    encode: A => Either[AvroError, Repr0],
-    decode: (Any, Schema) => Either[AvroError, A]
-  ): Codec.Aux[Repr0, A] =
-    instance(schema, encode, decode(_, _).leftMap(AvroError.errorDecodingTo(decodingTypeName, _)))
-
   private[vulcan] final def instanceForTypes[Repr <: AnyRef, A](
     expectedValueType: String,
     typeName: String,
