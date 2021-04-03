@@ -6,16 +6,16 @@
 
 package vulcan
 
-import cats.{~>, Invariant, Show}
+import cats.{Invariant, Show, ~>}
 import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyVector}
 import cats.free.FreeApplicative
 import cats.implicits._
+
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate}
 import java.util.UUID
-
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
@@ -166,7 +166,7 @@ object Codec extends CodecCompanionCompat {
           Right(integer.toByte)
         else Left(AvroError.unexpectedByte(integer))
       }(_.toInt)
-      .adaptDecodeError(AvroError.decodeError("Byte", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Byte", _))
   }
 
   /**
@@ -199,9 +199,8 @@ object Codec extends CodecCompanionCompat {
                 )
               }
           }
-        }
+        }.leftMap(AvroError.errorDecodingTo("Array[Byte]", _))
       )
-      .adaptDecodeError(AvroError.decodeError("Array[Byte]", _))
 
   /**
     * @group Cats
@@ -342,7 +341,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.decodeError("Double", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Double", _))
 
   /**
     * @group General
@@ -353,7 +352,7 @@ object Codec extends CodecCompanionCompat {
   ): Codec.Aux[AnyRef, Either[A, B]] =
     Codec
       .union[Either[A, B]](alt => alt[Left[A, B]] |+| alt[Right[A, B]])
-      .adaptDecodeError(AvroError.decodeError("Either", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Either", _))
 
   /**
     * Returns the result of encoding the specified value.
@@ -534,7 +533,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.decodeError("Float", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Float", _))
 
   /**
     * Returns the result of decoding the specified
@@ -603,6 +602,14 @@ object Codec extends CodecCompanionCompat {
     }
   }
 
+  private[vulcan] final def instance_[Repr0 <: AnyRef, A](
+    decodingTypeName: String,
+    schema: Either[AvroError, Schema],
+    encode: A => Either[AvroError, Repr0],
+    decode: (Any, Schema) => Either[AvroError, A]
+  ): Codec.Aux[Repr0, A] =
+    instance(schema, encode, decode(_, _).leftMap(AvroError.errorDecodingTo(decodingTypeName, _)))
+
   private[vulcan] final def instanceForTypes[Repr <: AnyRef, A](
     expectedValueType: String,
     decodingTypeName: String,
@@ -614,24 +621,26 @@ object Codec extends CodecCompanionCompat {
       schema,
       encode,
       (value, writerSchema) =>
-        schema.flatMap { readerSchema =>
-          val schemaType = readerSchema.getType()
-          if (writerSchema.getType() == schemaType)
-            decode
-              .lift((value, writerSchema))
-              .getOrElse(
-                Left(AvroError.decodeUnexpectedType(value, expectedValueType))
-              )
-          else
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(
-                  writerSchema.getType(),
-                  schemaType
+        schema
+          .flatMap { readerSchema =>
+            val schemaType = readerSchema.getType()
+            if (writerSchema.getType() == schemaType)
+              decode
+                .lift((value, writerSchema))
+                .getOrElse(
+                  Left(AvroError.decodeUnexpectedType(value, expectedValueType))
                 )
-            }
-        }
-    ).adaptDecodeError(AvroError.decodeError(decodingTypeName, _))
+            else
+              Left {
+                AvroError
+                  .decodeUnexpectedSchemaType(
+                    writerSchema.getType(),
+                    schemaType
+                  )
+              }
+          }
+          .leftMap(AvroError.errorDecodingTo(decodingTypeName, _))
+    )
 
   /**
     * @group JavaTime
@@ -734,7 +743,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.decodeError("Long", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Long", _))
 
   /**
     * @group Collection
@@ -789,7 +798,7 @@ object Codec extends CodecCompanionCompat {
       .imapError(
         NonEmptyChain.fromChain(_).toRight(AvroError.decodeEmptyCollection)
       )(_.toChain)
-      .adaptDecodeError(AvroError.decodeError("NonEmptyChain", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptyChain", _))
 
   /**
     * @group Cats
@@ -802,7 +811,7 @@ object Codec extends CodecCompanionCompat {
       .imapError(
         NonEmptyList.fromList(_).toRight(AvroError.decodeEmptyCollection)
       )(_.toList)
-      .adaptDecodeError(AvroError.decodeError("NonEmptyList", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptyList", _))
 
   /**
     * @group Cats
@@ -819,7 +828,7 @@ object Codec extends CodecCompanionCompat {
             .fromSet(SortedSet(list: _*))
             .toRight(AvroError.decodeEmptyCollection)
       )(_.toList)
-      .adaptDecodeError(AvroError.decodeError("NonEmptySet", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptySet", _))
 
   /**
     * @group Cats
@@ -832,7 +841,7 @@ object Codec extends CodecCompanionCompat {
       .imapError(
         NonEmptyVector.fromVector(_).toRight(AvroError.decodeEmptyCollection)
       )(_.toVector)
-      .adaptDecodeError(AvroError.decodeError("NonEmptyVector", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptyVector", _))
 
   /**
     * @group General
@@ -840,7 +849,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def option[A](implicit codec: Codec[A]): Codec[Option[A]] =
     Codec
       .union[Option[A]](alt => alt[None.type] |+| alt[Some[A]])
-      .adaptDecodeError(AvroError.decodeError("Option", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Option", _))
 
   /**
     * Returns a new record [[Codec]] for type `A`.
@@ -971,7 +980,7 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final def right[A, B](implicit codec: Codec[B]): Codec.Aux[codec.Repr, Right[A, B]] =
-    codec.imap(Right[A, B](_))(_.value).adaptDecodeError(AvroError.decodeError("Right", _))
+    codec.imap(Right[A, B](_))(_.value).adaptDecodeError(AvroError.errorDecodingTo("Right", _))
 
   /**
     * @group Collection
@@ -982,7 +991,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .list[A]
       .imap[Seq[A]](_.toSeq)(_.toList)
-      .adaptDecodeError(AvroError.decodeError("Seq", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Seq", _))
 
   /**
     * @group Collection
@@ -993,7 +1002,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .list[A]
       .imap(_.toSet)(_.toList)
-      .adaptDecodeError(AvroError.decodeError("Set", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Set", _))
 
   /**
     * @group General
@@ -1007,14 +1016,14 @@ object Codec extends CodecCompanionCompat {
           Right(integer.toShort)
         else Left(AvroError.unexpectedShort(integer))
       }(_.toInt)
-      .adaptDecodeError(AvroError.decodeError("Short", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("Short", _))
   }
 
   /**
     * @group General
     */
   implicit final def some[A](implicit codec: Codec[A]): Codec.Aux[codec.Repr, Some[A]] =
-    codec.imap(Some(_))(_.value).adaptDecodeError(AvroError.decodeError("Some", _))
+    codec.imap(Some(_))(_.value).adaptDecodeError(AvroError.errorDecodingTo("Some", _))
 
   /**
     * @group General
@@ -1052,7 +1061,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.decodeError("String", _))
+      .adaptDecodeError(AvroError.errorDecodingTo("String", _))
 
   /**
     * Returns the result of encoding the specified
@@ -1167,7 +1176,7 @@ object Codec extends CodecCompanionCompat {
         }
       }
     )
-  }.adaptDecodeError(AvroError.decodeError("union", _))
+  }.adaptDecodeError(AvroError.errorDecodingTo("union", _))
 
   /**
     * @group General

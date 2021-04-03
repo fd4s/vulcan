@@ -233,7 +233,7 @@ package object generic {
               }
             }
         )
-        .adaptDecodeError(AvroError.decodeError(typeName, _))
+        .adaptDecodeError(AvroError.errorDecodingTo(typeName, _))
     }
 
     /**
@@ -306,7 +306,7 @@ package object generic {
             }
           }
         )
-        .adaptDecodeError(AvroError.decodeError(typeName, _))
+        .adaptDecodeError(AvroError.errorDecodingTo(typeName, _))
     }
 
     final type Typeclass[A] = Codec[A]

@@ -45,7 +45,7 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
                   }
               }
             )
-            .adaptDecodeError(AvroError.decodeError("String", _))
+            .adaptDecodeError(AvroError.errorDecodingTo("String", _))
         }
       }
     }

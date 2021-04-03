@@ -25,11 +25,13 @@ sealed abstract class AvroError {
   def throwable: Throwable
 }
 
+@deprecated("Do not use - kept for binary compatibility", "1.5.0")
 sealed abstract class AvroDecodingError extends AvroError {
   def withDecodingTypeName(decodingTypeName: String): AvroDecodingError
 }
 
 object AvroDecodingError {
+  @deprecated("Do not use - kept for binary compatibility", "1.5.0")
   final def apply(decodingTypeName: String, message: String => String): AvroDecodingError = {
     val _message = message
 
@@ -81,7 +83,7 @@ object AvroError {
         Left(AvroError.fromThrowable(e))
     }
 
-  private[vulcan] def decodeError(decodingTypeName: String, cause: AvroError): AvroError =
+  private[vulcan] def errorDecodingTo(decodingTypeName: String, cause: AvroError): AvroError =
     AvroError {
       s"Error decoding $decodingTypeName: ${cause.message}"
     }
