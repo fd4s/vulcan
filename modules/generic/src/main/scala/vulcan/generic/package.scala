@@ -57,39 +57,35 @@ package object generic {
           }
 
         value match {
-          case container: GenericContainer =>
-            Right(headCodec.schema).flatMap {
-              headSchema =>
-                val name = container.getSchema.getName
-                if (headSchema.getName == name) {
-                  val subschema =
-                    schemaTypes
-                      .find(_.getName == name)
-                      .toRight(AvroError.decodeMissingUnionSchema(name, Some("Coproduct")))
+          case container: GenericContainer => {
+            val headSchema = headCodec.schema
+            val name = container.getSchema.getName
+            if (headSchema.getName == name) {
+              val subschema =
+                schemaTypes
+                  .find(_.getName == name)
+                  .toRight(AvroError.decodeMissingUnionSchema(name, Some("Coproduct")))
 
-                  subschema
-                    .flatMap(headCodec.decode(container, _))
-                    .map(Inl(_))
-                } else {
-                  tailCodec.value
-                    .decode(container, schema)
-                    .map(Inr(_))
-                }
+              subschema
+                .flatMap(headCodec.decode(container, _))
+                .map(Inl(_))
+            } else {
+              tailCodec.value
+                .decode(container, schema)
+                .map(Inr(_))
             }
+          }
 
           case other =>
-            Right(headCodec.schema)
-              .traverse { headSchema =>
-                val headName = headSchema.getName
-                schemaTypes
-                  .find(_.getName == headName)
-                  .flatMap { schema =>
-                    headCodec
-                      .decode(other, schema)
-                      .map(Inl(_))
-                      .toOption
-                  }
+            schemaTypes
+              .find(_.getName == headCodec.schema.getName)
+              .flatMap { schema =>
+                headCodec
+                  .decode(other, schema)
+                  .map(Inl(_))
+                  .toOption
               }
+              .map(Right(_))
               .getOrElse {
                 tailCodec.value
                   .decode(other, schema)
