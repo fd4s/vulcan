@@ -35,7 +35,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         it("should error") {
           assertDecodeError[CNil](
             null,
-            unsafeSchema[CNil],
+            schema[CNil],
             "Exhausted alternatives for type null while decoding Coproduct"
           )
         }
@@ -98,7 +98,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           type A = Int :+: String :+: CNil
           assertDecodeError[A](
             unsafeEncode(Coproduct[A](123)),
-            unsafeSchema[String],
+            schema[String],
             "Exhausted alternatives for type java.lang.Integer while decoding Coproduct"
           )
         }
@@ -108,7 +108,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           assertDecodeIs[A](
             unsafeEncode(Coproduct[A](123)),
             Right(Coproduct[A](123)),
-            Some(unsafeSchema[Int])
+            Some(schema[Int])
           )
         }
 
@@ -159,7 +159,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           type A = Int :+: CaseClassField :+: CNil
           assertDecodeError[A](
             unsafeEncode(Coproduct[A](CaseClassField(10))),
-            unsafeSchema[Int :+: String :+: CNil],
+            schema[Int :+: String :+: CNil],
             "Missing schema CaseClassField in union for type Coproduct"
           )
         }
@@ -177,7 +177,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           type A = Int :+: CaseClassField :+: CNil
           assertDecodeError[A](
             unsafeEncode(Coproduct[A](CaseClassField(10))),
-            unsafeSchema[CNil],
+            schema[CNil],
             "Missing schema CaseClassField in union for type Coproduct"
           )
         }
@@ -230,7 +230,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertEncodeIs[CaseClassField](
               CaseClassField(0),
               Right {
-                val record = new GenericData.Record(unsafeSchema[CaseClassField])
+                val record = new GenericData.Record(schema[CaseClassField])
                 record.put(0, unsafeEncode(0))
                 record
               }
@@ -241,7 +241,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertEncodeIs[CaseClassTwoFields](
               CaseClassTwoFields("the-name", 0),
               Right {
-                val record = new GenericData.Record(unsafeSchema[CaseClassTwoFields])
+                val record = new GenericData.Record(schema[CaseClassTwoFields])
                 record.put(0, unsafeEncode("the-name"))
                 record.put(1, unsafeEncode(0))
                 record
@@ -261,7 +261,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if schema is not record") {
             assertDecodeError[CaseClassField](
               unsafeEncode(CaseClassField(123)),
-              unsafeSchema[String],
+              schema[String],
               "Got unexpected schema type STRING while decoding vulcan.generic.examples.CaseClassField, expected schema type RECORD"
             )
           }
@@ -269,7 +269,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if value is not indexed record") {
             assertDecodeError[CaseClassField](
               unsafeEncode(123),
-              unsafeSchema[CaseClassField],
+              schema[CaseClassField],
               "Got unexpected type java.lang.Integer while decoding vulcan.generic.examples.CaseClassField, expected type IndexedRecord"
             )
           }
@@ -284,7 +284,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
                   List(
                     new Schema.Field(
                       "other",
-                      unsafeSchema[Int],
+                      schema[Int],
                       null
                     )
                   ).asJava
@@ -294,7 +294,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
                 record.put(0, 123)
                 record
               },
-              unsafeSchema[CaseClassField],
+              schema[CaseClassField],
               "Record writer schema is missing field 'value' while decoding vulcan.generic.examples.CaseClassField"
             )
           }
@@ -350,7 +350,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if schema is not in union") {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseClass](CaseClassInSealedTrait(0)),
-              unsafeSchema[String],
+              schema[String],
               "Missing schema CaseClassInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseClass"
             )
           }
@@ -359,14 +359,14 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             assertDecodeIs[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseClass](CaseClassInSealedTrait(0)),
               Right(CaseClassInSealedTrait(0)),
-              Some(unsafeSchema[CaseClassInSealedTrait])
+              Some(schema[CaseClassInSealedTrait])
             )
           }
 
           it("should error if value is not an alternative") {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode(123),
-              unsafeSchema[SealedTraitCaseClass],
+              schema[SealedTraitCaseClass],
               "Exhausted alternatives for type java.lang.Integer while decoding vulcan.generic.examples.SealedTraitCaseClass"
             )
           }
@@ -374,7 +374,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if no schema in union with container name") {
             assertDecodeError[SealedTraitCaseObject](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
-              unsafeSchema[SealedTraitCaseClass],
+              schema[SealedTraitCaseClass],
               "Missing schema CaseObjectInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseObject"
             )
           }
@@ -382,7 +382,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if no subtype with container name") {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
-              unsafeSchema[SealedTraitCaseObject],
+              schema[SealedTraitCaseObject],
               "Missing alternative CaseObjectInSealedTrait in union for type vulcan.generic.examples.SealedTraitCaseClass"
             )
           }
@@ -398,7 +398,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
     }
   }
 
-  def unsafeSchema[A](implicit codec: Codec[A]): Schema =
+  def schema[A](implicit codec: Codec[A]): Schema =
     codec.schema
 
   def unsafeEncode[A](a: A)(implicit codec: Codec[A]): Any =
