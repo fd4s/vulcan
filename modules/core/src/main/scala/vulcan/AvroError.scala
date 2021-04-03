@@ -223,6 +223,20 @@ object AvroError {
       s"Got unexpected Int value $value, expected value in range ${Short.MinValue} to ${Short.MaxValue}"
     }
 
+  private[vulcan] def errorEncodingFrom(encodingTypeName: String, cause: AvroError): AvroError =
+    ErrorEncodingType(encodingTypeName, cause)
+
+  private[vulcan] final case class ErrorEncodingType(encodingTypeName: String, cause: AvroError)
+      extends AvroError {
+
+    def message = s"Error encoding $encodingTypeName: ${cause.message}"
+    def throwable: Throwable =
+      AvroException(message)
+
+    override def toString: String =
+      s"AvroError($message)"
+  }
+
   private[vulcan] final def encodeDecimalPrecisionExceeded(
     actualPrecision: Int,
     expectedPrecision: Int
@@ -239,34 +253,26 @@ object AvroError {
 
   private[vulcan] final def encodeExceedsFixedSize(
     length: Int,
-    fixedSize: Int,
-    encodingTypeName: String
+    fixedSize: Int
   ): AvroError =
     AvroError(
-      s"Got $length bytes while encoding $encodingTypeName, expected maximum fixed size $fixedSize"
+      s"Got $length bytes, expected maximum fixed size $fixedSize"
     )
 
   private[vulcan] final def encodeExhaustedAlternatives(
-    value: Any,
-    encodingTypeName: Option[String]
+    value: Any
   ): AvroError =
     AvroError {
       val typeName = if (value != null) value.getClass().getTypeName() else "null"
-      encodingTypeName match {
-        case Some(encodingTypeName) =>
-          s"Exhausted alternatives for type $typeName while encoding $encodingTypeName"
-        case None =>
-          s"Exhausted alternatives for type $typeName"
-      }
+      s"Exhausted alternatives for type $typeName"
     }
 
   private[vulcan] final def encodeSymbolNotInSchema(
     symbol: String,
-    symbols: Seq[String],
-    encodingTypeName: String
+    symbols: Seq[String]
   ): AvroError =
     AvroError {
-      s"Symbol $symbol is not part of schema symbols [${symbols.mkString(", ")}] for type $encodingTypeName"
+      s"Symbol $symbol is not part of schema symbols [${symbols.mkString(", ")}]"
     }
 
   private[vulcan] final def fromThrowable(throwable: Throwable): AvroError =

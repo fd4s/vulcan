@@ -22,13 +22,10 @@ package object generic {
     Codec
       .instance[Nothing, CNil](
         Right(Schema.createUnion()),
-        cnil => Left(AvroError.encodeExhaustedAlternatives(cnil, Some("Coproduct"))),
+        cnil => Left(AvroError.encodeExhaustedAlternatives(cnil)),
         (value, _) => Left(AvroError.decodeExhaustedAlternatives(value))
       )
-      .adaptDecodeError {
-        case e @ AvroError.ErrorDecodingType("Coproduct", _) => e
-        case other                                           => AvroError.ErrorDecodingType("Coproduct", other)
-      }
+      .withTypeName("Coproduct")
 
   implicit final def coproductCodec[H, T <: Coproduct](
     implicit headCodec: Codec[H],
@@ -100,12 +97,11 @@ package object generic {
                     .map(Inr(_))
                 }
           }
+        }.leftMap {
+          case e @ AvroError.ErrorDecodingType("Coproduct", _) => e
+          case other                                           => AvroError.ErrorDecodingType("Coproduct", other)
         }
       )
-      .adaptDecodeError {
-        case e @ AvroError.ErrorDecodingType("Coproduct", _) => e
-        case other                                           => AvroError.ErrorDecodingType("Coproduct", other)
-      }
 
   implicit final def coproductPrism[C <: Coproduct, A](
     implicit inject: Inject[C, A],
@@ -233,7 +229,7 @@ package object generic {
               }
             }
         )
-        .adaptDecodeError(AvroError.errorDecodingTo(typeName, _))
+        .withTypeName(typeName)
     }
 
     /**
@@ -306,7 +302,7 @@ package object generic {
             }
           }
         )
-        .adaptDecodeError(AvroError.errorDecodingTo(typeName, _))
+        .withTypeName(typeName)
     }
 
     final type Typeclass[A] = Codec[A]

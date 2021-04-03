@@ -26,7 +26,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
         it("should error") {
           assertEncodeError[CNil](
             null,
-            "Exhausted alternatives for type null while encoding Coproduct"
+            "Error encoding Coproduct: Exhausted alternatives for type null"
           )
         }
       }
@@ -356,7 +356,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if value is not an alternative") {
             assertEncodeError[SealedTraitCaseClassIncomplete](
               SecondInSealedTraitCaseClassIncomplete(0),
-              "Exhausted alternatives for type vulcan.generic.examples.SecondInSealedTraitCaseClassIncomplete"
+              "Error encoding union: Exhausted alternatives for type vulcan.generic.examples.SecondInSealedTraitCaseClassIncomplete"
             )
           }
 

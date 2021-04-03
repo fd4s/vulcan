@@ -314,14 +314,14 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should error if scale is different in schema") {
           assertEncodeError[BigDecimal](
             BigDecimal("123"),
-            "Unable to encode decimal with scale 0 as scale 5"
+            "Error encoding BigDecimal: Unable to encode decimal with scale 0 as scale 5"
           )
         }
 
         it("should error if precision exceeds schema precision") {
           assertEncodeError[BigDecimal](
             BigDecimal("123456.45678"),
-            "Unable to encode decimal with precision 11 exceeding schema precision 10"
+            "Error encoding BigDecimal: Unable to encode decimal with precision 11 exceeding schema precision 10"
           )
         }
 
@@ -568,7 +568,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
           assertEncodeError[SealedTraitEnum](
             FirstInSealedTraitEnum,
-            "Symbol not-symbol is not part of schema symbols [symbol] for type vulcan.examples.SealedTraitEnum"
+            "Error encoding vulcan.examples.SealedTraitEnum: Symbol not-symbol is not part of schema symbols [symbol]"
           )
         }
 
@@ -660,7 +660,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should error if length exceeds schema size") {
           assertEncodeError[FixedBoolean](
             TrueFixedBoolean,
-            "Got 2 bytes while encoding vulcan.examples.FixedBoolean, expected maximum fixed size 1"
+            "Error encoding vulcan.examples.FixedBoolean: Got 2 bytes, expected maximum fixed size 1"
           )
         }
 
@@ -2659,14 +2659,14 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should error if subtype is not an alternative") {
           assertEncodeError[SealedTraitCaseClassIncomplete](
             SecondInSealedTraitCaseClassIncomplete(0d),
-            "Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete"
+            "Error encoding union: Exhausted alternatives for type vulcan.examples.SecondInSealedTraitCaseClassIncomplete"
           )
         }
 
         it("should error if subtype is not an alternative and value null") {
           assertEncodeError[SealedTraitCaseClassIncomplete](
             null,
-            "Exhausted alternatives for type null"
+            "Error encoding union: Exhausted alternatives for type null"
           )
         }
 

@@ -85,11 +85,11 @@ sealed abstract class Codec[A] {
   final def imapTry[B](f: A => Try[B])(g: B => A): Codec.Aux[Repr, B] =
     imapError(f(_).toEither.leftMap(AvroError.fromThrowable))(g)
 
-  private[vulcan] def adaptDecodeError(f: AvroError => AvroError): Codec.Aux[Repr, A] =
+  private[vulcan] def withTypeName(typeName: String): Codec.Aux[Repr, A] =
     Codec.instance(
       schema,
-      encode,
-      decode(_, _).leftMap(f)
+      encode(_).leftMap(AvroError.errorEncodingFrom(typeName, _)),
+      decode(_, _).leftMap(AvroError.errorDecodingTo(typeName, _))
     )
 }
 
@@ -166,7 +166,7 @@ object Codec extends CodecCompanionCompat {
           Right(integer.toByte)
         else Left(AvroError.unexpectedByte(integer))
       }(_.toInt)
-      .adaptDecodeError(AvroError.errorDecodingTo("Byte", _))
+      .withTypeName("Byte")
   }
 
   /**
@@ -199,8 +199,9 @@ object Codec extends CodecCompanionCompat {
                 )
               }
           }
-        }.leftMap(AvroError.errorDecodingTo("Array[Byte]", _))
+        }
       )
+      .withTypeName("Array[Byte]")
 
   /**
     * @group Cats
@@ -341,7 +342,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.errorDecodingTo("Double", _))
+      .withTypeName("Double")
 
   /**
     * @group General
@@ -352,7 +353,7 @@ object Codec extends CodecCompanionCompat {
   ): Codec.Aux[AnyRef, Either[A, B]] =
     Codec
       .union[Either[A, B]](alt => alt[Left[A, B]] |+| alt[Right[A, B]])
-      .adaptDecodeError(AvroError.errorDecodingTo("Either", _))
+      .withTypeName("Either")
 
   /**
     * Returns the result of encoding the specified value.
@@ -409,7 +410,7 @@ object Codec extends CodecCompanionCompat {
         if (symbols.contains(symbol))
           schema.map(new GenericData.EnumSymbol(_, symbol))
         else
-          Left(AvroError.encodeSymbolNotInSchema(symbol, symbols, typeName))
+          Left(AvroError.encodeSymbolNotInSchema(symbol, symbols))
       }, {
         case (genericEnum: GenericEnumSymbol[_], _) =>
           val symbol = genericEnum.toString()
@@ -481,7 +482,7 @@ object Codec extends CodecCompanionCompat {
             val buffer = ByteBuffer.allocate(size).put(bytes)
             schema.map(new GenericData.Fixed(_, buffer.array()))
           } else {
-            Left(AvroError.encodeExceedsFixedSize(bytes.length, size, typeName))
+            Left(AvroError.encodeExceedsFixedSize(bytes.length, size))
           }
         }, {
           case (fixed: GenericFixed, schema) =>
@@ -533,7 +534,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.errorDecodingTo("Float", _))
+      .withTypeName("Float")
 
   /**
     * Returns the result of decoding the specified
@@ -612,14 +613,14 @@ object Codec extends CodecCompanionCompat {
 
   private[vulcan] final def instanceForTypes[Repr <: AnyRef, A](
     expectedValueType: String,
-    decodingTypeName: String,
+    typeName: String,
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, Repr],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
   ): Codec.Aux[Repr, A] =
     instance(
       schema,
-      encode,
+      encode(_).leftMap(AvroError.errorEncodingFrom(typeName, _)),
       (value, writerSchema) =>
         schema
           .flatMap { readerSchema =>
@@ -639,7 +640,7 @@ object Codec extends CodecCompanionCompat {
                   )
               }
           }
-          .leftMap(AvroError.errorDecodingTo(decodingTypeName, _))
+          .leftMap(AvroError.errorDecodingTo(typeName, _))
     )
 
   /**
@@ -743,7 +744,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.errorDecodingTo("Long", _))
+      .withTypeName("Long")
 
   /**
     * @group Collection
@@ -798,7 +799,7 @@ object Codec extends CodecCompanionCompat {
       .imapError(
         NonEmptyChain.fromChain(_).toRight(AvroError.decodeEmptyCollection)
       )(_.toChain)
-      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptyChain", _))
+      .withTypeName("NonEmptyChain")
 
   /**
     * @group Cats
@@ -811,7 +812,7 @@ object Codec extends CodecCompanionCompat {
       .imapError(
         NonEmptyList.fromList(_).toRight(AvroError.decodeEmptyCollection)
       )(_.toList)
-      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptyList", _))
+      .withTypeName("NonEmptyList")
 
   /**
     * @group Cats
@@ -828,7 +829,7 @@ object Codec extends CodecCompanionCompat {
             .fromSet(SortedSet(list: _*))
             .toRight(AvroError.decodeEmptyCollection)
       )(_.toList)
-      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptySet", _))
+      .withTypeName("NonEmptySet")
 
   /**
     * @group Cats
@@ -841,7 +842,7 @@ object Codec extends CodecCompanionCompat {
       .imapError(
         NonEmptyVector.fromVector(_).toRight(AvroError.decodeEmptyCollection)
       )(_.toVector)
-      .adaptDecodeError(AvroError.errorDecodingTo("NonEmptyVector", _))
+      .withTypeName("NonEmptyVector")
 
   /**
     * @group General
@@ -849,7 +850,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def option[A](implicit codec: Codec[A]): Codec[Option[A]] =
     Codec
       .union[Option[A]](alt => alt[None.type] |+| alt[Some[A]])
-      .adaptDecodeError(AvroError.errorDecodingTo("Option", _))
+      .withTypeName("Option")
 
   /**
     * Returns a new record [[Codec]] for type `A`.
@@ -980,7 +981,7 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final def right[A, B](implicit codec: Codec[B]): Codec.Aux[codec.Repr, Right[A, B]] =
-    codec.imap(Right[A, B](_))(_.value).adaptDecodeError(AvroError.errorDecodingTo("Right", _))
+    codec.imap(Right[A, B](_))(_.value).withTypeName("Right")
 
   /**
     * @group Collection
@@ -991,7 +992,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .list[A]
       .imap[Seq[A]](_.toSeq)(_.toList)
-      .adaptDecodeError(AvroError.errorDecodingTo("Seq", _))
+      .withTypeName("Seq")
 
   /**
     * @group Collection
@@ -1002,7 +1003,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .list[A]
       .imap(_.toSet)(_.toList)
-      .adaptDecodeError(AvroError.errorDecodingTo("Set", _))
+      .withTypeName("Set")
 
   /**
     * @group General
@@ -1016,14 +1017,14 @@ object Codec extends CodecCompanionCompat {
           Right(integer.toShort)
         else Left(AvroError.unexpectedShort(integer))
       }(_.toInt)
-      .adaptDecodeError(AvroError.errorDecodingTo("Short", _))
+      .withTypeName("Short")
   }
 
   /**
     * @group General
     */
   implicit final def some[A](implicit codec: Codec[A]): Codec.Aux[codec.Repr, Some[A]] =
-    codec.imap(Some(_))(_.value).adaptDecodeError(AvroError.errorDecodingTo("Some", _))
+    codec.imap(Some(_))(_.value).withTypeName("Some")
 
   /**
     * @group General
@@ -1061,7 +1062,7 @@ object Codec extends CodecCompanionCompat {
           }
         }
       )
-      .adaptDecodeError(AvroError.errorDecodingTo("String", _))
+      .withTypeName("String")
 
   /**
     * Returns the result of encoding the specified
@@ -1122,7 +1123,7 @@ object Codec extends CodecCompanionCompat {
             alt.prism.getOption(a).map(alt.codec.encode(_))
           }
           .getOrElse {
-            Left(AvroError.encodeExhaustedAlternatives(a, None))
+            Left(AvroError.encodeExhaustedAlternatives(a))
           },
       (value, schema) => {
         val schemaTypes =
@@ -1176,7 +1177,7 @@ object Codec extends CodecCompanionCompat {
         }
       }
     )
-  }.adaptDecodeError(AvroError.errorDecodingTo("union", _))
+  }.withTypeName("union")
 
   /**
     * @group General
