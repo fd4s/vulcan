@@ -26,8 +26,8 @@ package object generic {
         (value, _) => Left(AvroError.decodeExhaustedAlternatives(value))
       )
       .adaptDecodeError {
-        case e @ AvroError.DecodeError("Coproduct", _) => e
-        case other                                     => AvroError.DecodeError("Coproduct", other)
+        case e @ AvroError.ErrorDecodingType("Coproduct", _) => e
+        case other                                           => AvroError.ErrorDecodingType("Coproduct", other)
       }
 
   implicit final def coproductCodec[H, T <: Coproduct](
@@ -103,8 +103,8 @@ package object generic {
         }
       )
       .adaptDecodeError {
-        case e @ AvroError.DecodeError("Coproduct", _) => e
-        case other                                     => AvroError.DecodeError("Coproduct", other)
+        case e @ AvroError.ErrorDecodingType("Coproduct", _) => e
+        case other                                           => AvroError.ErrorDecodingType("Coproduct", other)
       }
 
   implicit final def coproductPrism[C <: Coproduct, A](

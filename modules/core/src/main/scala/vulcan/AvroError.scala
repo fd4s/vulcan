@@ -84,11 +84,9 @@ object AvroError {
     }
 
   private[vulcan] def errorDecodingTo(decodingTypeName: String, cause: AvroError): AvroError =
-    AvroError {
-      s"Error decoding $decodingTypeName: ${cause.message}"
-    }
+    ErrorDecodingType(decodingTypeName, cause)
 
-  private[vulcan] final case class DecodeError(decodingTypeName: String, cause: AvroError)
+  private[vulcan] final case class ErrorDecodingType(decodingTypeName: String, cause: AvroError)
       extends AvroError {
 
     def message = s"Error decoding $decodingTypeName: ${cause.message}"
