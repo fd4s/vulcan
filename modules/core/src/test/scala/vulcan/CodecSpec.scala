@@ -2313,10 +2313,10 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should error if any field without default value is missing") {
           assertDecodeError[CaseClassTwoFields](
             {
-              val schema =
+              val recordSchema =
                 Schema.createRecord("CaseClassTwoFields", null, "vulcan.examples", false)
 
-              schema.setFields(
+              recordSchema.setFields(
                 List(
                   new Schema.Field(
                     "name",
@@ -2326,7 +2326,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
                 ).asJava
               )
 
-              val record = new GenericData.Record(schema)
+              val record = new GenericData.Record(recordSchema)
               record.put(0, unsafeEncode("name"))
               record
             },
@@ -2338,10 +2338,10 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should decode if field with default value is missing") {
           assertDecodeIs[CaseClassTwoFields](
             {
-              val schema =
+              val recordSchema =
                 Schema.createRecord("CaseClassTwoFields", null, "vulcan.examples", false)
 
-              schema.setFields(
+              recordSchema.setFields(
                 List(
                   new Schema.Field(
                     "age",
@@ -2351,7 +2351,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
                 ).asJava
               )
 
-              val record = new GenericData.Record(schema)
+              val record = new GenericData.Record(recordSchema)
               record.put(0, 123)
               record
             },

@@ -277,10 +277,10 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
           it("should error if any field is missing in writer schema") {
             assertDecodeError[CaseClassField](
               {
-                val schema =
+                val recordSchema =
                   Schema.createRecord("CaseClassField", null, "vulcan.generic.examples", false)
 
-                schema.setFields(
+                recordSchema.setFields(
                   List(
                     new Schema.Field(
                       "other",
@@ -290,7 +290,7 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
                   ).asJava
                 )
 
-                val record = new GenericData.Record(schema)
+                val record = new GenericData.Record(recordSchema)
                 record.put(0, 123)
                 record
               },
