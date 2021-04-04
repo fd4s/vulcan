@@ -15,6 +15,8 @@ Codec[Option[Instant]]
 In some cases, it's not possible to generate Avro schemas. In these cases, an exception will be thrown. For example, Avro doesn't support nested unions, so what would happen when we try to ask for a [`Codec`][codec] for `Option[Option[Instant]]`?
 
 ```scala mdoc
+import scala.util.Try
+
 Try {
   Codec[Option[Option[Instant]]]
 }
