@@ -298,10 +298,10 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should capture errors on invalid precision and scale") {
-          implicit def avroSchema: Codec[BigDecimal] =
+          implicit def avroCodec: Codec[BigDecimal] =
             Codec.decimal(precision = -1, scale = -1)
 
-          assertSchemaError[BigDecimal] {
+          assertSchemaError[BigDecimal](avroCodec) {
             """java.lang.IllegalArgumentException: Invalid decimal precision: -1 (must be positive)"""
           }
         }
@@ -549,7 +549,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should capture errors on invalid schema") {
-          assertSchemaError[`-SealedTraitEnumInvalidName`] {
+          assertSchemaError(`-SealedTraitEnumInvalidName`.codec) {
             """org.apache.avro.SchemaParseException: Illegal initial character: -SealedTraitEnumInvalidName"""
           }
         }
@@ -1497,7 +1497,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should capture errors on nested unions") {
-          assertSchemaError[Option[Option[Int]]] {
+          assertSchemaError(Codec[Option[Option[Int]]]) {
             """org.apache.avro.AvroRuntimeException: Nested union: ["null",["null","int"]]"""
           }
         }
@@ -2644,7 +2644,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should capture errors on nested unions") {
-          assertSchemaError[SealedTraitCaseClassNestedUnion] {
+          assertSchemaError(Codec[SealedTraitCaseClassNestedUnion]) {
             """org.apache.avro.AvroRuntimeException: Nested union: [["null","int"]]"""
           }
         }
@@ -2922,9 +2922,9 @@ trait CodecSpecHelpers {
       decode === decoded.value
     }
 
-  def assertSchemaError[A](
+  def assertSchemaError[A](codec: => Codec[A])(
     expectedErrorMessage: String
-  )(implicit codec: => Codec[A]): Assertion =
+  ): Assertion =
     assert(
       Either
         .catchNonFatal(codec)
