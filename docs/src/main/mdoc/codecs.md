@@ -12,10 +12,12 @@ import vulcan.Codec
 Codec[Option[Instant]]
 ```
 
-In some cases, it's not possible to generate Avro schemas. This is why [`Codec`][codec] `schema`s are wrapped in `Either` with error type [`AvroError`][avroerror]. For example, Avro doesn't support nested unions, so what would happen when we try to ask for a [`Codec`][codec] for `Option[Option[Instant]]`?
+In some cases, it's not possible to generate Avro schemas. In these cases, an exception will be thrown. For example, Avro doesn't support nested unions, so what would happen when we try to ask for a [`Codec`][codec] for `Option[Option[Instant]]`?
 
 ```scala mdoc
-Codec[Option[Option[Instant]]]
+Try {
+  Codec[Option[Option[Instant]]]
+}
 ```
 
 Encoding and decoding with a [`Codec`][codec] might also be unsuccessful, so results are wrapped in `Either` with error type [`AvroError`][avroerror]. Encoding accepts a value to be encoded according to the schema defined by the [`Codec`][codec], and decoding accepts a value and a schema to decode the value against. For example, what happens if we try to decode `Int`s using a `Boolean` schema?
