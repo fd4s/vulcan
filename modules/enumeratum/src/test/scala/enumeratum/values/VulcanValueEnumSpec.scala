@@ -240,7 +240,7 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
       val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
-          """third is not a member of CustomEnum (first, second, third)"""
+          """Error decoding com.example.CustomEnum: third is not a member of CustomEnum (first, second, third)"""
       }
     }
   }

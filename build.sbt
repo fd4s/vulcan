@@ -1,20 +1,22 @@
-val avroVersion = "1.10.1"
+import com.typesafe.tools.mima.core.ProblemFilters
 
-val catsVersion = "2.4.2"
+val avroVersion = "1.10.2"
+
+val catsVersion = "2.5.0"
 
 val enumeratumVersion = "1.6.1"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.21"
+val refinedVersion = "0.9.23"
 
 val shapelessVersion = "2.3.3"
 
 val scala212 = "2.12.13"
 
-val scala213 = "2.13.4"
+val scala213 = "2.13.5"
 
-val scala3 = "3.0.0-RC1"
+val scala3 = "3.0.0-RC2"
 
 lazy val vulcan = project
   .in(file("."))
@@ -41,6 +43,7 @@ lazy val core = project
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
       }
     ),
+    scalatestSettings,
     publishSettings,
     mimaSettings,
     scalaSettings ++ Seq(
@@ -57,6 +60,7 @@ lazy val enumeratum = project
     dependencySettings ++ Seq(
       libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
     ),
+    scalatestSettings,
     publishSettings,
     mimaSettings,
     scalaSettings,
@@ -76,6 +80,7 @@ lazy val generic = project
         "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
       )
     ),
+    scalatestSettings,
     publishSettings,
     mimaSettings,
     scalaSettings,
@@ -94,6 +99,9 @@ lazy val refined = project
         "eu.timepit" %% "refined-scalacheck" % refinedVersion % Test
       )
     ),
+    // uses munit because Scalatest and Refined for Scala 3.0.0-RC2 have
+    // incompatible scala-xml dependencies
+    munitSettings,
     publishSettings,
     mimaSettings,
     scalaSettings ++ Seq(
@@ -118,18 +126,14 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
-  libraryDependencies ++= (Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.2",
-    "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.30"
-  ).map(_ % Test) ++ {
+  libraryDependencies ++= {
     if (isDotty.value) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.2" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
       )
-  }),
+  },
   pomPostProcess := { (node: xml.Node) =>
     new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
       def scopedDependency(e: xml.Elem): Boolean =
@@ -142,6 +146,23 @@ lazy val dependencySettings = Seq(
         }
     }).transform(node).head
   }
+)
+
+lazy val scalatestSettings = Seq(
+  libraryDependencies ++= (Seq(
+    "org.typelevel" %% "discipline-scalatest" % "2.1.3",
+    "org.typelevel" %% "cats-testkit" % catsVersion,
+    "org.slf4j" % "slf4j-nop" % "1.7.30"
+  ).map(_ % Test))
+)
+
+lazy val munitSettings = Seq(
+  libraryDependencies ++= (Seq(
+    "org.scalameta" %% "munit" % "0.7.23",
+    "org.scalameta" %% "munit-scalacheck" % "0.7.23",
+    "org.slf4j" % "slf4j-nop" % "1.7.30"
+  ).map(_ % Test)),
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val mdocSettings = Seq(
@@ -259,7 +280,10 @@ lazy val mimaSettings = Seq(
     // format: off
     Seq(
       ProblemFilters.exclude[Problem]("vulcan.internal.*"),
-      ProblemFilters.exclude[IncompatibleSignatureProblem]("*")
+      ProblemFilters.exclude[IncompatibleSignatureProblem]("*"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.Codec.withDecodingTypeName"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.decode*"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.encode*")
     )
     // format: on
   }

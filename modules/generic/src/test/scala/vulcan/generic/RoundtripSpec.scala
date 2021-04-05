@@ -47,6 +47,9 @@ final class RoundtripSpec extends BaseSpec {
     it("CaseClassField") { roundtrip[CaseClassField] }
     it("SealedTraitCaseClassAvroNamespace") { roundtrip[SealedTraitCaseClassAvroNamespace] }
     it("SealedTraitCaseClassCustom") { roundtrip[SealedTraitCaseClassCustom] }
+    it("CaseClassAvroNullDefault") { roundtrip[CaseClassAvroNullDefault] }
+    it("CaseClassFieldAvroNullDefault") { roundtrip[CaseClassFieldAvroNullDefault] }
+    it("CaseClassAndFieldAvroNullDefault") { roundtrip[CaseClassAndFieldAvroNullDefault] }
   }
 
   def roundtrip[A](
