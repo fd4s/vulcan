@@ -3,36 +3,10 @@ package vulcan
 import cats.syntax.show._
 
 final class PropsSpec extends BaseSpec {
-  val codecSchemaError: Codec[Int] =
-    Codec.instance(
-      schema = Left(AvroError("error")),
-      encode = _ => Left(AvroError("error")),
-      decode = Codec.int.decode
-    )
 
   describe("Props") {
     describe("one") {
       describe("add") {
-        describe("error") {
-          it("toChain") {
-            assert {
-              Props
-                .one("first", "firstValue")
-                .add("second", 2)(codecSchemaError)
-                .toChain
-                .isLeft
-            }
-          }
-
-          it("toString") {
-            assert {
-              Props
-                .one("first", "firstValue")
-                .add("second", 2)(codecSchemaError)
-                .toString == "AvroError(error)"
-            }
-          }
-        }
 
         it("toChain") {
           assert {
@@ -55,70 +29,8 @@ final class PropsSpec extends BaseSpec {
       }
 
       describe("error") {
-        describe("add") {
-          describe("error") {
-            it("toChain") {
-              assert {
-                Props
-                  .one("name", 1)(codecSchemaError)
-                  .add("name", 1)(codecSchemaError)
-                  .toChain
-                  .swap
-                  .value
-                  .message == "error"
-              }
-            }
+        describe("add") {}
 
-            it("toString") {
-              assert {
-                Props
-                  .one("name", 1)(codecSchemaError)
-                  .add("name", 1)(codecSchemaError)
-                  .toString == "AvroError(error)"
-              }
-            }
-          }
-
-          it("toChain") {
-            assert {
-              Props
-                .one("name", 1)(codecSchemaError)
-                .add("name", 1)
-                .toChain
-                .swap
-                .value
-                .message == "error"
-            }
-          }
-
-          it("toString") {
-            assert {
-              Props
-                .one("name", 1)(codecSchemaError)
-                .add("name", 1)
-                .toString == "AvroError(error)"
-            }
-          }
-        }
-
-        it("toChain") {
-          assert {
-            Props
-              .one("name", 1)(codecSchemaError)
-              .toChain
-              .swap
-              .value
-              .message == "error"
-          }
-        }
-
-        it("toString") {
-          assert {
-            Props
-              .one("name", 1)(codecSchemaError)
-              .toString == "AvroError(error)"
-          }
-        }
       }
 
       it("toChain") {
@@ -175,25 +87,9 @@ final class PropsSpec extends BaseSpec {
         }
       }
 
-      it("empty.add.error") {
-        assert {
-          Props.empty
-            .add("name", 1)(codecSchemaError)
-            .show == "AvroError(error)"
-        }
-      }
-
       it("one") {
         assert {
           Props.one("name", "value").show == "Props(name -> value)"
-        }
-      }
-
-      it("one.error") {
-        assert {
-          Props
-            .one("name", 1)(codecSchemaError)
-            .show == "AvroError(error)"
         }
       }
 
@@ -203,33 +99,6 @@ final class PropsSpec extends BaseSpec {
             .one("first", "firstValue")
             .add("second", "secondValue")
             .show == "Props(first -> firstValue, second -> secondValue)"
-        }
-      }
-
-      it("one.add.error") {
-        assert {
-          Props
-            .one("name", 1)
-            .add("name", 2)(codecSchemaError)
-            .show == "AvroError(error)"
-        }
-      }
-
-      it("one.error.add") {
-        assert {
-          Props
-            .one("name", 1)(codecSchemaError)
-            .add("name", 2)
-            .show == "AvroError(error)"
-        }
-      }
-
-      it("one.error.add.error") {
-        assert {
-          Props
-            .one("name", 1)(codecSchemaError)
-            .add("name", 2)(codecSchemaError)
-            .show == """AvroError(error)"""
         }
       }
     }

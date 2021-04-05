@@ -6,7 +6,7 @@ import vulcan.generic._
 sealed trait SealedTraitNestedUnion
 
 object SealedTraitNestedUnion {
-  implicit val codec: Codec[SealedTraitNestedUnion] =
+  implicit def codec: Codec[SealedTraitNestedUnion] =
     Codec.derive
 }
 

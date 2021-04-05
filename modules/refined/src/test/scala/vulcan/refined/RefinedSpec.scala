@@ -11,7 +11,7 @@ final class RefinedSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Ei
     it("should succeed for values conforming to predicate") {
       forAll { (posInt: PosInt) =>
         val codec = Codec[PosInt]
-        val schema = codec.schema.value
+        val schema = codec.schema
         val encoded = codec.encode(posInt).value
         val decoded = codec.decode(encoded, schema).value
         assert(decoded === posInt)
@@ -21,7 +21,7 @@ final class RefinedSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Ei
     it("should fail for values not conforming to predicate") {
       forAll { (nonPosInt: NonPosInt) =>
         val codec = Codec[PosInt]
-        val schema = codec.schema.value
+        val schema = codec.schema
         val encoded = Codec[Int].encode(nonPosInt.value).value
         val error = codec.decode(encoded, schema).swap.map(_.message).value
         assert(error === s"Predicate failed: ($nonPosInt > 0).")

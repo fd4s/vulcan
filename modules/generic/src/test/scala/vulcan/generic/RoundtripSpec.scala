@@ -65,12 +65,11 @@ final class RoundtripSpec extends BaseSpec {
     eq: Eq[A]
   ): Assertion = {
     val avroSchema = codec.schema
-    assert(avroSchema.isRight)
 
     val encoded = codec.encode(a)
     assert(encoded.isRight)
 
-    val decoded = codec.decode(encoded.value, avroSchema.value)
+    val decoded = codec.decode(encoded.value, avroSchema)
     assert(decoded === Right(a))
   }
 
@@ -87,31 +86,29 @@ final class RoundtripSpec extends BaseSpec {
 
   def toBinary[A](a: A)(
     implicit codec: Codec[A]
-  ): Either[AvroError, Array[Byte]] =
-    codec.schema.flatMap { schema =>
-      codec.encode(a).map { encoded =>
-        val baos = new ByteArrayOutputStream()
-        val serializer = EncoderFactory.get().binaryEncoder(baos, null)
-        new GenericDatumWriter[Any](schema)
-          .write(encoded, serializer)
-        serializer.flush()
-        baos.toByteArray()
-      }
+  ): Either[AvroError, Array[Byte]] = {
+    codec.encode(a).map { encoded =>
+      val baos = new ByteArrayOutputStream()
+      val serializer = EncoderFactory.get().binaryEncoder(baos, null)
+      new GenericDatumWriter[Any](codec.schema)
+        .write(encoded, serializer)
+      serializer.flush()
+      baos.toByteArray()
     }
+  }
 
   def fromBinary[A](bytes: Array[Byte])(
     implicit codec: Codec[A]
-  ): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
-      val bais = new ByteArrayInputStream(bytes)
-      val deserializer = DecoderFactory.get().binaryDecoder(bais, null)
-      val read =
-        new GenericDatumReader[Any](
-          schema,
-          schema,
-          new GenericData
-        ).read(null, deserializer)
+  ): Either[AvroError, A] = {
+    val bais = new ByteArrayInputStream(bytes)
+    val deserializer = DecoderFactory.get().binaryDecoder(bais, null)
+    val read =
+      new GenericDatumReader[Any](
+        codec.schema,
+        codec.schema,
+        new GenericData
+      ).read(null, deserializer)
 
-      codec.decode(read, schema)
-    }
+    codec.decode(read, codec.schema)
+  }
 }
