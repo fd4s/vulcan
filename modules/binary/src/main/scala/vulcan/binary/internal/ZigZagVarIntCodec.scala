@@ -3,7 +3,7 @@ package vulcan.binary.internal
 import scodec.bits.BitVector
 import scodec.{SizeBound, Codec => Scodec}
 
-object ZigZagVarIntCodec extends Scodec[Int] {
+private[binary] object ZigZagVarIntCodec extends Scodec[Int] {
   private val toPositiveLong = (i: Int) => {
     (i.toLong << 1) ^ (i.toLong >> 31)
   }

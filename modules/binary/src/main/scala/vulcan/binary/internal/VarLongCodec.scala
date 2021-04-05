@@ -6,7 +6,7 @@ import scodec.{Attempt, DecodeResult, Err, SizeBound, Codec => Scodec}
 import java.nio.{ByteBuffer, ByteOrder}
 import scala.annotation.tailrec
 
-object VarLongCodec extends Scodec[Long] {
+private[binary] object VarLongCodec extends Scodec[Long] {
 
   override def sizeBound = SizeBound.bounded(1L, 11L)
 

@@ -7,7 +7,7 @@ import org.apache.avro.util.Utf8
 import scodec.bits.ByteVector
 import scodec.interop.cats._
 import scodec.{Attempt, DecodeResult, Decoder, Encoder, Err, codecs, Codec => Scodec}
-import vulcan.binary.internal.{VarLongCodec, ZigZagVarIntCodec}
+import vulcan.binary.internal.{ArrayScodec, MapScodec, VarLongCodec, ZigZagVarIntCodec}
 import vulcan.internal.converters.collection._
 
 import java.nio.ByteBuffer
@@ -148,9 +148,10 @@ package object binary {
           }(gf => ByteVector(gf.bytes))
         )
       }
-    case Schema.Type.MAP => ???
+    case Schema.Type.MAP => widenToAny(new MapScodec(forWriterSchema(schema.getValueType)))
   }
 
+  // WIP
   def resolve(writerSchema: Schema, readerSchema: Schema): Decoder[Any] =
     writerSchema.getType match {
       case Schema.Type.FLOAT  => floatScodec
@@ -173,22 +174,21 @@ package object binary {
         ZigZagVarIntCodec.consume(writerSchemaIdx => forWriterSchema(types(writerSchemaIdx))) {
           value =>
             val check: Schema => Boolean =
-              if (value == null) _.getType == Schema.Type.NULL
-              else
-                value match {
-                  case _: java.lang.Float         => _.getType == Schema.Type.FLOAT
-                  case _: java.lang.Double        => _.getType == Schema.Type.DOUBLE
-                  case _: java.lang.Integer       => _.getType == Schema.Type.INT
-                  case _: java.lang.Long          => _.getType == Schema.Type.LONG
-                  case _: java.lang.Boolean       => _.getType == Schema.Type.BOOLEAN
-                  case _: Utf8                    => _.getType == Schema.Type.STRING
-                  case _: java.util.Map[_, _]     => _.getType == Schema.Type.MAP
-                  case _: java.util.Collection[_] => _.getType == Schema.Type.ARRAY
-                  case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
-                  case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
-                  case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
-                  case _                          => throw new AssertionError("match should have been exhaustive")
-                }
+              value match {
+                case null                       => _.getType == Schema.Type.NULL
+                case _: java.lang.Float         => _.getType == Schema.Type.FLOAT
+                case _: java.lang.Double        => _.getType == Schema.Type.DOUBLE
+                case _: java.lang.Integer       => _.getType == Schema.Type.INT
+                case _: java.lang.Long          => _.getType == Schema.Type.LONG
+                case _: java.lang.Boolean       => _.getType == Schema.Type.BOOLEAN
+                case _: Utf8                    => _.getType == Schema.Type.STRING
+                case _: java.util.Map[_, _]     => _.getType == Schema.Type.MAP
+                case _: java.util.Collection[_] => _.getType == Schema.Type.ARRAY
+                case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
+                case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
+                case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
+                case _                          => throw new AssertionError("match should have been exhaustive")
+              }
             types.indexWhere(check)
         }
       case Schema.Type.BYTES =>

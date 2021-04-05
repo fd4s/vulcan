@@ -53,6 +53,10 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
     arbitrary[List[A]].map(_.asJava)
   )
 
+  implicit def arbMap[A: Arbitrary]: Arbitrary[java.util.Map[Utf8, A]] = Arbitrary(
+    arbitrary[Map[Utf8, A]].map(_.asJava)
+  )
+
   implicit val arbEnumSymbol: Arbitrary[GenericData.EnumSymbol] = Arbitrary(
     arbitrary[SealedTraitEnum].map(entry => SealedTraitEnum.codec.encode(entry).value)
   )
@@ -111,6 +115,15 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
     }
   }
 
+  describe("map") {
+    it("roundtrip") {
+      implicit val eq: Eq[java.util.Map[Utf8, java.lang.Long]] = Eq.fromUniversalEquals
+      roundtrip[java.util.Map[Utf8, java.lang.Long]](
+        SchemaBuilder.builder().map().values(SchemaBuilder.builder().longType())
+      )
+    }
+  }
+
   describe("null") {
     it("roundtrip") {
       implicit val eq: Eq[Null] = Eq.fromUniversalEquals
@@ -141,10 +154,10 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
     }
   }
 
-  describe("Fixed") { 
+  describe("Fixed") {
     it("roundtrip") {
       val fixedSchema = Schema.createFixed("foo", null, "com.example", 10)
-      implicit val arbitrary: Arbitrary[GenericFixed] = Arbitrary(genBytes(10).map{ b =>
+      implicit val arbitrary: Arbitrary[GenericFixed] = Arbitrary(genBytes(10).map { b =>
         new GenericFixed {
           def getSchema() = fixedSchema
           def bytes = b
@@ -158,7 +171,7 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
     }
   }
 
-  describe("Union") { 
+  describe("Union") {
     it("roundtrip") {
       implicit val arb: Arbitrary[AnyRef] = Arbitrary(
         arbitrary[SealedTraitCaseClass].map(Codec[SealedTraitCaseClass].encode(_).value)
@@ -188,7 +201,6 @@ trait RoundTripHelpers {
     val encoded = forWriterSchema(schema).encode(value).fold(err => fail(err.toString), identity)
     val result = forWriterSchema(schema).decode(encoded).fold(err => fail(err.toString), identity)
 
-    
     assert(Eq[A].eqv(result.value.asInstanceOf[A], value))
     assert(result.remainder.isEmpty)
   }

@@ -1,15 +1,15 @@
-package vulcan.binary
+package vulcan.binary.internal
 
 import cats.data.Chain
 import scodec.bits.BitVector
 import scodec.{Attempt, DecodeResult, SizeBound, codecs, Codec => Scodec}
+import vulcan.binary.intScodec
 import vulcan.internal.converters.collection._
 
 import java.util
 import scala.annotation.tailrec
-import vulcan.binary.internal.ZigZagVarIntCodec
 
-class ArrayScodec[A](codec: Scodec[A]) extends Scodec[util.List[A]] {
+private[binary] class ArrayScodec[A](codec: Scodec[A]) extends Scodec[util.List[A]] {
   override def decode(bits: BitVector): Attempt[DecodeResult[util.List[A]]] = {
     def decodeBlock(bits: BitVector): Attempt[DecodeResult[List[A]]] =
       codecs.listOfN(ZigZagVarIntCodec, codec).decode(bits)
@@ -41,6 +41,6 @@ class ArrayScodec[A](codec: Scodec[A]) extends Scodec[util.List[A]] {
   override val sizeBound: SizeBound = intScodec.sizeBound.atLeast
 }
 
-object ArrayScodec {
+private[binary] object ArrayScodec {
   def apply[A](elementCodec: Scodec[A]) = new ArrayScodec(elementCodec)
 }
