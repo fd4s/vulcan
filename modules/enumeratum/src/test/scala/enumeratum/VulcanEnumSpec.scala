@@ -31,7 +31,7 @@ final class VulcanEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with
       val roundtrip = Codec.encode[Suit](Suit.Clubs).flatMap(Codec.decode[Suit])
       assert {
         roundtrip.swap.value.message ===
-          "clubs is not a member of Suit (clubs, diamonds, hearts, spades)"
+          "Error decoding com.example.Suit: clubs is not a member of Suit (clubs, diamonds, hearts, spades)"
       }
     }
   }

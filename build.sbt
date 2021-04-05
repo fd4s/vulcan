@@ -1,3 +1,5 @@
+import com.typesafe.tools.mima.core.ProblemFilters
+
 val avroVersion = "1.10.2"
 
 val catsVersion = "2.5.0"
@@ -276,7 +278,10 @@ lazy val mimaSettings = Seq(
     // format: off
     Seq(
       ProblemFilters.exclude[Problem]("vulcan.internal.*"),
-      ProblemFilters.exclude[IncompatibleSignatureProblem]("*")
+      ProblemFilters.exclude[IncompatibleSignatureProblem]("*"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.Codec.withDecodingTypeName"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.decode*"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.encode*")
     )
     // format: on
   }
