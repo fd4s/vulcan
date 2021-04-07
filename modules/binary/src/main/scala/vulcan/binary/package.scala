@@ -7,6 +7,7 @@ import org.apache.avro.util.Utf8
 import scodec.bits.ByteVector
 import scodec.interop.cats._
 import scodec.{Attempt, DecodeResult, Decoder, Encoder, Err, codecs, Codec => Scodec}
+import shapeless.{HList, HNil}
 import vulcan.binary.internal.{ArrayScodec, MapScodec, VarLongCodec, ZigZagVarIntCodec}
 import vulcan.internal.converters.collection._
 
@@ -47,13 +48,23 @@ package object binary {
       symbol => writerSchema.getEnumOrdinal(symbol.toString)
     )
 
+  def fieldsCodec(writerSchema: Schema): Scodec[List[(String, Any)]] =
+    writerSchema.getFields.asScala.toList
+      .map { field =>
+        forWriterSchema(field.schema).xmap[(String, Any)](result => field.name -> result, _._2)
+      }
+      .foldRight[Scodec[HList]](codecs.provide[HList](HNil))(_ :: _)
+      .xmap(_.toList, HList.fromList)
+
   def recordEncoder(writerSchema: Schema): Encoder[GenericRecord] =
     Encoder { record =>
-      writerSchema.getFields.asScala.toList.zipWithIndex
-        .map { case (field, idx) => (forWriterSchema(field.schema), record.get(idx)) }
+      writerSchema.getFields.asScala.toList
+        .map { field =>
+          field.name -> forWriterSchema(field.schema)
+        }
         .traverse {
-          case (codec, value) =>
-            codec.encode(value)
+          case (name, codec) =>
+            codec.encode(record.get(name))
         }
         .map(_.reduce(_ ++ _))
     }
@@ -62,8 +73,10 @@ package object binary {
     Decoder { bytes =>
       val record = new GenericData.Record(writerSchema)
 
-      writerSchema.getFields.asScala.toList
-        .map(field => forWriterSchema(field.schema).map((field.name, _)))
+      val foo = writerSchema.getFields.asScala.toList
+        .map(field => forWriterSchema(field.schema).map((field.name, _)).asDecoder)
+
+      foo
         .scanLeft[Attempt[DecodeResult[(String, Any)]]](
           Attempt.successful(DecodeResult((null, null), bytes))
         ) { (prev, codec) =>
@@ -154,12 +167,28 @@ package object binary {
   // WIP
   def resolve(writerSchema: Schema, readerSchema: Schema): Decoder[Any] =
     writerSchema.getType match {
-      case Schema.Type.FLOAT  => floatScodec
-      case Schema.Type.DOUBLE => doubleScodec
+      case Schema.Type.FLOAT =>
+        readerSchema.getType match {
+          case Schema.Type.FLOAT => floatScodec
+          case other =>
+            Decoder.point(
+              Attempt.failure(
+                Err(
+                  s"Reader schema of type FLOAT cannot read output of writer schema of type $other"
+                )
+              )
+            )
+        }
+      case Schema.Type.DOUBLE =>
+        readerSchema.getType match {
+          case Schema.Type.DOUBLE => doubleScodec
+          case Schema.Type.FLOAT  => floatScodec.map(_.doubleValue)
+          case Schema.Type.INT    => intScodec.map(_.doubleValue)
+          case Schema.Type.LONG   => longScodec.map(_.doubleValue)
+        }
       case Schema.Type.INT    => intScodec
       case Schema.Type.LONG   => longScodec
-      case Schema.Type.RECORD =>
-        Scodec[GenericRecord](recordEncoder(writerSchema), recordDecoder(writerSchema))
+      case Schema.Type.RECORD => recordDecoder(writerSchema)
       case Schema.Type.ARRAY =>
         ArrayScodec(forWriterSchema(writerSchema.getElementType))
       case Schema.Type.STRING  => stringScodec

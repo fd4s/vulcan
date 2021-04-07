@@ -36,7 +36,8 @@ lazy val core = project
       libraryDependencies ++= Seq(
         "org.apache.avro" % "avro" % avroVersion,
         "org.typelevel" %% "cats-free" % catsVersion,
-        "org.scodec" %% "scodec-core" % "1.11.7"
+        "org.scodec" %% "scodec-core" % "1.11.7",
+        "org.scodec" %% "scodec-cats" % "1.1.0-RC2"
       ) ++ {
         if (isDotty.value) Nil
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
