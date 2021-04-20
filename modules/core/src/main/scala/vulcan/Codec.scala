@@ -1314,29 +1314,6 @@ object Codec extends CodecCompanionCompat {
     def props: Props
   }
 
-  private[vulcan] object Field {
-    final def apply[A, B](
-      _name: String,
-      _access: A => B,
-      _codec: Codec[B],
-      _doc: Option[String],
-      _default: Option[B],
-      _order: Option[Schema.Field.Order],
-      _aliases: Seq[String],
-      _props: Props
-    ): Field[A, B] =
-      new Field[A, B] {
-        override final val name: String = _name
-        override final val access: A => B = _access
-        override final val codec: Codec[B] = _codec
-        override final val doc: Option[String] = _doc
-        override final val default: Option[B] = _default
-        override final val order: Option[Schema.Field.Order] = _order
-        override final val aliases: Seq[String] = _aliases
-        override final val props: Props = _props
-      }
-  }
-
   /**
     * @group Create
     */
@@ -1363,19 +1340,29 @@ object Codec extends CodecCompanionCompat {
           order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
-        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, *], B] =
+        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, *], B] = {
+          val _name = name
+          val _access = access
+          val _codec = codec
+          val _doc = doc
+          val _default = default
+          val _order = order
+          val _aliases = aliases
+          val _props = props
+
           FreeApplicative.lift {
-            Field(
-              name = name,
-              access = access,
-              codec = codec,
-              doc = doc,
-              default = default,
-              order = order,
-              aliases = aliases,
-              props = props
-            )
+            new Field[Any, B] {
+              override val name: String = _name
+              override val access: Any => B = _access
+              override val codec: Codec[B] = _codec
+              override val doc: Option[String] = _doc
+              override val default: Option[B] = _default
+              override val order: Option[Schema.Field.Order] = _order
+              override val aliases: Seq[String] = _aliases
+              override val props: Props = _props
+            }
           }
+        }
 
         override final def toString: String =
           "FieldBuilder"
