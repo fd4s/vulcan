@@ -1256,19 +1256,13 @@ object Codec extends CodecCompanionCompat {
   }
 
   private[vulcan] object Alt {
-    final def apply[A, B](
-      codec: Codec[B],
-      prism: Prism[A, B]
-    ): Alt[A] = {
-      type B0 = B
-      val _codec = codec
-      val _prism = prism
-
-      new Alt[A] {
-        override final type B = B0
-        override final val codec: Codec[B] = _codec
-        override final val prism: Prism[A, B] = _prism
-      }
+    final def apply[A, B0](
+      _codec: Codec[B0],
+      _prism: Prism[A, B0]
+    ): Alt[A] = new Alt[A] {
+      override final type B = B0
+      override final val codec: Codec[B] = _codec
+      override final val prism: Prism[A, B] = _prism
     }
   }
 
@@ -1322,24 +1316,15 @@ object Codec extends CodecCompanionCompat {
 
   private[vulcan] object Field {
     final def apply[A, B](
-      name: String,
-      access: A => B,
-      codec: Codec[B],
-      doc: Option[String],
-      default: Option[B],
-      order: Option[Schema.Field.Order],
-      aliases: Seq[String],
-      props: Props
-    ): Field[A, B] = {
-      val _name = name
-      val _access = access
-      val _codec = codec
-      val _doc = doc
-      val _default = default
-      val _order = order
-      val _aliases = aliases
-      val _props = props
-
+      _name: String,
+      _access: A => B,
+      _codec: Codec[B],
+      _doc: Option[String],
+      _default: Option[B],
+      _order: Option[Schema.Field.Order],
+      _aliases: Seq[String],
+      _props: Props
+    ): Field[A, B] =
       new Field[A, B] {
         override final val name: String = _name
         override final val access: A => B = _access
@@ -1350,7 +1335,6 @@ object Codec extends CodecCompanionCompat {
         override final val aliases: Seq[String] = _aliases
         override final val props: Props = _props
       }
-    }
   }
 
   /**
