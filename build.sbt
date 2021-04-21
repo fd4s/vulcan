@@ -1,12 +1,12 @@
 val avroVersion = "1.10.2"
 
-val catsVersion = "2.5.0"
+val catsVersion = "2.6.0"
 
 val enumeratumVersion = "1.6.1"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.23"
+val refinedVersion = "0.9.24"
 
 val shapelessVersion = "2.3.4"
 
@@ -280,7 +280,8 @@ lazy val mimaSettings = Seq(
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.Codec.withDecodingTypeName"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.decode*"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.encode*"),
-      ProblemFilters.exclude[MissingClassProblem]("vulcan.Codec$Field$")
+      ProblemFilters.exclude[MissingClassProblem]("vulcan.Codec$Field$"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroException.*")
     )
     // format: on
   }
