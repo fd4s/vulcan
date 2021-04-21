@@ -280,6 +280,7 @@ lazy val mimaSettings = Seq(
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.Codec.withDecodingTypeName"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.decode*"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.encode*"),
+      ProblemFilters.exclude[MissingClassProblem]("vulcan.Codec$Field$"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroException.*")
     )
     // format: on
