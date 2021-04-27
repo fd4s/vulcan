@@ -14,7 +14,7 @@ val scala212 = "2.12.13"
 
 val scala213 = "2.13.5"
 
-val scala3 = "3.0.0-RC2"
+val scala3 = "3.0.0-RC3"
 
 lazy val vulcan = project
   .in(file("."))
@@ -148,7 +148,7 @@ lazy val dependencySettings = Seq(
 
 lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.3",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.4",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test)
