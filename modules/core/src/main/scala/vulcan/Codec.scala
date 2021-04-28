@@ -315,7 +315,14 @@ object Codec extends CodecCompanionCompat {
           schema.getType() match {
             case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
               value match {
-                case n: Number => Right(n.doubleValue)
+                case double: Double =>
+                  Right(double)
+                case float: Float =>
+                  Right(float.toDouble)
+                case int: Integer =>
+                  Right(int.toDouble)
+                case long: Long =>
+                  Right(long.toDouble)
                 case other =>
                   Left(
                     AvroError.decodeUnexpectedTypes(
