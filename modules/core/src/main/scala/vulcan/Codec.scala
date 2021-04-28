@@ -148,7 +148,7 @@ object Codec extends CodecCompanionCompat {
       "Boolean",
       "Boolean",
       Right(SchemaBuilder.builder().booleanType()),
-      Right(_), {
+      _.asRight, {
         case (boolean: Boolean, _) =>
           Right(boolean)
       }
@@ -310,7 +310,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .instance[Double, Double](
         Right(SchemaBuilder.builder().doubleType()),
-        Right(_),
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
@@ -506,7 +506,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .instance[Float, Float](
         Right(SchemaBuilder.builder().floatType()),
-        Right(_),
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
@@ -658,7 +658,7 @@ object Codec extends CodecCompanionCompat {
       "Int",
       "Int",
       Right(SchemaBuilder.builder().intType()),
-      Right(_), {
+      _.asRight, {
         case (integer: Int, _) =>
           Right(integer)
       }
@@ -710,7 +710,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .instance[Long, Long](
         Right(SchemaBuilder.builder().longType()),
-        Right(_),
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.LONG | Schema.Type.INT =>
