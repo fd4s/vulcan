@@ -4,7 +4,9 @@ import cats.data._
 import cats.implicits._
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.time.{Instant, LocalDate}
+import java.time.{Instant, LocalDate, LocalTime}
+import java.util.concurrent.TimeUnit
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
@@ -1120,6 +1122,117 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
       }
     }
+
+    describe("localTimeMillis") {
+      implicit val codec: Codec[LocalTime] = Codec.localTimeMillis
+      describe("schema") {
+        it("should be encoded as int with logical type time-millis") {
+          assertSchemaIs[LocalTime] {
+            """{"type":"int","logicalType":"time-millis"}"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode as int") {
+          val value = LocalTime.now()
+          assertEncodeIs[LocalTime](
+            value,
+            Right(java.lang.Integer.valueOf(TimeUnit.NANOSECONDS.toMillis(value.toNanoOfDay()).toInt))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not int") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            unsafeSchema[Long],
+            "Error decoding LocalTime: Got unexpected schema type LONG, expected schema type INT"
+          )
+        }
+
+        it("should error if logical type is not time-millis") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            unsafeSchema[Int],
+            "Error decoding LocalTime: Got unexpected missing logical type"
+          )
+        }
+
+        it("should error if value is not int") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(123L),
+            unsafeSchema[LocalTime],
+            "Error decoding LocalTime: Got unexpected type java.lang.Long, expected type Integer"
+          )
+        }
+
+        it("should decode int as local time-millis") {
+          val value = LocalTime.now()
+          assertDecodeIs[LocalTime](
+            unsafeEncode(value),
+            Right(value.truncatedTo(ChronoUnit.MILLIS))
+          )
+        }
+      }
+    }
+
+    describe("localTimeMicros") {
+      implicit val codec: Codec[LocalTime] = Codec.localTimeMicros
+      describe("schema") {
+        it("should be encoded as int with logical type time-micros") {
+          assertSchemaIs[LocalTime] {
+            """{"type":"long","logicalType":"time-micros"}"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode as long") {
+          val value = LocalTime.now()
+          assertEncodeIs[LocalTime](
+            value,
+            Right(java.lang.Long.valueOf(TimeUnit.NANOSECONDS.toMicros(value.toNanoOfDay())))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not int") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            unsafeSchema[Int],
+            "Error decoding LocalTime: Got unexpected schema type INT, expected schema type LONG"
+          )
+        }
+
+        it("should error if logical type is not time-micros") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            unsafeSchema[Long],
+            "Error decoding LocalTime: Got unexpected missing logical type"
+          )
+        }
+
+        it("should error if value is not long") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(123),
+            unsafeSchema[LocalTime],
+            "Error decoding LocalTime: Got unexpected type java.lang.Integer, expected type Long"
+          )
+        }
+
+        it("should decode int as local time-micros") {
+          val value = LocalTime.now()
+          assertDecodeIs[LocalTime](
+            unsafeEncode(value),
+            Right(value.truncatedTo(ChronoUnit.MICROS))
+          )
+        }
+      }
+    }
+
 
     describe("long") {
       describe("schema") {
