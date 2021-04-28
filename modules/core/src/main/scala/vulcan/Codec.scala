@@ -148,8 +148,8 @@ object Codec extends CodecCompanionCompat {
       "Boolean",
       "Boolean",
       Right(SchemaBuilder.builder().booleanType()),
-      java.lang.Boolean.valueOf(_).asRight, {
-        case (boolean: java.lang.Boolean, _) =>
+      Right(_), {
+        case (boolean: Boolean, _) =>
           Right(boolean)
       }
     )
@@ -310,18 +310,18 @@ object Codec extends CodecCompanionCompat {
     Codec
       .instance[java.lang.Double, Double](
         Right(SchemaBuilder.builder().doubleType()),
-        java.lang.Double.valueOf(_).asRight,
+        Right(_),
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
               value match {
-                case double: java.lang.Double =>
+                case double: Double =>
                   Right(double)
-                case float: java.lang.Float =>
+                case float: Float =>
                   Right(float.toDouble)
-                case int: java.lang.Integer =>
+                case int: Integer =>
                   Right(int.toDouble)
-                case long: java.lang.Long =>
+                case long: Long =>
                   Right(long.toDouble)
                 case other =>
                   Left(
@@ -513,16 +513,16 @@ object Codec extends CodecCompanionCompat {
     Codec
       .instance[java.lang.Float, Float](
         Right(SchemaBuilder.builder().floatType()),
-        java.lang.Float.valueOf(_).asRight,
+        Right(_),
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
               value match {
-                case float: java.lang.Float =>
+                case float: Float =>
                   Right(float)
-                case int: java.lang.Integer =>
+                case int: Integer =>
                   Right(int.toFloat)
-                case long: java.lang.Long =>
+                case long: Long =>
                   Right(long.toFloat)
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Float"))
@@ -648,8 +648,8 @@ object Codec extends CodecCompanionCompat {
       "Long",
       "Instant",
       Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
-      instant => Right(java.lang.Long.valueOf(instant.toEpochMilli)), {
-        case (long: java.lang.Long, schema) =>
+      instant => Right(instant.toEpochMilli), {
+        case (long: Long, schema) =>
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.timestampMillis()) {
             Right(Instant.ofEpochMilli(long))
@@ -665,8 +665,8 @@ object Codec extends CodecCompanionCompat {
       "Int",
       "Int",
       Right(SchemaBuilder.builder().intType()),
-      java.lang.Integer.valueOf(_).asRight, {
-        case (integer: java.lang.Integer, _) =>
+      Right(_), {
+        case (integer: Integer, _) =>
           Right(integer)
       }
     )
@@ -701,8 +701,8 @@ object Codec extends CodecCompanionCompat {
       "Integer",
       "LocalDate",
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
-      localDate => Right(java.lang.Integer.valueOf(localDate.toEpochDay.toInt)), {
-        case (int: java.lang.Integer, schema) =>
+      localDate => Right(localDate.toEpochDay.toInt), {
+        case (int: Integer, schema) =>
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.date()) {
             Right(LocalDate.ofEpochDay(int.toLong))
@@ -717,14 +717,14 @@ object Codec extends CodecCompanionCompat {
     Codec
       .instance[java.lang.Long, Long](
         Right(SchemaBuilder.builder().longType()),
-        java.lang.Long.valueOf(_).asRight,
+        Right(_),
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.LONG | Schema.Type.INT =>
               value match {
-                case long: java.lang.Long =>
+                case long: Long =>
                   Right(long)
-                case int: java.lang.Integer =>
+                case int: Integer =>
                   Right(int.toLong)
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Long"))
