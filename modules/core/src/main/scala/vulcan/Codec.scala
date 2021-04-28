@@ -214,7 +214,7 @@ object Codec extends CodecCompanionCompat {
       "Chain",
       codec.schema.map(Schema.createArray),
       _.toList.traverse(codec.encode(_)).map(_.asJava), {
-        case (collection: java.util.Collection[Any @unchecked], schema) =>
+        case (collection: java.util.Collection[_], schema) =>
           collection.asScala.toList
             .traverse(codec.decode(_, schema.getElementType()))
             .map(Chain.fromSeq)
@@ -681,7 +681,7 @@ object Codec extends CodecCompanionCompat {
       "List",
       codec.schema.map(Schema.createArray),
       _.traverse(codec.encode(_)).map(_.asJava), {
-        case (collection: java.util.Collection[Any @unchecked], schema) =>
+        case (collection: java.util.Collection[_], schema) =>
           collection.asScala.toList.traverse(codec.decode(_, schema.getElementType()))
       }
     )
