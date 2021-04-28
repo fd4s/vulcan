@@ -14,7 +14,8 @@ import cats.implicits._
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.time.{Instant, LocalDate}
+import java.time.{Instant, LocalDate, LocalTime}
+import java.util.concurrent.TimeUnit
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
@@ -706,6 +707,48 @@ object Codec extends CodecCompanionCompat {
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.date()) {
             Right(LocalDate.ofEpochDay(int.toLong))
+          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+      }
+    )
+
+  /**
+    * @group JavaTime
+    */
+  final val localTimeMillis: Codec.Aux[java.lang.Integer, LocalTime] = 
+    Codec.instanceForTypes(
+      "Integer",
+      "LocalTime",
+      Right(LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType())),
+      { localTime => 
+        val millis = TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay())
+        Right(java.lang.Integer.valueOf(millis.toInt)) 
+      }, {
+        case (int: java.lang.Integer, schema) =>
+          val logicalType = schema.getLogicalType()
+          if (logicalType == LogicalTypes.timeMillis()) {
+            val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
+            Right(LocalTime.ofNanoOfDay(nanos))
+          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+      }
+    )
+
+  /**
+    * @group JavaTime
+    */
+  final val localTimeMicros: Codec.Aux[java.lang.Long, LocalTime] = 
+    Codec.instanceForTypes(
+      "Long",
+      "LocalTime",
+      Right(LogicalTypes.timeMicros().addToSchema(SchemaBuilder.builder().longType())),
+      { localTime => 
+        val micros = TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay())
+        Right(java.lang.Long.valueOf(micros)) 
+      }, {
+        case (long: java.lang.Long, schema) =>
+          val logicalType = schema.getLogicalType()
+          if (logicalType == LogicalTypes.timeMicros()) {
+            val nanos = TimeUnit.MICROSECONDS.toNanos(long)
+            Right(LocalTime.ofNanoOfDay(nanos))
           } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
       }
     )
