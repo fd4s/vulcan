@@ -6,6 +6,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
@@ -1171,7 +1172,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = LocalTime.now()
           assertDecodeIs[LocalTime](
             unsafeEncode(value),
-            Right(LocalTime.ofNanoOfDay(TimeUnit.MILLISECONDS.toNanos(TimeUnit.NANOSECONDS.toMillis(value.toNanoOfDay()))))
+            Right(value.truncatedTo(ChronoUnit.MILLIS))
           )
         }
       }
@@ -1226,7 +1227,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = LocalTime.now()
           assertDecodeIs[LocalTime](
             unsafeEncode(value),
-            Right(LocalTime.ofNanoOfDay(TimeUnit.MICROSECONDS.toNanos(TimeUnit.NANOSECONDS.toMicros(value.toNanoOfDay()))))
+            Right(value.truncatedTo(ChronoUnit.MICROS))
           )
         }
       }
