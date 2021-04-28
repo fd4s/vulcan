@@ -714,14 +714,14 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  final val localTimeMillis: Codec.Aux[java.lang.Integer, LocalTime] = 
+  final val localTimeMillis: Codec.Aux[java.lang.Integer, LocalTime] =
     Codec.instanceForTypes(
       "Integer",
       "LocalTime",
-      Right(LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType())),
-      { localTime => 
-        val millis = TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay())
-        Right(java.lang.Integer.valueOf(millis.toInt)) 
+      Right(LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType())), {
+        localTime =>
+          val millis = TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay())
+          Right(java.lang.Integer.valueOf(millis.toInt))
       }, {
         case (int: java.lang.Integer, schema) =>
           val logicalType = schema.getLogicalType()
@@ -735,14 +735,14 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  final val localTimeMicros: Codec.Aux[java.lang.Long, LocalTime] = 
+  final val localTimeMicros: Codec.Aux[java.lang.Long, LocalTime] =
     Codec.instanceForTypes(
       "Long",
       "LocalTime",
-      Right(LogicalTypes.timeMicros().addToSchema(SchemaBuilder.builder().longType())),
-      { localTime => 
-        val micros = TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay())
-        Right(java.lang.Long.valueOf(micros)) 
+      Right(LogicalTypes.timeMicros().addToSchema(SchemaBuilder.builder().longType())), {
+        localTime =>
+          val micros = TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay())
+          Right(java.lang.Long.valueOf(micros))
       }, {
         case (long: java.lang.Long, schema) =>
           val logicalType = schema.getLogicalType()
