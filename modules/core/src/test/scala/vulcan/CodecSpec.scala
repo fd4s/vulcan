@@ -35,7 +35,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = true
           assertEncodeIs[Boolean](
             value,
-            Right(java.lang.Boolean.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -89,7 +89,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 1.toByte
           assertEncodeIs[Byte](
             value,
-            Right(java.lang.Integer.valueOf(1))
+            Right(1)
           )
         }
       }
@@ -428,7 +428,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123d
           assertEncodeIs[Double](
             value,
-            Right(java.lang.Double.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -734,7 +734,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123f
           assertEncodeIs[Float](
             value,
-            Right(java.lang.Float.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -823,7 +823,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
           assertEncodeIs[Instant](
             value,
-            Right(java.lang.Long.valueOf(value.toEpochMilli()))
+            Right(value.toEpochMilli())
           )
         }
       }
@@ -992,7 +992,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123
           assertEncodeIs[Int](
             value,
-            Right(java.lang.Integer.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -1083,7 +1083,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = LocalDate.now()
           assertEncodeIs[LocalDate](
             value,
-            Right(java.lang.Integer.valueOf(value.toEpochDay().toInt))
+            Right(value.toEpochDay().toInt)
           )
         }
       }
@@ -1248,7 +1248,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123L
           assertEncodeIs[Long](
             value,
-            Right(java.lang.Long.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -2641,7 +2641,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 1.toShort
           assertEncodeIs[Short](
             value,
-            Right(java.lang.Integer.valueOf(1))
+            Right(1)
           )
         }
       }

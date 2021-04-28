@@ -32,7 +32,7 @@ package object generic {
     tailCodec: Lazy[Codec[T]]
   ): Codec[H :+: T] =
     Codec
-      .instance[AnyRef, H :+: T](
+      .instance[Any, H :+: T](
         AvroError.catchNonFatal {
           headCodec.schema.flatMap { first =>
             tailCodec.value.schema.flatMap { rest =>
@@ -165,7 +165,7 @@ package object generic {
           }
         }
       Codec
-        .instance[AnyRef, A](
+        .instance[Any, A](
           schema,
           if (caseClass.isValueClass) { a =>
             val param = caseClass.parameters.head
@@ -240,10 +240,10 @@ package object generic {
     final def derive[A]: Codec[A] =
       macro Magnolia.gen[A]
 
-    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[AnyRef, A] = {
+    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[Any, A] = {
       val typeName = sealedTrait.typeName.full
       Codec
-        .instance[AnyRef, A](
+        .instance[Any, A](
           AvroError.catchNonFatal {
             sealedTrait.subtypes.toList
               .traverse(_.typeclass.schema)

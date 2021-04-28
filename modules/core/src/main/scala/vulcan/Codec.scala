@@ -37,7 +37,7 @@ import scala.util.Try
   "could not find implicit Codec[${A}]; ensure no imports are missing or manually define an instance"
 )
 sealed abstract class Codec[A] {
-  type Repr <: AnyRef
+  type Repr
 
   /** The schema or an error if the schema could not be generated. */
   def schema: Either[AvroError, Schema]
@@ -129,7 +129,7 @@ sealed abstract class Codec[A] {
   */
 object Codec extends CodecCompanionCompat {
 
-  type Aux[Repr0 <: AnyRef, A] = Codec[A] {
+  type Aux[Repr0, A] = Codec[A] {
     type Repr = Repr0
   }
 
@@ -144,13 +144,13 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val boolean: Codec.Aux[java.lang.Boolean, Boolean] =
+  implicit final val boolean: Codec.Aux[Boolean, Boolean] =
     Codec.instanceForTypes(
       "Boolean",
       "Boolean",
       Right(SchemaBuilder.builder().booleanType()),
-      java.lang.Boolean.valueOf(_).asRight, {
-        case (boolean: java.lang.Boolean, _) =>
+      _.asRight, {
+        case (boolean: Boolean, _) =>
           Right(boolean)
       }
     )
@@ -158,7 +158,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final lazy val byte: Codec.Aux[java.lang.Integer, Byte] = {
+  implicit final lazy val byte: Codec.Aux[Int, Byte] = {
     val min: Int = Byte.MinValue.toInt
     val max: Int = Byte.MaxValue.toInt
     Codec.int
@@ -307,22 +307,22 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val double: Codec.Aux[java.lang.Double, Double] =
+  implicit final val double: Codec.Aux[Double, Double] =
     Codec
-      .instance[java.lang.Double, Double](
+      .instance[Double, Double](
         Right(SchemaBuilder.builder().doubleType()),
-        java.lang.Double.valueOf(_).asRight,
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
               value match {
-                case double: java.lang.Double =>
+                case double: Double =>
                   Right(double)
-                case float: java.lang.Float =>
+                case float: Float =>
                   Right(float.toDouble)
-                case int: java.lang.Integer =>
+                case int: Integer =>
                   Right(int.toDouble)
-                case long: java.lang.Long =>
+                case long: Long =>
                   Right(long.toDouble)
                 case other =>
                   Left(
@@ -351,7 +351,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def either[A, B](
     implicit codecA: Codec[A],
     codecB: Codec[B]
-  ): Codec.Aux[AnyRef, Either[A, B]] =
+  ): Codec.Aux[Any, Either[A, B]] =
     Codec
       .union[Either[A, B]](alt => alt[Left[A, B]] |+| alt[Right[A, B]])
       .withTypeName("Either")
@@ -361,7 +361,7 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def encode[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Any] =
+  final def encode[A](a: A)(implicit codec: Codec[A]): Either[AvroError, codec.Repr] =
     codec.encode(a)
 
   /**
@@ -510,20 +510,20 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val float: Codec.Aux[java.lang.Float, Float] =
+  implicit final val float: Codec.Aux[Float, Float] =
     Codec
-      .instance[java.lang.Float, Float](
+      .instance[Float, Float](
         Right(SchemaBuilder.builder().floatType()),
-        java.lang.Float.valueOf(_).asRight,
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
               value match {
-                case float: java.lang.Float =>
+                case float: Float =>
                   Right(float)
-                case int: java.lang.Integer =>
+                case int: Int =>
                   Right(int.toFloat)
-                case long: java.lang.Long =>
+                case long: Long =>
                   Right(long.toFloat)
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Float"))
@@ -580,7 +580,7 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Create
     */
-  final def instance[Repr0 <: AnyRef, A](
+  final def instance[Repr0, A](
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, Repr0],
     decode: (Any, Schema) => Either[AvroError, A]
@@ -609,7 +609,7 @@ object Codec extends CodecCompanionCompat {
     }
   }
 
-  private[vulcan] final def instanceForTypes[Repr <: AnyRef, A](
+  private[vulcan] final def instanceForTypes[Repr, A](
     expectedValueType: String,
     typeName: String,
     schema: Either[AvroError, Schema],
@@ -644,13 +644,13 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  implicit final val instant: Codec.Aux[java.lang.Long, Instant] =
+  implicit final val instant: Codec.Aux[Long, Instant] =
     Codec.instanceForTypes(
       "Long",
       "Instant",
       Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
-      instant => Right(java.lang.Long.valueOf(instant.toEpochMilli)), {
-        case (long: java.lang.Long, schema) =>
+      instant => Right(instant.toEpochMilli), {
+        case (long: Long, schema) =>
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.timestampMillis()) {
             Right(Instant.ofEpochMilli(long))
@@ -661,13 +661,13 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val int: Codec.Aux[java.lang.Integer, Int] =
+  implicit final val int: Codec.Aux[Int, Int] =
     Codec.instanceForTypes(
       "Int",
       "Int",
       Right(SchemaBuilder.builder().intType()),
-      java.lang.Integer.valueOf(_).asRight, {
-        case (integer: java.lang.Integer, _) =>
+      _.asRight, {
+        case (integer: Int, _) =>
           Right(integer)
       }
     )
@@ -697,13 +697,13 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  implicit final val localDate: Codec.Aux[java.lang.Integer, LocalDate] =
+  implicit final val localDate: Codec.Aux[Int, LocalDate] =
     Codec.instanceForTypes(
       "Integer",
       "LocalDate",
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
-      localDate => Right(java.lang.Integer.valueOf(localDate.toEpochDay.toInt)), {
-        case (int: java.lang.Integer, schema) =>
+      localDate => Right(localDate.toEpochDay.toInt), {
+        case (int: Int, schema) =>
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.date()) {
             Right(LocalDate.ofEpochDay(int.toLong))
@@ -714,16 +714,16 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  final val localTimeMillis: Codec.Aux[java.lang.Integer, LocalTime] =
+  final val localTimeMillis: Codec.Aux[Int, LocalTime] =
     Codec.instanceForTypes(
       "Integer",
       "LocalTime",
       Right(LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType())), {
         localTime =>
           val millis = TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay())
-          Right(java.lang.Integer.valueOf(millis.toInt))
+          Right(millis.toInt)
       }, {
-        case (int: java.lang.Integer, schema) =>
+        case (int: Int, schema) =>
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.timeMillis()) {
             val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
@@ -735,16 +735,16 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  final val localTimeMicros: Codec.Aux[java.lang.Long, LocalTime] =
+  final val localTimeMicros: Codec.Aux[Long, LocalTime] =
     Codec.instanceForTypes(
       "Long",
       "LocalTime",
       Right(LogicalTypes.timeMicros().addToSchema(SchemaBuilder.builder().longType())), {
         localTime =>
           val micros = TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay())
-          Right(java.lang.Long.valueOf(micros))
+          Right(micros)
       }, {
-        case (long: java.lang.Long, schema) =>
+        case (long: Long, schema) =>
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.timeMicros()) {
             val nanos = TimeUnit.MICROSECONDS.toNanos(long)
@@ -756,18 +756,18 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val long: Codec.Aux[java.lang.Long, Long] =
+  implicit final val long: Codec.Aux[Long, Long] =
     Codec
-      .instance[java.lang.Long, Long](
+      .instance[Long, Long](
         Right(SchemaBuilder.builder().longType()),
-        java.lang.Long.valueOf(_).asRight,
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
             case Schema.Type.LONG | Schema.Type.INT =>
               value match {
-                case long: java.lang.Long =>
+                case long: Long =>
                   Right(long)
-                case int: java.lang.Integer =>
+                case int: Int =>
                   Right(int.toLong)
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Long"))
@@ -1048,7 +1048,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val short: Codec.Aux[java.lang.Integer, Short] = {
+  implicit final val short: Codec.Aux[Int, Short] = {
     val min: Int = Short.MinValue.toInt
     val max: Int = Short.MaxValue.toInt
     Codec.int
@@ -1147,7 +1147,7 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Create
     */
-  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[AnyRef, A] = {
+  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[Any, A] = {
     val alts = f(AltBuilder.instance)
     val schema = AvroError.catchNonFatal {
       alts.toList
@@ -1155,7 +1155,7 @@ object Codec extends CodecCompanionCompat {
         .map(schemas => Schema.createUnion(schemas.asJava))
     }
 
-    Codec.instance[AnyRef, A](
+    Codec.instance[Any, A](
       schema,
       a =>
         alts
@@ -1284,7 +1284,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group Cats
     */
-  implicit final def codecAuxShow[Repr <: AnyRef, A]: Show[Codec.Aux[Repr, A]] =
+  implicit final def codecAuxShow[Repr, A]: Show[Codec.Aux[Repr, A]] =
     Show.fromToString
 
   /**

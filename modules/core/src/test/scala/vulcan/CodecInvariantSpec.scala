@@ -29,7 +29,7 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
       schemaGen.flatMap { schema =>
         charsetGen.map { charset =>
           Codec
-            .instance[AnyRef, String](
+            .instance[Any, String](
               schema,
               s => Right(s.getBytes(charset)),
               (value, schema) => {
