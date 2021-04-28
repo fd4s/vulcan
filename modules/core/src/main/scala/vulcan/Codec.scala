@@ -520,7 +520,7 @@ object Codec extends CodecCompanionCompat {
               value match {
                 case float: Float =>
                   Right(float)
-                case int: Integer =>
+                case int: Int =>
                   Right(int.toFloat)
                 case long: Long =>
                   Right(long.toFloat)
@@ -666,7 +666,7 @@ object Codec extends CodecCompanionCompat {
       "Int",
       Right(SchemaBuilder.builder().intType()),
       Right(_), {
-        case (integer: Integer, _) =>
+        case (integer: Int, _) =>
           Right(integer)
       }
     )
@@ -702,7 +702,7 @@ object Codec extends CodecCompanionCompat {
       "LocalDate",
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
       localDate => Right(localDate.toEpochDay.toInt), {
-        case (int: Integer, schema) =>
+        case (int: Int, schema) =>
           val logicalType = schema.getLogicalType()
           if (logicalType == LogicalTypes.date()) {
             Right(LocalDate.ofEpochDay(int.toLong))
@@ -724,7 +724,7 @@ object Codec extends CodecCompanionCompat {
               value match {
                 case long: Long =>
                   Right(long)
-                case int: Integer =>
+                case int: Int =>
                   Right(int.toLong)
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Long"))
