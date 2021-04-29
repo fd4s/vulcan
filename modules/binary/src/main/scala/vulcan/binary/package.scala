@@ -185,6 +185,7 @@ package object binary {
             )
           )
         }
+      case (_, _) => None
     }
 
   def mismatch(readerType: Schema.Type, writerType: Schema.Type): Decoder[Any] =
@@ -208,7 +209,7 @@ package object binary {
     implicit codec: Codec[A]
   ): Either[AvroError, A] =
     codec.schema.flatMap { readerSchema =>
-      resolve(readerSchema, writerSchema)
+      resolve(writerSchema, readerSchema)
         .getOrElse(mismatch(readerSchema.getType, writerSchema.getType))
         .decode(BitVector(bytes)) match {
         case Attempt.Successful(DecodeResult(value, _)) => codec.decode(value, writerSchema)

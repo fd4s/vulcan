@@ -6,12 +6,12 @@ import org.scalacheck.Arbitrary
 import vulcan.{Codec, Props}
 import org.scalacheck.Arbitrary.arbitrary
 
-final case class CaseClassThreeFields(name: Float, age: Int, foo: Double)
+final case class CaseClassThreeFields(name: String, age: Int, foo: Double)
 
 object CaseClassThreeFields {
   implicit val codec: Codec[CaseClassThreeFields] =
     Codec.record(
-      name = "CaseClassThreeFields",
+      name = "CaseClass",
       namespace = "vulcan.examples",
       doc = Some("some documentation for example"),
       aliases = Seq("FirstAlias", "SecondAlias"),
@@ -24,7 +24,7 @@ object CaseClassThreeFields {
           name = "name",
           access = _.name,
           doc = Some("some doc"),
-          default = Some(1.0f),
+          default = Some("hi"),
           order = Some(Schema.Field.Order.DESCENDING),
           aliases = Seq("TheAlias"),
           props = Props.one("custom", "value")
@@ -36,7 +36,7 @@ object CaseClassThreeFields {
 
   implicit val arb: Arbitrary[CaseClassThreeFields] = Arbitrary {
     for {
-      name <- arbitrary[Float]
+      name <- arbitrary[String]
       age <- arbitrary[Int]
       foo <- arbitrary[Double]
     } yield CaseClassThreeFields(name, age, foo)
