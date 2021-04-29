@@ -6,7 +6,7 @@
 
 package vulcan
 
-import org.apache.avro.generic.{GenericData, GenericFixed}
+import org.apache.avro.generic.{GenericFixed}
 
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.tags._
