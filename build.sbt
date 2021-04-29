@@ -135,7 +135,8 @@ lazy val binary = project
     publishSettings,
     mimaSettings,
     scalaSettings,
-    testSettings
+    testSettings,
+    scalatestSettings
   )
   .dependsOn(core)
 

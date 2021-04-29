@@ -20,28 +20,9 @@ import cats.kernel.Eq
 import vulcan.binary.examples.SealedTraitCaseClass
 
 class RoundTripSpec extends BaseSpec with RoundTripHelpers {
-  implicit val arbFloat: Arbitrary[java.lang.Float] = Arbitrary(
-    implicitly[Arbitrary[Float]].arbitrary.map(java.lang.Float.valueOf(_))
-  )
-
-  implicit val arbDouble: Arbitrary[java.lang.Double] = Arbitrary(
-    implicitly[Arbitrary[Double]].arbitrary.map(java.lang.Double.valueOf(_))
-  )
-
-  implicit val arbInteger: Arbitrary[java.lang.Integer] = Arbitrary(
-    implicitly[Arbitrary[Int]].arbitrary.map(java.lang.Integer.valueOf(_))
-  )
-
-  implicit val arbLong: Arbitrary[java.lang.Long] = Arbitrary(
-    implicitly[Arbitrary[Long]].arbitrary.map(java.lang.Long.valueOf(_))
-  )
 
   implicit val arbUtf8: Arbitrary[Utf8] = Arbitrary(
     implicitly[Arbitrary[String]].arbitrary.map(new Utf8(_))
-  )
-
-  implicit val arbBool: Arbitrary[java.lang.Boolean] = Arbitrary(
-    implicitly[Arbitrary[Boolean]].arbitrary.map(java.lang.Boolean.valueOf(_))
   )
 
   implicit val arbRecord: Arbitrary[GenericRecord] = Arbitrary(
@@ -66,29 +47,25 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   describe("float") {
     it("roundtrip") {
-      implicit val eq: Eq[java.lang.Float] = Eq.fromUniversalEquals
-      roundtrip[java.lang.Float](SchemaBuilder.builder().floatType())
+      roundtrip[Float](SchemaBuilder.builder().floatType())
     }
   }
 
   describe("double") {
     it("roundtrip") {
-      implicit val eq: Eq[java.lang.Double] = Eq.fromUniversalEquals
-      roundtrip[java.lang.Double](SchemaBuilder.builder().doubleType())
+      roundtrip[Double](SchemaBuilder.builder().doubleType())
     }
   }
 
   describe("int") {
     it("roundtrip") {
-      implicit val eq: Eq[java.lang.Integer] = Eq.fromUniversalEquals
-      roundtrip[java.lang.Integer](SchemaBuilder.builder().intType())
+      roundtrip[Int](SchemaBuilder.builder().intType())
     }
   }
 
   describe("long") {
     it("roundtrip") {
-      implicit val eq: Eq[java.lang.Long] = Eq.fromUniversalEquals
-      roundtrip[java.lang.Long](SchemaBuilder.builder().longType())
+      roundtrip[Long](SchemaBuilder.builder().longType())
     }
   }
 
@@ -101,15 +78,14 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   describe("boolean") {
     it("roundtrip") {
-      implicit val eq: Eq[java.lang.Boolean] = Eq.fromUniversalEquals
-      roundtrip[java.lang.Boolean](SchemaBuilder.builder().booleanType())
+      roundtrip[Boolean](SchemaBuilder.builder().booleanType())
     }
   }
 
   describe("array") {
     it("roundtrip") {
-      implicit val eq: Eq[java.util.List[java.lang.Long]] = Eq.fromUniversalEquals
-      roundtrip[java.util.List[java.lang.Long]](
+      implicit val eq: Eq[java.util.List[Long]] = Eq.fromUniversalEquals
+      roundtrip[java.util.List[Long]](
         SchemaBuilder.builder().array().items(SchemaBuilder.builder().longType())
       )
     }
@@ -117,8 +93,8 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   describe("map") {
     it("roundtrip") {
-      implicit val eq: Eq[java.util.Map[Utf8, java.lang.Long]] = Eq.fromUniversalEquals
-      roundtrip[java.util.Map[Utf8, java.lang.Long]](
+      implicit val eq: Eq[java.util.Map[Utf8, Long]] = Eq.fromUniversalEquals
+      roundtrip[java.util.Map[Utf8, Long]](
         SchemaBuilder.builder().map().values(SchemaBuilder.builder().longType())
       )
     }
@@ -173,13 +149,13 @@ class RoundTripSpec extends BaseSpec with RoundTripHelpers {
 
   describe("Union") {
     it("roundtrip") {
-      implicit val arb: Arbitrary[AnyRef] = Arbitrary(
+      implicit val arb: Arbitrary[Any] = Arbitrary(
         arbitrary[SealedTraitCaseClass].map(Codec[SealedTraitCaseClass].encode(_).value)
       )
 
-      implicit val eq: Eq[AnyRef] = Eq.fromUniversalEquals
+      implicit val eq: Eq[Any] = Eq.fromUniversalEquals
 
-      roundtrip[AnyRef](SealedTraitCaseClass.sealedTraitCaseClassCodec.schema.value)
+      roundtrip[Any](SealedTraitCaseClass.sealedTraitCaseClassCodec.schema.value)
     }
   }
 }

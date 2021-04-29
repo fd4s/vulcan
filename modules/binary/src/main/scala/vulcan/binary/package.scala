@@ -1,14 +1,13 @@
 package vulcan
 
-import cats.syntax.all._
 import org.apache.avro.Schema
+import org.apache.avro.Schema.Type._
 import org.apache.avro.generic.{GenericData, GenericEnumSymbol, GenericFixed, GenericRecord}
 import org.apache.avro.util.Utf8
-import scodec.bits.ByteVector
-import scodec.interop.cats._
-import scodec.{Attempt, DecodeResult, Decoder, Encoder, Err, codecs, Codec => Scodec}
-import shapeless.{HList, HNil}
-import vulcan.binary.internal.{ArrayScodec, MapScodec, VarLongCodec, ZigZagVarIntCodec}
+import cats.syntax.all._
+import scodec.bits.{BitVector, ByteVector}
+import scodec.{Attempt, DecodeResult, Decoder, Err, codecs, Codec => Scodec}
+import vulcan.binary.internal._
 import vulcan.internal.converters.collection._
 
 import java.nio.ByteBuffer
@@ -16,31 +15,40 @@ import scala.reflect.ClassTag
 
 package object binary {
 
-  private[binary] val zigZagVarLong: Scodec[Long] = VarLongCodec.xmap(
+  lazy val intScodec: Scodec[Int] = ZigZagVarIntCodec
+
+  val longScodec: Scodec[Long] = VarLongCodec.xmap(
     zz => (zz >>> 1L) ^ -(zz & 1L),
     i => (i << 1L) ^ (i >> 63L)
   )
 
-  lazy val intScodec: Scodec[java.lang.Integer] =
-    ZigZagVarIntCodec.xmap(java.lang.Integer.valueOf(_), _.intValue)
+  val floatScodec: Scodec[Float] = codecs.floatL
 
-  val longScodec: Scodec[java.lang.Long] =
-    zigZagVarLong.xmap(java.lang.Long.valueOf(_), _.longValue)
-
-  val floatScodec: Scodec[java.lang.Float] =
-    codecs.floatL.xmap(java.lang.Float.valueOf(_), _.floatValue)
-
-  val doubleScodec: Scodec[java.lang.Double] =
-    codecs.doubleL.xmap(java.lang.Double.valueOf(_), _.doubleValue)
+  val doubleScodec: Scodec[Double] = codecs.doubleL
 
   val stringScodec: Scodec[Utf8] =
     codecs
-      .variableSizeBytesLong(zigZagVarLong, codecs.bytes)
+      .variableSizeBytesLong(longScodec, codecs.bytes)
       .xmap(bytes => new Utf8(bytes.toArray), utf8 => ByteVector(utf8.getBytes))
 
-  val boolScodec: Scodec[java.lang.Boolean] =
+  val boolScodec: Scodec[Boolean] =
     codecs.byte
-      .xmap(b => java.lang.Boolean.valueOf(b == 1), b => if (b.booleanValue) 1: Byte else 0: Byte)
+      .xmap(_ == 1, b => if (b) 1: Byte else 0: Byte)
+
+  val bytesScodec: Scodec[ByteBuffer] =
+    codecs
+      .variableSizeBytesLong(longScodec, codecs.bytes)
+      .xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
+
+  def fixedScodec(schema: Schema): Scodec[GenericFixed] = {
+    require(schema.getType == FIXED)
+    codecs.fixedSizeBytes(
+      schema.getFixedSize.toLong,
+      codecs.bytes.xmapc { b =>
+        new GenericData.Fixed(schema, b.toArray): GenericFixed
+      }(gf => ByteVector(gf.bytes))
+    )
+  }
 
   def enumScodec(writerSchema: Schema): Scodec[GenericData.EnumSymbol] =
     ZigZagVarIntCodec.xmap(
@@ -48,48 +56,20 @@ package object binary {
       symbol => writerSchema.getEnumOrdinal(symbol.toString)
     )
 
-  def fieldsCodec(writerSchema: Schema): Scodec[List[(String, Any)]] =
-    writerSchema.getFields.asScala.toList
-      .map { field =>
-        forWriterSchema(field.schema).xmap[(String, Any)](result => field.name -> result, _._2)
-      }
-      .foldRight[Scodec[HList]](codecs.provide[HList](HNil))(_ :: _)
-      .xmap(_.toList, HList.fromList)
-
-  def recordEncoder(writerSchema: Schema): Encoder[GenericRecord] =
-    Encoder { record =>
-      writerSchema.getFields.asScala.toList
-        .map { field =>
-          field.name -> forWriterSchema(field.schema)
-        }
-        .traverse {
-          case (name, codec) =>
-            codec.encode(record.get(name))
-        }
-        .map(_.reduce(_ ++ _))
-    }
-
-  def recordDecoder(writerSchema: Schema): Decoder[GenericRecord] =
-    Decoder { bytes =>
-      val record = new GenericData.Record(writerSchema)
-
-      val foo = writerSchema.getFields.asScala.toList
-        .map(field => forWriterSchema(field.schema).map((field.name, _)).asDecoder)
-
-      foo
-        .scanLeft[Attempt[DecodeResult[(String, Any)]]](
-          Attempt.successful(DecodeResult((null, null), bytes))
-        ) { (prev, codec) =>
-          prev
-            .map(_.remainder)
-            .flatMap(codec.decode)
-        }
-        .sequence
-        .map { l =>
-          l.tail.foreach {
-            case DecodeResult((name, value), _) => record.put(name, value)
-          }
-          DecodeResult(record, l.last.remainder)
+  def enumResolver(writerSchema: Schema, readerSchema: Schema): Decoder[GenericData.EnumSymbol] =
+    ZigZagVarIntCodec.emap { writerIdx =>
+      val symbol = writerSchema.getEnumSymbols.get(writerIdx)
+      if (readerSchema.hasEnumSymbol(symbol))
+        Attempt.successful(new GenericData.EnumSymbol(readerSchema, symbol))
+      else
+        readerSchema.getEnumDefault match {
+          case null =>
+            Attempt.failure(
+              Err(
+                s"Symbol $symbol is not present in ${readerSchema.getName} and there is no default"
+              )
+            )
+          case default => Attempt.successful(new GenericData.EnumSymbol(readerSchema, default))
         }
     }
 
@@ -99,142 +79,141 @@ package object binary {
   private def widenToAny[A](codec: Scodec[A])(implicit ct: ClassTag[A]): Scodec[Any] =
     codec.widen[Any](
       identity, {
-        case a if ct.runtimeClass.isInstance(a) => Attempt.successful(a.asInstanceOf[A])
-        case other                              => Attempt.failure(Err(s"$other is not a ${ct.runtimeClass.getName}"))
+        case a: A  => Attempt.successful(a)
+        case other => Attempt.failure(Err(s"$other is not a ${ct.runtimeClass.getName}"))
       }
     )
 
   def forWriterSchema(schema: Schema): Scodec[Any] = schema.getType match {
-    case Schema.Type.FLOAT  => widenToAny(floatScodec)
-    case Schema.Type.DOUBLE => widenToAny(doubleScodec)
-    case Schema.Type.INT    => widenToAny(intScodec)
-    case Schema.Type.LONG   => widenToAny(longScodec)
-    case Schema.Type.RECORD =>
-      widenToAny(Scodec[GenericRecord](recordEncoder(schema), recordDecoder(schema)))
-    case Schema.Type.ARRAY =>
+    case FLOAT  => widenToAny(floatScodec)
+    case DOUBLE => widenToAny(doubleScodec)
+    case INT    => widenToAny(intScodec)
+    case LONG   => widenToAny(longScodec)
+    case RECORD =>
+      widenToAny(new RecordScodec(schema))
+    case ARRAY =>
       widenToAny(ArrayScodec(forWriterSchema(schema.getElementType)))
-    case Schema.Type.STRING  => widenToAny(stringScodec)
-    case Schema.Type.BOOLEAN => widenToAny(boolScodec)
-    case Schema.Type.NULL =>
+    case STRING  => widenToAny(stringScodec)
+    case BOOLEAN => widenToAny(boolScodec)
+    case NULL =>
       nullScodec.widen[Any](identity, { n =>
         if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
       })
-    case Schema.Type.ENUM => widenToAny(enumScodec(schema))
-    case Schema.Type.UNION =>
+    case ENUM => widenToAny(enumScodec(schema))
+    case UNION =>
       val types = schema.getTypes.asScala.toList
-      ZigZagVarIntCodec.consume(schemaIdx => forWriterSchema(types(schemaIdx))) { value =>
+      intScodec.consume(schemaIdx => forWriterSchema(types(schemaIdx))) { value =>
         val check: Schema => Boolean =
-          if (value == null) _.getType == Schema.Type.NULL
-          else
-            value match {
-              case _: java.lang.Float         => _.getType == Schema.Type.FLOAT
-              case _: java.lang.Double        => _.getType == Schema.Type.DOUBLE
-              case _: java.lang.Integer       => _.getType == Schema.Type.INT
-              case _: java.lang.Long          => _.getType == Schema.Type.LONG
-              case _: java.lang.Boolean       => _.getType == Schema.Type.BOOLEAN
-              case _: Utf8                    => _.getType == Schema.Type.STRING
-              case _: java.util.Map[_, _]     => _.getType == Schema.Type.MAP
-              case _: java.util.Collection[_] => _.getType == Schema.Type.ARRAY
-              case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
-              case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
-              case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
-              case _                          => throw new AssertionError("match should have been exhaustive")
-            }
+          value match {
+            case null                       => _.getType == NULL
+            case _: Float                   => _.getType == FLOAT
+            case _: Double                  => _.getType == DOUBLE
+            case _: Int                     => _.getType == INT
+            case _: Long                    => _.getType == LONG
+            case _: Boolean                 => _.getType == BOOLEAN
+            case _: Utf8                    => _.getType == STRING
+            case _: java.util.Map[_, _]     => _.getType == MAP
+            case _: java.util.Collection[_] => _.getType == ARRAY
+            case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
+            case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
+            case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
+            case _                          => throw new AssertionError("match should have been exhaustive")
+          }
         types.indexWhere(check)
       }
-    case Schema.Type.BYTES =>
-      widenToAny {
-        codecs
-          .variableSizeBytesLong(zigZagVarLong, codecs.bytes)
-          .xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
-      }
-    case Schema.Type.FIXED =>
-      widenToAny {
-        codecs.fixedSizeBytes(
-          schema.getFixedSize.toLong,
-          codecs.bytes.xmapc[GenericFixed] { b =>
-            val _schema = schema
-            new GenericFixed {
-              override def getSchema() = _schema
-              override val bytes = b.toArray
-            }
-          }(gf => ByteVector(gf.bytes))
-        )
-      }
-    case Schema.Type.MAP => widenToAny(new MapScodec(forWriterSchema(schema.getValueType)))
+    case BYTES => widenToAny(bytesScodec)
+    case FIXED => widenToAny(fixedScodec(schema))
+    case MAP   => widenToAny(new MapScodec(forWriterSchema(schema.getValueType)))
   }
 
   // WIP
-  def resolve(writerSchema: Schema, readerSchema: Schema): Decoder[Any] =
-    writerSchema.getType match {
-      case Schema.Type.FLOAT =>
-        readerSchema.getType match {
-          case Schema.Type.FLOAT => floatScodec
-          case other =>
-            Decoder.point(
-              Attempt.failure(
-                Err(
-                  s"Reader schema of type FLOAT cannot read output of writer schema of type $other"
-                )
-              )
+  def resolve(writerSchema: Schema, readerSchema: Schema): Option[Decoder[Any]] =
+    (readerSchema.getType, writerSchema.getType) match {
+      case (FLOAT, FLOAT)   => floatScodec.some
+      case (FLOAT, INT)     => intScodec.map(_.toFloat).some
+      case (DOUBLE, DOUBLE) => doubleScodec.some
+      case (DOUBLE, FLOAT)  => floatScodec.map(_.toDouble).some
+      case (DOUBLE, INT)    => intScodec.map(_.toDouble).some
+      case (DOUBLE, LONG)   => longScodec.map(_.toDouble).some
+      case (INT, INT)       => intScodec.some
+      case (LONG, LONG)     => longScodec.some
+      case (LONG, INT)      => intScodec.map(_.toLong).some
+      case (RECORD, RECORD) if readerSchema.getName == writerSchema.getName =>
+        RecordScodec.resolve(writerSchema, readerSchema).some
+      case (ARRAY, ARRAY) =>
+        ArrayScodec[Any](
+          Scodec[Any](
+            codecs.fail[Any](Err("decode only")),
+            resolve(writerSchema.getElementType, readerSchema.getElementType).getOrElse(
+              mismatch(writerSchema.getElementType.getType, readerSchema.getElementType.getType)
             )
-        }
-      case Schema.Type.DOUBLE =>
-        readerSchema.getType match {
-          case Schema.Type.DOUBLE => doubleScodec
-          case Schema.Type.FLOAT  => floatScodec.map(_.doubleValue)
-          case Schema.Type.INT    => intScodec.map(_.doubleValue)
-          case Schema.Type.LONG   => longScodec.map(_.doubleValue)
-        }
-      case Schema.Type.INT    => intScodec
-      case Schema.Type.LONG   => longScodec
-      case Schema.Type.RECORD => recordDecoder(writerSchema)
-      case Schema.Type.ARRAY =>
-        ArrayScodec(forWriterSchema(writerSchema.getElementType))
-      case Schema.Type.STRING  => stringScodec
-      case Schema.Type.BOOLEAN => boolScodec
-      case Schema.Type.NULL =>
-        nullScodec.widen[Any](identity, { n =>
-          if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
-        })
-      case Schema.Type.ENUM => enumScodec(writerSchema)
-      case Schema.Type.UNION =>
+          )
+        ).some
+      case (STRING, STRING | BYTES) => stringScodec.some
+
+      case (BOOLEAN, BOOLEAN) => boolScodec.some
+      case (NULL, NULL) =>
+        nullScodec
+          .widen[Any](identity, { n =>
+            if (n == null) Attempt.successful(null) else Attempt.failure(Err(s"$n is not null"))
+          })
+          .some
+      case (ENUM, ENUM) if readerSchema.getName == writerSchema.getName =>
+        enumResolver(writerSchema, readerSchema).some
+      case (UNION, _) =>
         val types = writerSchema.getTypes.asScala.toList
-        ZigZagVarIntCodec.consume(writerSchemaIdx => forWriterSchema(types(writerSchemaIdx))) {
-          value =>
-            val check: Schema => Boolean =
-              value match {
-                case null                       => _.getType == Schema.Type.NULL
-                case _: java.lang.Float         => _.getType == Schema.Type.FLOAT
-                case _: java.lang.Double        => _.getType == Schema.Type.DOUBLE
-                case _: java.lang.Integer       => _.getType == Schema.Type.INT
-                case _: java.lang.Long          => _.getType == Schema.Type.LONG
-                case _: java.lang.Boolean       => _.getType == Schema.Type.BOOLEAN
-                case _: Utf8                    => _.getType == Schema.Type.STRING
-                case _: java.util.Map[_, _]     => _.getType == Schema.Type.MAP
-                case _: java.util.Collection[_] => _.getType == Schema.Type.ARRAY
-                case gr: GenericRecord          => _.getFullName == gr.getSchema.getFullName
-                case gf: GenericFixed           => _.getFullName == gf.getSchema.getFullName
-                case ge: GenericEnumSymbol[_]   => _.getFullName == ge.getSchema.getFullName
-                case _                          => throw new AssertionError("match should have been exhaustive")
-              }
-            types.indexWhere(check)
+        intScodec
+          .flatMap(
+            writerSchemaIdx =>
+              resolve(types(writerSchemaIdx), readerSchema)
+                .getOrElse(codecs.fail[Any](Err("exhausted alternatives for union")))
+          )
+          .some
+      case (_, UNION) =>
+        readerSchema.getTypes.asScala.toList.collectFirstSome(resolve(writerSchema, _))
+      case (BYTES, BYTES | STRING) =>
+        bytesScodec.some
+      case (FIXED, FIXED)
+          if readerSchema.getName == writerSchema.getName && readerSchema.getFixedSize == writerSchema.getFixedSize =>
+        fixedScodec(readerSchema).some
+      case (MAP, MAP) =>
+        resolve(writerSchema.getValueType, readerSchema.getValueType).map { resolved =>
+          new MapScodec(
+            Scodec(
+              codecs.fail[Any](Err("decode only")),
+              resolved
+            )
+          )
         }
-      case Schema.Type.BYTES =>
-        codecs
-          .variableSizeBytesLong(zigZagVarLong, codecs.bytes)
-          .xmap[ByteBuffer](_.toByteBuffer, ByteVector.apply)
-      case Schema.Type.FIXED =>
-        codecs.fixedSizeBytes(
-          writerSchema.getFixedSize.toLong,
-          codecs.bytes.xmapc[GenericFixed] { b =>
-            val _schema = writerSchema
-            new GenericFixed {
-              override def getSchema() = _schema
-              override val bytes = b.toArray
-            }
-          }(gf => ByteVector(gf.bytes))
-        )
-      case Schema.Type.MAP => ???
     }
+
+  def mismatch(readerType: Schema.Type, writerType: Schema.Type): Decoder[Any] =
+    codecs.fail[Any](
+      Err(
+        s"Reader schema of type $readerType cannot read output of writer schema of type $writerType"
+      )
+    )
+
+  def encode[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Array[Byte]] =
+    codec.schema.flatMap { schema =>
+      codec.encode(a).flatMap { jAvro =>
+        forWriterSchema(schema).encode(jAvro) match {
+          case Attempt.Successful(bits) => Right(bits.toByteArray)
+          case Attempt.Failure(cause)   => Left(AvroError(cause.messageWithContext))
+        }
+      }
+    }
+
+  def decode[A](bytes: Array[Byte], writerSchema: Schema)(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
+    codec.schema.flatMap { readerSchema =>
+      resolve(readerSchema, writerSchema)
+        .getOrElse(mismatch(readerSchema.getType, writerSchema.getType))
+        .decode(BitVector(bytes)) match {
+        case Attempt.Successful(DecodeResult(value, _)) => codec.decode(value, writerSchema)
+        case Attempt.Failure(cause)                     => Left(AvroError(cause.messageWithContext))
+      }
+    }
+
 }
