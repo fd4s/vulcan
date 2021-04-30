@@ -6,10 +6,11 @@
 
 package vulcan
 
-import org.apache.avro.generic.{GenericData, GenericFixed}
+import org.apache.avro.generic.{GenericFixed}
 
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.tags._
+import org.apache.avro.generic.GenericData
 
 private[vulcan] trait CodecCompanionCompat {
 

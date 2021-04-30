@@ -17,6 +17,8 @@ import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
 import java.util.UUID
+import scodec.bits.BitVector
+
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
@@ -183,7 +185,7 @@ object Codec extends CodecCompanionCompat {
             case Schema.Type.BYTES | Schema.Type.STRING =>
               value match {
                 case buffer: ByteBuffer =>
-                  Right(buffer.array())
+                  Right(if (buffer.hasArray) buffer.array() else BitVector(buffer).toByteArray)
                 case utf8: Utf8 =>
                   Right(utf8.getBytes)
                 case string: String =>
