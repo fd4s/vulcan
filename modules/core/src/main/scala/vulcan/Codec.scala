@@ -210,17 +210,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def chain[A](
     implicit codec: Codec[A]
   ): Codec.Aux[java.util.List[codec.Repr], Chain[A]] =
-    Codec.instanceForTypes(
-      "Collection",
-      "Chain",
-      codec.schema.map(Schema.createArray),
-      _.toList.traverse(codec.encode(_)).map(_.asJava), {
-        case (collection: java.util.Collection[_], schema) =>
-          collection.asScala.toList
-            .traverse(codec.decode(_, schema.getElementType()))
-            .map(Chain.fromSeq)
-      }
-    )
+    Codec.list[A].imap(Chain.fromSeq)(_.toList).withTypeName("Chain")
 
   /**
     * @group General
