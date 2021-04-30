@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
 import java.util.UUID
-import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
+import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
@@ -612,10 +612,7 @@ object Codec extends CodecCompanionCompat {
       Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
       instant => Right(instant.toEpochMilli), {
         case (long: Long, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.timestampMillis()) {
-            Right(Instant.ofEpochMilli(long))
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+          validateLogicalType(LogicalTypes.timestampMillis(), schema).as(Instant.ofEpochMilli(long))
       }
     )
 
@@ -663,10 +660,7 @@ object Codec extends CodecCompanionCompat {
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
       localDate => Right(localDate.toEpochDay.toInt), {
         case (int: Int, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.date()) {
-            Right(LocalDate.ofEpochDay(int.toLong))
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+          validateLogicalType(LogicalTypes.date, schema).as(LocalDate.ofEpochDay(int.toLong))
       }
     )
 
@@ -683,11 +677,10 @@ object Codec extends CodecCompanionCompat {
           Right(millis.toInt)
       }, {
         case (int: Int, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.timeMillis()) {
+          validateLogicalType(LogicalTypes.timeMillis, schema).as {
             val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
-            Right(LocalTime.ofNanoOfDay(nanos))
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+            LocalTime.ofNanoOfDay(nanos)
+          }
       }
     )
 
@@ -704,11 +697,10 @@ object Codec extends CodecCompanionCompat {
           Right(micros)
       }, {
         case (long: Long, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.timeMicros()) {
+          validateLogicalType(LogicalTypes.timeMicros, schema).as {
             val nanos = TimeUnit.MICROSECONDS.toNanos(long)
-            Right(LocalTime.ofNanoOfDay(nanos))
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+            LocalTime.ofNanoOfDay(nanos)
+          }
       }
     )
 
@@ -1173,12 +1165,10 @@ object Codec extends CodecCompanionCompat {
       Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
       uuid => Right(new Utf8(uuid.toString())), {
         case (utf8: Utf8, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.uuid()) {
+          validateLogicalType(LogicalTypes.uuid, schema) *>
             AvroError.catchNonFatal {
               Right(UUID.fromString(utf8.toString()))
             }
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
       }
     )
 
@@ -1218,6 +1208,11 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def codecAuxShow[Repr, A]: Show[Codec.Aux[Repr, A]] =
     Show.fromToString
+
+  private def validateLogicalType(expected: LogicalType, schema: Schema): Either[AvroError, Unit] =
+    if (expected == schema.getLogicalType) rightUnit
+    else Left(AvroError.decodeUnexpectedLogicalType(schema.getLogicalType))
+  private val rightUnit = Right(())
 
   /**
     * @group Create
