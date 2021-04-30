@@ -138,8 +138,7 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def apply[A](implicit codec: Codec[A]): codec.type =
-    codec
+  final def apply[A](implicit codec: Codec[A]): codec.type = codec
 
   /**
     * @group General
@@ -149,22 +148,17 @@ object Codec extends CodecCompanionCompat {
       "Boolean",
       "Boolean",
       Right(SchemaBuilder.builder().booleanType()),
-      _.asRight, {
-        case (boolean: Boolean, _) =>
-          Right(boolean)
-      }
+      _.asRight,
+      { case (boolean: Boolean, _) => Right(boolean) }
     )
 
   /**
     * @group General
     */
   implicit final lazy val byte: Codec.Aux[Int, Byte] = {
-    val min: Int = Byte.MinValue.toInt
-    val max: Int = Byte.MaxValue.toInt
     Codec.int
       .imapError { integer =>
-        if (min <= integer && integer <= max)
-          Right(integer.toByte)
+        if (integer.isValidByte) Right(integer.toByte)
         else Left(AvroError.unexpectedByte(integer))
       }(_.toInt)
       .withTypeName("Byte")
@@ -182,14 +176,10 @@ object Codec extends CodecCompanionCompat {
           schema.getType() match {
             case Schema.Type.BYTES | Schema.Type.STRING =>
               value match {
-                case buffer: ByteBuffer =>
-                  Right(buffer.array())
-                case utf8: Utf8 =>
-                  Right(utf8.getBytes)
-                case string: String =>
-                  Right(string.getBytes(StandardCharsets.UTF_8))
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "ByteBuffer"))
+                case buffer: ByteBuffer => Right(buffer.array())
+                case utf8: Utf8         => Right(utf8.getBytes)
+                case string: String     => Right(string.getBytes(StandardCharsets.UTF_8))
+                case other              => Left(AvroError.decodeUnexpectedType(other, "ByteBuffer"))
               }
 
             case schemaType =>
@@ -316,14 +306,10 @@ object Codec extends CodecCompanionCompat {
           schema.getType() match {
             case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
               value match {
-                case double: Double =>
-                  Right(double)
-                case float: Float =>
-                  Right(float.toDouble)
-                case int: Integer =>
-                  Right(int.toDouble)
-                case long: Long =>
-                  Right(long.toDouble)
+                case double: Double => Right(double)
+                case float: Float   => Right(float.toDouble)
+                case int: Integer   => Right(int.toDouble)
+                case long: Long     => Right(long.toDouble)
                 case other =>
                   Left(
                     AvroError.decodeUnexpectedTypes(
@@ -519,14 +505,10 @@ object Codec extends CodecCompanionCompat {
           schema.getType() match {
             case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
               value match {
-                case float: Float =>
-                  Right(float)
-                case int: Int =>
-                  Right(int.toFloat)
-                case long: Long =>
-                  Right(long.toFloat)
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Float"))
+                case float: Float => Right(float)
+                case int: Int     => Right(int.toFloat)
+                case long: Long   => Right(long.toFloat)
+                case other        => Left(AvroError.decodeUnexpectedType(other, "Float"))
               }
 
             case schemaType =>
@@ -666,10 +648,8 @@ object Codec extends CodecCompanionCompat {
       "Int",
       "Int",
       Right(SchemaBuilder.builder().intType()),
-      _.asRight, {
-        case (integer: Int, _) =>
-          Right(integer)
-      }
+      _.asRight,
+      { case (integer: Int, _) => Right(integer) }
     )
 
   /**
@@ -809,8 +789,7 @@ object Codec extends CodecCompanionCompat {
             .traverse {
               case (key: Utf8, value) =>
                 codec.decode(value, schema.getValueType()).tupleLeft(key.toString)
-              case (key, _) =>
-                Left(AvroError.decodeUnexpectedMapKey(key))
+              case (key, _) => Left(AvroError.decodeUnexpectedMapKey(key))
             }
             .map(_.toMap)
       }
@@ -825,7 +804,7 @@ object Codec extends CodecCompanionCompat {
       "None",
       Right(SchemaBuilder.builder().nullType()),
       _ => Right(null),
-      { case (value, _) if (value == null) => Right(None) }
+      { case (value, null) => Right(None) }
     )
 
   /**
@@ -1049,12 +1028,9 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final val short: Codec.Aux[Int, Short] = {
-    val min: Int = Short.MinValue.toInt
-    val max: Int = Short.MaxValue.toInt
     Codec.int
       .imapError { integer =>
-        if (min <= integer && integer <= max)
-          Right(integer.toShort)
+        if (integer.isValidShort) Right(integer.toShort)
         else Left(AvroError.unexpectedShort(integer))
       }(_.toInt)
       .withTypeName("Short")
@@ -1078,10 +1054,8 @@ object Codec extends CodecCompanionCompat {
           schema.getType() match {
             case Schema.Type.STRING | Schema.Type.BYTES =>
               value match {
-                case string: String =>
-                  Right(string)
-                case utf8: Utf8 =>
-                  Right(utf8.toString())
+                case string: String => Right(string)
+                case utf8: Utf8     => Right(utf8.toString())
                 case bytes: ByteBuffer =>
                   AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
                 case other =>
@@ -1228,7 +1202,7 @@ object Codec extends CodecCompanionCompat {
       "Unit",
       Right(SchemaBuilder.builder().nullType()),
       _ => Right(null),
-      { case (value, _) if (value == null) => Right(()) }
+      { case (value, null) => Right(()) }
     )
 
   /**
