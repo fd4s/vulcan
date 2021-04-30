@@ -789,7 +789,7 @@ object Codec extends CodecCompanionCompat {
       "None",
       Right(SchemaBuilder.builder().nullType()),
       _ => Right(null),
-      { case (value, null) => Right(None) }
+      { case (null, _) => Right(None) }
     )
 
   /**
@@ -1183,7 +1183,7 @@ object Codec extends CodecCompanionCompat {
       "Unit",
       Right(SchemaBuilder.builder().nullType()),
       _ => Right(null),
-      { case (value, null) => Right(()) }
+      { case (null, _) => Right(()) }
     )
 
   /**
