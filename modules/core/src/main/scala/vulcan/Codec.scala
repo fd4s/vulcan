@@ -911,64 +911,56 @@ object Codec extends CodecCompanionCompat {
         free.analyze {
           new (Field[A, *] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]) {
             def apply[B](field: Field[A, B]) =
-              field.codec.schema.flatMap { schema =>
-                field.props.toChain
-                  .flatMap { props =>
-                    field.default
-                      .traverse(field.codec.encode(_))
-                      .map { default =>
-                        Chain.one {
-                          val schemaField =
-                            new Schema.Field(
-                              field.name,
-                              schema,
-                              field.doc.orNull,
-                              adaptForSchema {
-                                default.map {
-                                  case null  => Schema.Field.NULL_DEFAULT_VALUE
-                                  case other => other
-                                }.orNull
-                              },
-                              field.order.getOrElse(Schema.Field.Order.ASCENDING)
-                            )
+              (
+                field.codec.schema,
+                field.props.toChain,
+                field.default.traverse(field.codec.encode(_))
+              ).mapN { (schema, props, default) =>
+                val schemaField =
+                  new Schema.Field(
+                    field.name,
+                    schema,
+                    field.doc.orNull,
+                    default.map {
+                      case null  => Schema.Field.NULL_DEFAULT_VALUE
+                      case other => adaptForSchema(other)
+                    }.orNull,
+                    field.order.getOrElse(Schema.Field.Order.ASCENDING)
+                  )
 
-                          field.aliases.foreach(schemaField.addAlias)
+                field.aliases.foreach(schemaField.addAlias)
 
-                          props.foldLeft(()) {
-                            case ((), (name, value)) =>
-                              schemaField.addProp(name, value)
-                          }
+                props.foldLeft(()) {
+                  case ((), (name, value)) =>
+                    schemaField.addProp(name, value)
+                }
 
-                          schemaField
-                        }
-                      }
-                  }
+                Chain.one(schemaField)
               }
           }
         }
 
-      fields.flatMap { fields =>
-        props.toChain.map { props =>
-          val record =
-            Schema.createRecord(
-              name,
-              doc.orNull,
-              namespace,
-              false,
-              fields.toList.asJava
-            )
+      (fields, props.toChain).mapN { (fields, props) =>
+        val record =
+          Schema.createRecord(
+            name,
+            doc.orNull,
+            namespace,
+            false,
+            fields.toList.asJava
+          )
 
-          aliases.foreach(record.addAlias)
+        aliases.foreach(record.addAlias)
 
-          props.foldLeft(()) {
-            case ((), (name, value)) =>
-              record.addProp(name, value)
-          }
-
-          record
+        props.foldLeft(()) {
+          case ((), (name, value)) =>
+            record.addProp(name, value)
         }
+
+        record
       }
     }
+
     Codec
       .instanceForTypes[GenericRecord, A](
         "IndexedRecord",
@@ -995,22 +987,17 @@ object Codec extends CodecCompanionCompat {
             }
           }, {
           case (record: IndexedRecord, _) =>
-            val recordSchema = record.getSchema()
-            val recordFields = recordSchema.getFields()
-
             free.foldMap {
               new (Field[A, *] ~> Either[AvroError, *]) {
-                def apply[B](field: Field[A, B]) = {
-                  val schemaField = recordSchema.getField(field.name)
-                  if (schemaField != null) {
-                    val value = record.get(recordFields.indexOf(schemaField))
-                    field.codec.decode(value, schemaField.schema())
-                  } else {
-                    field.default.toRight {
-                      AvroError.decodeMissingRecordField(field.name)
-                    }
+                def apply[B](field: Field[A, B]): Either[AvroError, B] =
+                  record.getSchema.getField(field.name) match {
+                    case null =>
+                      field.default.toRight {
+                        AvroError.decodeMissingRecordField(field.name)
+                      }
+                    case schemaField =>
+                      field.codec.decode(record.get(schemaField.pos), schemaField.schema)
                   }
-                }
               }
             }
         }
