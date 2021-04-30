@@ -212,7 +212,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(Chain(1, 2, 3)),
             unsafeSchema[Int],
-            "Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding Chain: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -220,7 +220,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(10),
             unsafeSchema[Chain[Int]],
-            "Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding Chain: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -1138,7 +1138,9 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = LocalTime.now()
           assertEncodeIs[LocalTime](
             value,
-            Right(java.lang.Integer.valueOf(TimeUnit.NANOSECONDS.toMillis(value.toNanoOfDay()).toInt))
+            Right(
+              java.lang.Integer.valueOf(TimeUnit.NANOSECONDS.toMillis(value.toNanoOfDay()).toInt)
+            )
           )
         }
       }
@@ -1232,7 +1234,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
       }
     }
-
 
     describe("long") {
       describe("schema") {
@@ -1415,7 +1416,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(NonEmptyChain(1, 2, 3)),
             unsafeSchema[Int],
-            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding NonEmptyChain: Error decoding Chain: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1423,7 +1424,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(10),
             unsafeSchema[NonEmptyChain[Int]],
-            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding NonEmptyChain: Error decoding Chain: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
