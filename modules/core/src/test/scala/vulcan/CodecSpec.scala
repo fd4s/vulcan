@@ -2,19 +2,19 @@ package vulcan
 
 import cats.data._
 import cats.implicits._
+
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
 import org.scalatest.Assertion
-import vulcan.examples._
+import vulcan.examples.{SecondInSealedTraitCaseClass, _}
 import vulcan.internal.converters.collection._
 
 import scala.util.{Failure, Success, Try}
@@ -2508,6 +2508,19 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Right(Test(None))
           )
         }
+
+        it("should decode field with aliased name") {
+          case class Aliased(aliasedField: Int)
+          implicit val codec: Codec[Aliased] =
+            Codec.record("CaseClassField", "") { field =>
+              field("aliasedField", _.aliasedField, aliases = Seq("value")).map(Aliased(_))
+            }
+
+          assertDecodeIs[Aliased](
+            unsafeEncode(CaseClassField(3)),
+            Right(Aliased(3))
+          )
+        }
       }
     }
 
@@ -2852,6 +2865,33 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeIs[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
             Right(FirstInSealedTraitCaseClass(0))
+          )
+        }
+
+        it("should decode using schema with aliased name") {
+
+          implicit val secondCodec: Codec[SecondInSealedTraitCaseClass] =
+            Codec.record(
+              name = "AliasedInSealedTraitCaseClass",
+              namespace = "com.example",
+              aliases = Seq("SecondInSealedTraitCaseClass")
+            ) { field =>
+              field("value", _.value).map(SecondInSealedTraitCaseClass(_))
+            }
+
+          implicit val codec: Codec[SealedTraitCaseClass] = Codec.union(
+            alt =>
+              alt[FirstInSealedTraitCaseClass]
+                |+| alt[SecondInSealedTraitCaseClass]
+                |+| alt[ThirdInSealedTraitCaseClass]
+          )
+
+          assertDecodeIs[SealedTraitCaseClass](
+            unsafeEncode[SealedTraitCaseClass](SecondInSealedTraitCaseClass("foo"))(
+              SealedTraitCaseClass.sealedTraitCaseClassCodec
+            ),
+            Right(SecondInSealedTraitCaseClass("foo")),
+            Some(SealedTraitCaseClass.sealedTraitCaseClassCodec.schema.value)
           )
         }
       }
