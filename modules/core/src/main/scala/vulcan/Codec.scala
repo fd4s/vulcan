@@ -932,7 +932,7 @@ object Codec extends CodecCompanionCompat {
               record
             }
           }, {
-          case (record: IndexedRecord, _) =>
+          case (record: IndexedRecord, writerSchema) =>
             free.foldMap {
               new (Field[A, *] ~> Either[AvroError, *]) {
                 def apply[B](field: Field[A, B]): Either[AvroError, B] =
@@ -942,7 +942,10 @@ object Codec extends CodecCompanionCompat {
                         AvroError.decodeMissingRecordField(field.name)
                       }
                     case schemaField =>
-                      field.codec.decode(record.get(schemaField.pos), schemaField.schema)
+                      field.codec.decode(
+                        record.get(schemaField.pos),
+                        writerSchema.getField(field.name).schema
+                      )
                   }
               }
             }

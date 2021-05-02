@@ -195,8 +195,8 @@ package object generic {
               .decode(value, schema)
               .map(decoded => caseClass.rawConstruct(List(decoded)))
           } else
-            (value, schema) => {
-              schema.getType() match {
+            (value, writerSchema) => {
+              writerSchema.getType() match {
                 case Schema.Type.RECORD =>
                   value match {
                     case record: IndexedRecord =>
@@ -208,7 +208,7 @@ package object generic {
                           val field = recordSchema.getField(param.label)
                           if (field != null) {
                             val value = record.get(recordFields.indexOf(field))
-                            param.typeclass.decode(value, field.schema())
+                            param.typeclass.decode(value, writerSchema.getField(param.label).schema)
                           } else Left(AvroError.decodeMissingRecordField(param.label))
                         }
 
