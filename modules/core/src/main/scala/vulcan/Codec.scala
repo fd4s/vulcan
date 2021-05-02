@@ -936,7 +936,7 @@ object Codec extends CodecCompanionCompat {
             free.foldMap {
               new (Field[A, *] ~> Either[AvroError, *]) {
                 def apply[B](field: Field[A, B]): Either[AvroError, B] =
-                  (field.name +: field.aliases)
+                  (field.name +: field.aliases.toList)
                     .collectFirstSome { name =>
                       Option(record.getSchema.getField(name))
                     }
