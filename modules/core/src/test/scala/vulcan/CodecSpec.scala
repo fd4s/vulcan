@@ -2424,51 +2424,53 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should error if any field without default value is missing") {
+          val schema =
+            Schema.createRecord("CaseClassTwoFields", null, "vulcan.examples", false)
+
+          schema.setFields(
+            List(
+              new Schema.Field(
+                "name",
+                unsafeSchema[String],
+                null
+              )
+            ).asJava
+          )
+
           assertDecodeError[CaseClassTwoFields](
             {
-              val schema =
-                Schema.createRecord("CaseClassTwoFields", null, "vulcan.examples", false)
-
-              schema.setFields(
-                List(
-                  new Schema.Field(
-                    "name",
-                    unsafeSchema[String],
-                    null
-                  )
-                ).asJava
-              )
-
               val record = new GenericData.Record(schema)
               record.put(0, unsafeEncode("name"))
               record
             },
-            unsafeSchema[CaseClassTwoFields],
+            schema,
             "Error decoding vulcan.examples.CaseClassTwoFields: Record writer schema is missing field 'age'"
           )
         }
 
         it("should decode if field with default value is missing") {
+          val schema =
+            Schema.createRecord("CaseClassTwoFields", null, "vulcan.examples", false)
+
+          schema.setFields(
+            List(
+              new Schema.Field(
+                "age",
+                unsafeSchema[Int],
+                null
+              )
+            ).asJava
+          )
+
           assertDecodeIs[CaseClassTwoFields](
             {
-              val schema =
-                Schema.createRecord("CaseClassTwoFields", null, "vulcan.examples", false)
-
-              schema.setFields(
-                List(
-                  new Schema.Field(
-                    "age",
-                    unsafeSchema[Int],
-                    null
-                  )
-                ).asJava
-              )
 
               val record = new GenericData.Record(schema)
               record.put(0, 123)
               record
             },
-            Right(CaseClassTwoFields("default name", 123))
+            Right(CaseClassTwoFields("default name", 123)),
+            Some(schema)
           )
         }
 
