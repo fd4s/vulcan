@@ -936,14 +936,14 @@ object Codec extends CodecCompanionCompat {
             free.foldMap {
               new (Field[A, *] ~> Either[AvroError, *]) {
                 def apply[B](field: Field[A, B]): Either[AvroError, B] =
-                  record.getSchema.getField(field.name) match {
-                    case null =>
-                      field.default.toRight {
-                        AvroError.decodeMissingRecordField(field.name)
-                      }
-                    case schemaField =>
-                      field.codec.decode(record.get(schemaField.pos), schemaField.schema)
-                  }
+                  (field.name +: field.aliases.toList)
+                    .collectFirstSome { name =>
+                      Option(record.getSchema.getField(name))
+                    }
+                    .fold(field.default.toRight(AvroError.decodeMissingRecordField(field.name))) {
+                      schemaField =>
+                        field.codec.decode(record.get(schemaField.pos), schemaField.schema)
+                    }
               }
             }
         }
@@ -1079,68 +1079,76 @@ object Codec extends CodecCompanionCompat {
         .map(schemas => Schema.createUnion(schemas.asJava))
     }
 
-    Codec.instance[Any, A](
-      schema,
-      a =>
-        alts
-          .foldMapK { alt =>
-            alt.prism.getOption(a).map(alt.codec.encode(_))
-          }
-          .getOrElse {
-            Left(AvroError.encodeExhaustedAlternatives(a))
-          },
-      (value, schema) => {
-        val schemaTypes =
-          schema.getType() match {
-            case UNION => schema.getTypes.asScala
-            case _     => Seq(schema)
-          }
-
-        value match {
-          case container: GenericContainer =>
-            val altName =
-              container.getSchema.getName
-
-            val altUnionSchema =
-              schemaTypes
-                .find(_.getName == altName)
-                .toRight(AvroError.decodeMissingUnionSchema(altName))
-
-            def altMatching =
-              alts
-                .find(_.codec.schema.exists(_.getName == altName))
-                .toRight(AvroError.decodeMissingUnionAlternative(altName))
-
-            altUnionSchema.flatMap { altSchema =>
-              altMatching.flatMap { alt =>
-                alt.codec
-                  .decode(container, altSchema)
-                  .map(alt.prism.reverseGet)
-              }
+    Codec
+      .instance[Any, A](
+        schema,
+        a =>
+          alts
+            .foldMapK { alt =>
+              alt.prism.getOption(a).map(alt.codec.encode(_))
+            }
+            .getOrElse {
+              Left(AvroError.encodeExhaustedAlternatives(a))
+            },
+        (value, schema) => {
+          val schemaTypes =
+            schema.getType() match {
+              case UNION => schema.getTypes.asScala
+              case _     => Seq(schema)
             }
 
-          case other =>
-            alts
-              .collectFirstSome { alt =>
-                alt.codec.schema
-                  .traverse { altSchema =>
-                    val altName = altSchema.getName
-                    schemaTypes
-                      .find(_.getName == altName)
-                      .flatMap { schema =>
-                        alt.codec
-                          .decode(other, schema)
-                          .map(alt.prism.reverseGet)
-                          .toOption
-                      }
-                  }
+          value match {
+            case container: GenericContainer =>
+              val altName =
+                container.getSchema.getName
+
+              val altWriterSchema =
+                schemaTypes
+                  .find(_.getName == altName)
+                  .toRight(AvroError.decodeMissingUnionSchema(altName))
+
+              def altMatching =
+                alts
+                  .find(_.codec.schema.exists { schema =>
+                    schema.getType match {
+                      case RECORD | FIXED | ENUM =>
+                        schema.getName == altName || schema.getAliases.asScala
+                          .exists(alias => alias == altName || alias.endsWith(s".$altName"))
+                      case _ => false
+                    }
+                  })
+                  .toRight(AvroError.decodeMissingUnionAlternative(altName))
+
+              altWriterSchema.flatMap { altSchema =>
+                altMatching.flatMap { alt =>
+                  alt.codec
+                    .decode(container, altSchema)
+                    .map(alt.prism.reverseGet)
+                }
               }
-              .getOrElse {
-                Left(AvroError.decodeExhaustedAlternatives(other))
-              }
+
+            case other =>
+              alts
+                .collectFirstSome { alt =>
+                  alt.codec.schema
+                    .traverse { altSchema =>
+                      val altName = altSchema.getName
+                      schemaTypes
+                        .find(_.getName == altName)
+                        .flatMap { schema =>
+                          alt.codec
+                            .decode(other, schema)
+                            .map(alt.prism.reverseGet)
+                            .toOption
+                        }
+                    }
+                }
+                .getOrElse {
+                  Left(AvroError.decodeExhaustedAlternatives(other))
+                }
+          }
         }
-      }
-    )
+      )
   }.withTypeName("union")
 
   /**
