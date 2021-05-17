@@ -267,8 +267,7 @@ lazy val publishSettings =
 
 lazy val mimaSettings = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value && !scalaVersion.value
-          .startsWith("3")) { // enable mima for Scala 3 after first release
+    if (publishArtifact.value) {
       Set(organization.value %% moduleName.value % (ThisBuild / previousStableVersion).value.get)
     } else Set()
   },
