@@ -1,12 +1,12 @@
 val avroVersion = "1.10.2"
 
-val catsVersion = "2.6.0"
+val catsVersion = "2.6.1"
 
 val enumeratumVersion = "1.6.1"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.24"
+val refinedVersion = "0.9.25"
 
 val shapelessVersion = "2.3.7"
 
@@ -14,7 +14,7 @@ val scala212 = "2.12.13"
 
 val scala213 = "2.13.5"
 
-val scala3 = "3.0.0-RC3"
+val scala3 = "3.0.0"
 
 lazy val vulcan = project
   .in(file("."))
@@ -37,7 +37,7 @@ lazy val core = project
         "org.apache.avro" % "avro" % avroVersion,
         "org.typelevel" %% "cats-free" % catsVersion
       ) ++ {
-        if (isDotty.value) Nil
+        if (scalaVersion.value.startsWith("3")) Nil
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
       }
     ),
@@ -125,7 +125,7 @@ lazy val docs = project
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= {
-    if (isDotty.value) Nil
+    if (scalaVersion.value.startsWith("3")) Nil
     else
       Seq(
         "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4" % Test,
@@ -148,7 +148,7 @@ lazy val dependencySettings = Seq(
 
 lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.4",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.5",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test)
@@ -267,7 +267,8 @@ lazy val publishSettings =
 
 lazy val mimaSettings = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value && !isDotty.value) {
+    if (publishArtifact.value && !scalaVersion.value
+          .startsWith("3")) { // enable mima for Scala 3 after first release
       Set(organization.value %% moduleName.value % (ThisBuild / previousStableVersion).value.get)
     } else Set()
   },
@@ -334,11 +335,9 @@ lazy val scalaSettings = Seq(
       } else Seq()
 
     val scala3ScalacOptions =
-      if (isDotty.value) {
+      if (scalaVersion.value.startsWith("3")) {
         Seq(
-          "-Ykind-projector",
-          "-source:3.0-migration",
-          "-Xignore-scala2-macros"
+          "-Ykind-projector"
         )
       } else Seq()
 
