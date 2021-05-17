@@ -8,7 +8,7 @@ val magnoliaVersion = "0.17.0"
 
 val refinedVersion = "0.9.24"
 
-val shapelessVersion = "2.3.5"
+val shapelessVersion = "2.3.7"
 
 val scala212 = "2.12.13"
 
@@ -129,7 +129,7 @@ lazy val dependencySettings = Seq(
     else
       Seq(
         "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4" % Test,
-        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.12.0").cross(CrossVersion.full))
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.0").cross(CrossVersion.full))
       )
   },
   pomPostProcess := { (node: xml.Node) =>
@@ -156,8 +156,8 @@ lazy val scalatestSettings = Seq(
 
 lazy val munitSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scalameta" %% "munit" % "0.7.25",
-    "org.scalameta" %% "munit-scalacheck" % "0.7.25",
+    "org.scalameta" %% "munit" % "0.7.26",
+    "org.scalameta" %% "munit-scalacheck" % "0.7.26",
     "org.slf4j" % "slf4j-nop" % "1.7.30"
   ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")
