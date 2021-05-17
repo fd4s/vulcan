@@ -129,7 +129,7 @@ lazy val dependencySettings = Seq(
     else
       Seq(
         "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3" % Test,
-        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.12.0").cross(CrossVersion.full))
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.0").cross(CrossVersion.full))
       )
   },
   pomPostProcess := { (node: xml.Node) =>
