@@ -26,7 +26,7 @@ object SealedTraitCaseClass {
       Gen.oneOf[SealedTraitCaseClass](
         arbitrary[Int].map(FirstInSealedTraitCaseClass(_)),
         arbitrary[String].map(SecondInSealedTraitCaseClass(_)),
-        arbitrary[Int].map(ThirdInSealedTraitCaseClass(_))
+        arbitrary[List[Int]].map(ThirdInSealedTraitCaseClass(_))
       )
     }
 }
@@ -61,12 +61,12 @@ object SecondInSealedTraitCaseClass {
     Arbitrary(arbitrary[String].map(apply))
 }
 
-final case class ThirdInSealedTraitCaseClass(value: Int) extends SealedTraitCaseClass
+final case class ThirdInSealedTraitCaseClass(value: List[Int]) extends SealedTraitCaseClass
 
 object ThirdInSealedTraitCaseClass {
   implicit val codec: Codec[ThirdInSealedTraitCaseClass] =
-    Codec[Int].imap(apply)(_.value)
+    Codec[List[Int]].imap(apply)(_.value)
 
   implicit val arb: Arbitrary[ThirdInSealedTraitCaseClass] =
-    Arbitrary(arbitrary[Int].map(apply))
+    Arbitrary(arbitrary[List[Int]].map(apply))
 }
