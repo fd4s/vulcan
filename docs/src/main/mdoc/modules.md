@@ -115,6 +115,56 @@ import shapeless.{:+:, CNil}
 Codec[Int :+: String :+: CNil]
 ```
 
+`deriveEnum` can be used to partly derive [`Codec`][codec]s for enumeration types. Annotations like `@AvroDoc` can be used to customize the derivation.
+
+
+```scala mdoc
+import vulcan.AvroError
+import vulcan.generic.{AvroDoc, AvroNamespace}
+
+@AvroNamespace("com.example")
+@AvroDoc("A selection of different fruits")
+sealed trait Fruit
+case object Apple extends Fruit
+case object Banana extends Fruit
+case object Cherry extends Fruit
+
+deriveEnum[Fruit](
+  symbols = List("apple", "banana", "cherry"),
+  encode = {
+    case Apple  => "apple"
+    case Banana => "banana"
+    case Cherry => "cherry"
+  },
+  decode = {
+    case "apple"  => Right(Apple)
+    case "banana" => Right(Banana)
+    case "cherry" => Right(Cherry)
+    case other    => Left(AvroError(s"$other is not a Fruit"))
+  }
+)
+```
+
+`deriveFixed` can be used to partly derive [`Codec`][codec]s for fixed types. Annotations like `@AvroDoc` can be used to customize the derivation.
+
+```scala mdoc
+import vulcan.AvroError
+
+sealed abstract case class Pence(value: Byte)
+
+object Pence {
+  def apply(value: Byte): Either[AvroError, Pence] =
+    if(0 <= value && value < 100) Right(new Pence(value) {})
+    else Left(AvroError(s"Expected pence value, got $value"))
+}
+
+deriveFixed[Pence](
+  size = 1,
+  encode = pence => Array[Byte](pence.value),
+  decode = bytes => Pence(bytes.head)
+)
+```
+
 ## Refined
 
 The `@REFINED_MODULE_NAME@` module provides [`Codec`][codec]s for [refined](https://github.com/fthomas/refined) refinement types.
