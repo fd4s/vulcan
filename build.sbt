@@ -10,6 +10,8 @@ val refinedVersion = "0.9.25"
 
 val shapelessVersion = "2.3.7"
 
+val shapeless3Version = "3.0.0"
+
 val scala212 = "2.12.13"
 
 val scala213 = "2.13.6"
@@ -72,16 +74,23 @@ lazy val generic = project
     moduleName := "vulcan-generic",
     name := moduleName.value,
     dependencySettings ++ Seq(
-      libraryDependencies ++= Seq(
-        "com.propensive" %% "magnolia" % magnoliaVersion,
-        "com.chuusai" %% "shapeless" % shapelessVersion,
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-      )
+      libraryDependencies ++= {
+        if (scalaVersion.value.startsWith("2"))
+          Seq(
+            "com.propensive" %% "magnolia" % magnoliaVersion,
+            "com.chuusai" %% "shapeless" % shapelessVersion,
+            "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+          )
+        else
+          Seq("org.typelevel" %% "shapeless3-deriving" % shapeless3Version)
+      }
     ),
     scalatestSettings,
     publishSettings,
     mimaSettings,
-    scalaSettings,
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
     testSettings
   )
   .dependsOn(core % "compile->compile;test->test")
