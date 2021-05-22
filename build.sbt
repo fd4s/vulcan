@@ -21,7 +21,7 @@ val scala3 = "3.0.0"
 lazy val vulcan = project
   .in(file("."))
   .settings(
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     noPublishSettings,
     console := (core / Compile / console).value,
@@ -45,7 +45,7 @@ lazy val core = project
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
@@ -62,7 +62,7 @@ lazy val enumeratum = project
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     testSettings
   )
@@ -87,7 +87,7 @@ lazy val generic = project
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(excludeScala3 = true), // re-include scala 3 after publishing
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
@@ -110,7 +110,7 @@ lazy val refined = project
     // incompatible scala-xml dependencies
     munitSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
@@ -274,9 +274,9 @@ lazy val publishSettings =
     )
   )
 
-lazy val mimaSettings = Seq(
+def mimaSettings(excludeScala3: Boolean = false) = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value) {
+    if (publishArtifact.value && !(excludeScala3 && scalaVersion.value.startsWith("3"))) {
       Set(organization.value %% moduleName.value % (ThisBuild / previousStableVersion).value.get)
     } else Set()
   },
