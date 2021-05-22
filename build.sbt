@@ -339,7 +339,7 @@ lazy val scalaSettings = Seq(
 
     val scala213ScalacOptions =
       if (scalaVersion.value.startsWith("2.13")) {
-        Seq("-Wconf:msg=Block&src=test/scala/vulcan/generic/.*:silent")
+        Seq("-Wconf:msg=Block&src=test/scala-2/vulcan/generic/.*:silent")
       } else Seq()
 
     val scala3ScalacOptions =
