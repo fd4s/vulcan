@@ -6,6 +6,6 @@ import vulcan.generic._
 final case class CaseClassFieldInvalidName(`-value`: Int)
 
 object CaseClassFieldInvalidName {
-  implicit val codec: Codec[CaseClassFieldInvalidName] =
+  implicit def codec: Codec[CaseClassFieldInvalidName] =
     Codec.derive
 }

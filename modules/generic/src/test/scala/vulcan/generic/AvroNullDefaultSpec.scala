@@ -36,7 +36,7 @@ final class AvroNullDefaultSpec extends BaseSpec {
 
       val encoded = Codec.toBinary(WriterCaseClass(3))
       val decoded =
-        encoded.flatMap(Codec.fromBinary[CaseClassAvroNullDefault](_, writerCodec.schema.value))
+        encoded.flatMap(Codec.fromBinary[CaseClassAvroNullDefault](_, writerCodec.schema))
 
       assert(decoded.value == CaseClassAvroNullDefault(Some(3), None, None, None, None, None, None))
 

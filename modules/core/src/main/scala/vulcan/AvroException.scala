@@ -10,7 +10,7 @@ package vulcan
   * `Throwable` representation of an [[AvroError]],
   * created with [[AvroError#throwable]].
   */
-sealed abstract class AvroException(message: String, cause: Option[Throwable])
+sealed abstract class AvroException(val message: String, cause: Option[Throwable])
     extends RuntimeException(message, cause.orNull)
 
 private[vulcan] object AvroException {

@@ -25,8 +25,8 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
-          Codec[Byte].schema.value.toString
+        Codec[CustomEnum].schema.toString ===
+          Codec[Byte].schema.toString
       }
     }
 
@@ -64,8 +64,8 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
-          Codec[Char].schema.value.toString
+        Codec[CustomEnum].schema.toString ===
+          Codec[Char].schema.toString
       }
     }
 
@@ -103,8 +103,8 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
-          Codec[Int].schema.value.toString
+        Codec[CustomEnum].schema.toString ===
+          Codec[Int].schema.toString
       }
     }
 
@@ -142,8 +142,8 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
-          Codec[Long].schema.value.toString
+        Codec[CustomEnum].schema.toString ===
+          Codec[Long].schema.toString
       }
     }
 
@@ -181,8 +181,8 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
-          Codec[Short].schema.value.toString
+        Codec[CustomEnum].schema.toString ===
+          Codec[Short].schema.toString
       }
     }
 
@@ -223,7 +223,7 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
 
     it("schema should be enum") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
+        Codec[CustomEnum].schema.toString ===
           """{"type":"enum","name":"CustomEnum","namespace":"com.example","doc":"Custom enumeration","symbols":["first","second","third"]}"""
       }
     }

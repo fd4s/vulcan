@@ -13,7 +13,7 @@ final class VulcanEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with
     describe("schema") {
       it("should use an enum schema") {
         assert {
-          Codec[Suit].schema.value.toString ===
+          Codec[Suit].schema.toString ===
             """{"type":"enum","name":"Suit","namespace":"com.example","doc":"The different card suits","symbols":["clubs","diamonds","hearts","spades"]}"""
         }
       }

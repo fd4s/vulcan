@@ -5,7 +5,7 @@ import vulcan.Codec
 sealed trait SealedTraitCaseClassNestedUnion
 
 object SealedTraitCaseClassNestedUnion {
-  implicit val codec: Codec[SealedTraitCaseClassNestedUnion] =
+  implicit def codec: Codec[SealedTraitCaseClassNestedUnion] =
     Codec.union { alt =>
       alt[NestedUnionInSealedTraitCaseClassNestedUnion]
     }

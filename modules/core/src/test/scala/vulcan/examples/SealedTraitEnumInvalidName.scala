@@ -5,7 +5,7 @@ import vulcan.{AvroError, Codec}
 sealed trait `-SealedTraitEnumInvalidName`
 
 object `-SealedTraitEnumInvalidName` {
-  implicit val codec: Codec[`-SealedTraitEnumInvalidName`] =
+  implicit def codec: Codec[`-SealedTraitEnumInvalidName`] =
     Codec.enumeration(
       "-SealedTraitEnumInvalidName",
       symbols = Seq("value"),
