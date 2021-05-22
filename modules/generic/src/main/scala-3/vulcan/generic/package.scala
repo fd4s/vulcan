@@ -17,7 +17,7 @@ package object generic {
   /**
     * Returns an enum `Codec` for type `A`, deriving details
     * like the name, namespace, and [[AvroDoc]] documentation
-    * from the type `A` reflection.
+    * from the type `A` using reflection.
     *
     * @group Derive
     */
@@ -38,7 +38,7 @@ package object generic {
   /**
     * Returns a fixed `Codec` for type `A`, deriving details
     * like the name, namespace, and [[AvroDoc]] documentation
-    * from the type `A` using type tags.
+    * from the type `A` using reflection.
     *
     * @group Derive
     */
