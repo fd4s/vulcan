@@ -23,7 +23,7 @@ trait ByteVulcanEnum[EntryType <: ByteEnumEntry] extends VulcanValueEnum[Byte, E
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[java.lang.Integer, EntryType] =
+  ): Codec.Aux[Int, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -41,7 +41,7 @@ trait IntVulcanEnum[EntryType <: IntEnumEntry] extends VulcanValueEnum[Int, Entr
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[java.lang.Integer, EntryType] =
+  ): Codec.Aux[Int, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -50,7 +50,7 @@ trait LongVulcanEnum[EntryType <: LongEnumEntry] extends VulcanValueEnum[Long, E
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[java.lang.Long, EntryType] =
+  ): Codec.Aux[Long, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -59,7 +59,7 @@ trait ShortVulcanEnum[EntryType <: ShortEnumEntry] extends VulcanValueEnum[Short
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[java.lang.Integer, EntryType] =
+  ): Codec.Aux[Int, EntryType] =
     Vulcan.codec(this)
 }
 

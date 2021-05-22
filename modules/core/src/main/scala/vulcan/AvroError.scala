@@ -275,6 +275,11 @@ object AvroError {
       s"Symbol $symbol is not part of schema symbols [${symbols.mkString(", ")}]"
     }
 
-  private[vulcan] final def fromThrowable(throwable: Throwable): AvroError =
-    AvroError(throwable.toString)
+  private[vulcan] final def fromThrowable(cause: Throwable): AvroError = {
+    new AvroError {
+      def message: String = cause.toString
+
+      def throwable: Throwable = AvroException(message, Some(cause))
+    }
+  }
 }

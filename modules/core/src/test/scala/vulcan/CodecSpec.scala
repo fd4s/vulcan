@@ -2,17 +2,19 @@ package vulcan
 
 import cats.data._
 import cats.implicits._
+
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.time.{Instant, LocalDate}
+import java.time.{Instant, LocalDate, LocalTime}
+import java.util.concurrent.TimeUnit
+import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
 import org.scalatest.Assertion
-import vulcan.examples._
+import vulcan.examples.{SecondInSealedTraitCaseClass, _}
 import vulcan.internal.converters.collection._
 
 import scala.util.{Failure, Success, Try}
@@ -33,7 +35,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = true
           assertEncodeIs[Boolean](
             value,
-            Right(java.lang.Boolean.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -87,7 +89,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 1.toByte
           assertEncodeIs[Byte](
             value,
-            Right(java.lang.Integer.valueOf(1))
+            Right(1)
           )
         }
       }
@@ -210,7 +212,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(Chain(1, 2, 3)),
             schema[Int],
-            "Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding Chain: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -218,7 +220,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(10),
             schema[Chain[Int]],
-            "Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding Chain: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -426,7 +428,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123d
           assertEncodeIs[Double](
             value,
-            Right(java.lang.Double.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -735,7 +737,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123f
           assertEncodeIs[Float](
             value,
-            Right(java.lang.Float.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -824,7 +826,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
           assertEncodeIs[Instant](
             value,
-            Right(java.lang.Long.valueOf(value.toEpochMilli()))
+            Right(value.toEpochMilli())
           )
         }
       }
@@ -993,7 +995,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123
           assertEncodeIs[Int](
             value,
-            Right(java.lang.Integer.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -1084,7 +1086,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = LocalDate.now()
           assertEncodeIs[LocalDate](
             value,
-            Right(java.lang.Integer.valueOf(value.toEpochDay().toInt))
+            Right(value.toEpochDay().toInt)
           )
         }
       }
@@ -1124,6 +1126,118 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
     }
 
+    describe("localTimeMillis") {
+      implicit val codec: Codec[LocalTime] = Codec.localTimeMillis
+      describe("schema") {
+        it("should be encoded as int with logical type time-millis") {
+          assertSchemaIs[LocalTime] {
+            """{"type":"int","logicalType":"time-millis"}"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode as int") {
+          val value = LocalTime.now()
+          assertEncodeIs[LocalTime](
+            value,
+            Right(
+              java.lang.Integer.valueOf(TimeUnit.NANOSECONDS.toMillis(value.toNanoOfDay()).toInt)
+            )
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not int") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            schema[Long],
+            "Error decoding LocalTime: Got unexpected schema type LONG, expected schema type INT"
+          )
+        }
+
+        it("should error if logical type is not time-millis") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            schema[Int],
+            "Error decoding LocalTime: Got unexpected missing logical type"
+          )
+        }
+
+        it("should error if value is not int") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(123L),
+            schema[LocalTime],
+            "Error decoding LocalTime: Got unexpected type java.lang.Long, expected type Integer"
+          )
+        }
+
+        it("should decode int as local time-millis") {
+          val value = LocalTime.now()
+          assertDecodeIs[LocalTime](
+            unsafeEncode(value),
+            Right(value.truncatedTo(ChronoUnit.MILLIS))
+          )
+        }
+      }
+    }
+
+    describe("localTimeMicros") {
+      implicit val codec: Codec[LocalTime] = Codec.localTimeMicros
+      describe("schema") {
+        it("should be encoded as int with logical type time-micros") {
+          assertSchemaIs[LocalTime] {
+            """{"type":"long","logicalType":"time-micros"}"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode as long") {
+          val value = LocalTime.now()
+          assertEncodeIs[LocalTime](
+            value,
+            Right(java.lang.Long.valueOf(TimeUnit.NANOSECONDS.toMicros(value.toNanoOfDay())))
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not int") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            schema[Int],
+            "Error decoding LocalTime: Got unexpected schema type INT, expected schema type LONG"
+          )
+        }
+
+        it("should error if logical type is not time-micros") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(LocalTime.now()),
+            schema[Long],
+            "Error decoding LocalTime: Got unexpected missing logical type"
+          )
+        }
+
+        it("should error if value is not long") {
+          assertDecodeError[LocalTime](
+            unsafeEncode(123),
+            schema[LocalTime],
+            "Error decoding LocalTime: Got unexpected type java.lang.Integer, expected type Long"
+          )
+        }
+
+        it("should decode int as local time-micros") {
+          val value = LocalTime.now()
+          assertDecodeIs[LocalTime](
+            unsafeEncode(value),
+            Right(value.truncatedTo(ChronoUnit.MICROS))
+          )
+        }
+      }
+    }
+
     describe("long") {
       describe("schema") {
         it("should be encoded as long") {
@@ -1138,7 +1252,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 123L
           assertEncodeIs[Long](
             value,
-            Right(java.lang.Long.valueOf(value))
+            Right(value)
           )
         }
       }
@@ -1305,7 +1419,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(NonEmptyChain(1, 2, 3)),
             schema[Int],
-            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding NonEmptyChain: Error decoding Chain: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1313,7 +1427,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(10),
             schema[NonEmptyChain[Int]],
-            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding NonEmptyChain: Error decoding Chain: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -2401,6 +2515,19 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Right(Test(None))
           )
         }
+
+        it("should decode field with aliased name") {
+          case class Aliased(aliasedField: Int)
+          implicit val codec: Codec[Aliased] =
+            Codec.record("CaseClassField", "") { field =>
+              field("aliasedField", _.aliasedField, aliases = Seq("value")).map(Aliased(_))
+            }
+
+          assertDecodeIs[Aliased](
+            unsafeEncode(CaseClassField(3)),
+            Right(Aliased(3))
+          )
+        }
       }
     }
 
@@ -2523,7 +2650,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 1.toShort
           assertEncodeIs[Short](
             value,
-            Right(java.lang.Integer.valueOf(1))
+            Right(1)
           )
         }
       }
@@ -2645,7 +2772,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       describe("schema") {
         it("should encode as union") {
           assertSchemaIs[SealedTraitCaseClass] {
-            """[{"type":"record","name":"FirstInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"int"}]},{"type":"record","name":"SecondInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"string"}]},"int"]"""
+            """[{"type":"record","name":"FirstInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"int"}]},{"type":"record","name":"SecondInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"string"}]},{"type":"array","items":"int"}]"""
           }
         }
 
@@ -2733,6 +2860,33 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeIs[SealedTraitCaseClass](
             unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
             Right(FirstInSealedTraitCaseClass(0))
+          )
+        }
+
+        it("should decode using schema with aliased name") {
+
+          implicit val secondCodec: Codec[SecondInSealedTraitCaseClass] =
+            Codec.record(
+              name = "AliasedInSealedTraitCaseClass",
+              namespace = "com.example",
+              aliases = Seq("SecondInSealedTraitCaseClass")
+            ) { field =>
+              field("value", _.value).map(SecondInSealedTraitCaseClass(_))
+            }
+
+          implicit val codec: Codec[SealedTraitCaseClass] = Codec.union(
+            alt =>
+              alt[FirstInSealedTraitCaseClass]
+                |+| alt[SecondInSealedTraitCaseClass]
+                |+| alt[ThirdInSealedTraitCaseClass]
+          )
+
+          assertDecodeIs[SealedTraitCaseClass](
+            unsafeEncode[SealedTraitCaseClass](SecondInSealedTraitCaseClass("foo"))(
+              SealedTraitCaseClass.sealedTraitCaseClassCodec
+            ),
+            Right(SecondInSealedTraitCaseClass("foo")),
+            Some(SealedTraitCaseClass.sealedTraitCaseClassCodec.schema)
           )
         }
       }

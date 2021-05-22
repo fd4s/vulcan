@@ -14,9 +14,11 @@ import cats.implicits._
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.time.{Instant, LocalDate}
+import java.time.{Instant, LocalDate, LocalTime}
+import java.util.concurrent.TimeUnit
 import java.util.UUID
-import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
+import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBuilder}
+import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.apache.avro.util.Utf8
@@ -36,7 +38,7 @@ import scala.util.Try
   "could not find implicit Codec[${A}]; ensure no imports are missing or manually define an instance"
 )
 sealed abstract class Codec[A] {
-  type Repr <: AnyRef
+  type Repr
 
   /** The schema or an error if the schema could not be generated. */
   def schema: Schema
@@ -128,7 +130,7 @@ sealed abstract class Codec[A] {
   */
 object Codec {
 
-  type Aux[Repr0 <: AnyRef, A] = Codec[A] {
+  type Aux[Repr0, A] = Codec[A] {
     type Repr = Repr0
   }
 
@@ -137,33 +139,27 @@ object Codec {
     *
     * @group Utilities
     */
-  final def apply[A](implicit codec: Codec[A]): codec.type =
-    codec
+  final def apply[A](implicit codec: Codec[A]): codec.type = codec
 
   /**
     * @group General
     */
-  implicit final val boolean: Codec.Aux[java.lang.Boolean, Boolean] =
+  implicit final val boolean: Codec.Aux[Boolean, Boolean] =
     Codec.instanceForTypes(
       "Boolean",
       "Boolean",
       SchemaBuilder.builder().booleanType(),
-      java.lang.Boolean.valueOf(_).asRight, {
-        case (boolean: java.lang.Boolean, _) =>
-          Right(boolean)
-      }
+      _.asRight,
+      { case (boolean: Boolean, _) => Right(boolean) }
     )
 
   /**
     * @group General
     */
-  implicit final lazy val byte: Codec.Aux[java.lang.Integer, Byte] = {
-    val min: Int = Byte.MinValue.toInt
-    val max: Int = Byte.MaxValue.toInt
+  implicit final lazy val byte: Codec.Aux[Int, Byte] = {
     Codec.int
       .imapError { integer =>
-        if (min <= integer && integer <= max)
-          Right(integer.toByte)
+        if (integer.isValidByte) Right(integer.toByte)
         else Left(AvroError.unexpectedByte(integer))
       }(_.toInt)
       .withTypeName("Byte")
@@ -179,24 +175,17 @@ object Codec {
         ByteBuffer.wrap(_).asRight,
         (value, schema) => {
           schema.getType() match {
-            case Schema.Type.BYTES | Schema.Type.STRING =>
+            case BYTES | STRING =>
               value match {
-                case buffer: ByteBuffer =>
-                  Right(buffer.array())
-                case utf8: Utf8 =>
-                  Right(utf8.getBytes)
-                case string: String =>
-                  Right(string.getBytes(StandardCharsets.UTF_8))
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "ByteBuffer"))
+                case buffer: ByteBuffer => Right(buffer.array())
+                case utf8: Utf8         => Right(utf8.getBytes)
+                case string: String     => Right(string.getBytes(StandardCharsets.UTF_8))
+                case other              => Left(AvroError.decodeUnexpectedType(other, "ByteBuffer"))
               }
 
             case schemaType =>
               Left {
-                AvroError.decodeUnexpectedSchemaType(
-                  schemaType,
-                  Schema.Type.BYTES
-                )
+                AvroError.decodeUnexpectedSchemaType(schemaType, BYTES)
               }
           }
         }
@@ -209,17 +198,7 @@ object Codec {
   implicit final def chain[A](
     implicit codec: Codec[A]
   ): Codec.Aux[java.util.List[codec.Repr], Chain[A]] =
-    Codec.instanceForTypes(
-      "Collection",
-      "Chain",
-      Schema.createArray(codec.schema),
-      _.toList.traverse(codec.encode(_)).map(_.asJava), {
-        case (collection: java.util.Collection[_], schema) =>
-          collection.asScala.toList
-            .traverse(codec.decode(_, schema.getElementType()))
-            .map(Chain.fromSeq)
-      }
-    )
+    Codec.list[A].imap(Chain.fromSeq)(_.toList).withTypeName("Chain")
 
   /**
     * @group General
@@ -306,23 +285,19 @@ object Codec {
   /**
     * @group General
     */
-  implicit final val double: Codec.Aux[java.lang.Double, Double] =
+  implicit final val double: Codec.Aux[Double, Double] =
     Codec
-      .instance[java.lang.Double, Double](
+      .instance[Double, Double](
         SchemaBuilder.builder().doubleType(),
-        java.lang.Double.valueOf(_).asRight,
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
-            case Schema.Type.DOUBLE | Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
+            case DOUBLE | FLOAT | INT | LONG =>
               value match {
-                case double: java.lang.Double =>
-                  Right(double)
-                case float: java.lang.Float =>
-                  Right(float.toDouble)
-                case int: java.lang.Integer =>
-                  Right(int.toDouble)
-                case long: java.lang.Long =>
-                  Right(long.toDouble)
+                case double: Double => Right(double)
+                case float: Float   => Right(float.toDouble)
+                case int: Integer   => Right(int.toDouble)
+                case long: Long     => Right(long.toDouble)
                 case other =>
                   Left(
                     AvroError.decodeUnexpectedTypes(
@@ -334,10 +309,7 @@ object Codec {
             case schemaType =>
               Left {
                 AvroError
-                  .decodeUnexpectedSchemaType(
-                    schemaType,
-                    Schema.Type.DOUBLE
-                  )
+                  .decodeUnexpectedSchemaType(schemaType, DOUBLE)
               }
           }
         }
@@ -350,7 +322,7 @@ object Codec {
   implicit final def either[A, B](
     implicit codecA: Codec[A],
     codecB: Codec[B]
-  ): Codec.Aux[AnyRef, Either[A, B]] =
+  ): Codec.Aux[Any, Either[A, B]] =
     Codec
       .union[Either[A, B]](alt => alt[Left[A, B]] |+| alt[Right[A, B]])
       .withTypeName("Either")
@@ -360,7 +332,7 @@ object Codec {
     *
     * @group Utilities
     */
-  final def encode[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Any] =
+  final def encode[A](a: A)(implicit codec: Codec[A]): Either[AvroError, codec.Repr] =
     codec.encode(a)
 
   /**
@@ -505,32 +477,25 @@ object Codec {
   /**
     * @group General
     */
-  implicit final val float: Codec.Aux[java.lang.Float, Float] =
+  implicit final val float: Codec.Aux[Float, Float] =
     Codec
-      .instance[java.lang.Float, Float](
+      .instance[Float, Float](
         SchemaBuilder.builder().floatType(),
-        java.lang.Float.valueOf(_).asRight,
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
-            case Schema.Type.FLOAT | Schema.Type.INT | Schema.Type.LONG =>
+            case FLOAT | INT | LONG =>
               value match {
-                case float: java.lang.Float =>
-                  Right(float)
-                case int: java.lang.Integer =>
-                  Right(int.toFloat)
-                case long: java.lang.Long =>
-                  Right(long.toFloat)
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Float"))
+                case float: Float => Right(float)
+                case int: Int     => Right(int.toFloat)
+                case long: Long   => Right(long.toFloat)
+                case other        => Left(AvroError.decodeUnexpectedType(other, "Float"))
               }
 
             case schemaType =>
               Left {
                 AvroError
-                  .decodeUnexpectedSchemaType(
-                    schemaType,
-                    Schema.Type.FLOAT
-                  )
+                  .decodeUnexpectedSchemaType(schemaType, FLOAT)
               }
           }
         }
@@ -575,7 +540,7 @@ object Codec {
     *
     * @group Create
     */
-  final def instance[Repr0 <: AnyRef, A](
+  final def instance[Repr0, A](
     schema: Schema,
     encode: A => Either[AvroError, Repr0],
     decode: (Any, Schema) => Either[AvroError, A]
@@ -600,7 +565,7 @@ object Codec {
     }
   }
 
-  private[vulcan] final def instanceForTypes[Repr <: AnyRef, A](
+  private[vulcan] final def instanceForTypes[Repr, A](
     expectedValueType: String,
     typeName: String,
     readerSchema: Schema,
@@ -621,10 +586,7 @@ object Codec {
         else
           Left {
             AvroError
-              .decodeUnexpectedSchemaType(
-                writerSchema.getType(),
-                schemaType
-              )
+              .decodeUnexpectedSchemaType(writerSchema.getType(), schemaType)
           }
       }.leftMap(AvroError.errorDecodingTo(typeName, _))
     )
@@ -632,32 +594,27 @@ object Codec {
   /**
     * @group JavaTime
     */
-  implicit final val instant: Codec.Aux[java.lang.Long, Instant] =
+  implicit final val instant: Codec.Aux[Long, Instant] =
     Codec.instanceForTypes(
       "Long",
       "Instant",
       LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType()),
-      instant => Right(java.lang.Long.valueOf(instant.toEpochMilli)), {
-        case (long: java.lang.Long, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.timestampMillis()) {
-            Right(Instant.ofEpochMilli(long))
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+      instant => Right(instant.toEpochMilli), {
+        case (long: Long, schema) =>
+          validateLogicalType(LogicalTypes.timestampMillis(), schema).as(Instant.ofEpochMilli(long))
       }
     )
 
   /**
     * @group General
     */
-  implicit final val int: Codec.Aux[java.lang.Integer, Int] =
+  implicit final val int: Codec.Aux[Int, Int] =
     Codec.instanceForTypes(
       "Int",
       "Int",
       SchemaBuilder.builder().intType(),
-      java.lang.Integer.valueOf(_).asRight, {
-        case (integer: java.lang.Integer, _) =>
-          Right(integer)
-      }
+      _.asRight,
+      { case (integer: Int, _) => Right(integer) }
     )
 
   /**
@@ -685,35 +642,70 @@ object Codec {
   /**
     * @group JavaTime
     */
-  implicit final val localDate: Codec.Aux[java.lang.Integer, LocalDate] =
+  implicit final val localDate: Codec.Aux[Int, LocalDate] =
     Codec.instanceForTypes(
       "Integer",
       "LocalDate",
       LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType()),
-      localDate => Right(java.lang.Integer.valueOf(localDate.toEpochDay.toInt)), {
-        case (int: java.lang.Integer, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.date()) {
-            Right(LocalDate.ofEpochDay(int.toLong))
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+      localDate => Right(localDate.toEpochDay.toInt), {
+        case (int: Int, schema) =>
+          validateLogicalType(LogicalTypes.date, schema).as(LocalDate.ofEpochDay(int.toLong))
+      }
+    )
+
+  /**
+    * @group JavaTime
+    */
+  final val localTimeMillis: Codec.Aux[Int, LocalTime] =
+    Codec.instanceForTypes(
+      "Integer",
+      "LocalTime",
+      LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType()), { localTime =>
+        val millis = TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay())
+        Right(millis.toInt)
+      }, {
+        case (int: Int, schema) =>
+          validateLogicalType(LogicalTypes.timeMillis, schema).as {
+            val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
+            LocalTime.ofNanoOfDay(nanos)
+          }
+      }
+    )
+
+  /**
+    * @group JavaTime
+    */
+  final val localTimeMicros: Codec.Aux[Long, LocalTime] =
+    Codec.instanceForTypes(
+      "Long",
+      "LocalTime",
+      LogicalTypes.timeMicros().addToSchema(SchemaBuilder.builder().longType()), { localTime =>
+        val micros = TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay())
+        Right(micros)
+      }, {
+        case (long: Long, schema) =>
+          validateLogicalType(LogicalTypes.timeMicros, schema).as {
+            val nanos = TimeUnit.MICROSECONDS.toNanos(long)
+            LocalTime.ofNanoOfDay(nanos)
+          }
       }
     )
 
   /**
     * @group General
     */
-  implicit final val long: Codec.Aux[java.lang.Long, Long] =
+  implicit final val long: Codec.Aux[Long, Long] =
     Codec
-      .instance[java.lang.Long, Long](
+      .instance[Long, Long](
         SchemaBuilder.builder().longType(),
-        java.lang.Long.valueOf(_).asRight,
+        _.asRight,
         (value, schema) => {
           schema.getType() match {
-            case Schema.Type.LONG | Schema.Type.INT =>
+            case LONG | INT =>
               value match {
-                case long: java.lang.Long =>
+                case long: Long =>
                   Right(long)
-                case int: java.lang.Integer =>
+                case int: Int =>
                   Right(int.toLong)
                 case other =>
                   Left(AvroError.decodeUnexpectedType(other, "Long"))
@@ -721,11 +713,7 @@ object Codec {
 
             case schemaType =>
               Left {
-                AvroError
-                  .decodeUnexpectedSchemaType(
-                    schemaType,
-                    Schema.Type.LONG
-                  )
+                AvroError.decodeUnexpectedSchemaType(schemaType, LONG)
               }
           }
         }
@@ -755,8 +743,7 @@ object Codec {
             .traverse {
               case (key: Utf8, value) =>
                 codec.decode(value, schema.getValueType()).tupleLeft(key.toString)
-              case (key, _) =>
-                Left(AvroError.decodeUnexpectedMapKey(key))
+              case (key, _) => Left(AvroError.decodeUnexpectedMapKey(key))
             }
             .map(_.toMap)
       }
@@ -771,7 +758,7 @@ object Codec {
       "None",
       SchemaBuilder.builder().nullType(),
       _ => Right(null),
-      { case (value, _) if (value == null) => Right(None) }
+      { case (null, _) => Right(None) }
     )
 
   /**
@@ -856,64 +843,53 @@ object Codec {
       val fields = AvroError.catchNonFatal {
         free.analyze {
           new (Field[A, *] ~> λ[a => Either[AvroError, Chain[Schema.Field]]]) {
-            def apply[B](field: Field[A, B]) = {
-              val schema = field.codec.schema
-              field.props.toChain
-                .flatMap { props =>
-                  field.default
-                    .traverse(field.codec.encode(_))
-                    .map { default =>
-                      Chain.one {
-                        val schemaField =
-                          new Schema.Field(
-                            field.name,
-                            schema,
-                            field.doc.orNull,
-                            adaptForSchema {
-                              default.map {
-                                case null  => Schema.Field.NULL_DEFAULT_VALUE
-                                case other => other
-                              }.orNull
-                            },
-                            field.order.getOrElse(Schema.Field.Order.ASCENDING)
-                          )
+            def apply[B](field: Field[A, B]) =
+              (field.props.toChain, field.default.traverse(field.codec.encode(_))).mapN {
+                (props, default) =>
+                  val schemaField =
+                    new Schema.Field(
+                      field.name,
+                      field.codec.schema,
+                      field.doc.orNull,
+                      default.map {
+                        case null  => Schema.Field.NULL_DEFAULT_VALUE
+                        case other => adaptForSchema(other)
+                      }.orNull,
+                      field.order.getOrElse(Schema.Field.Order.ASCENDING)
+                    )
 
-                        field.aliases.foreach(schemaField.addAlias)
+                  field.aliases.foreach(schemaField.addAlias)
 
-                        props.foldLeft(()) {
-                          case ((), (name, value)) =>
-                            schemaField.addProp(name, value)
-                        }
+                  props.foldLeft(()) {
+                    case ((), (name, value)) =>
+                      schemaField.addProp(name, value)
+                  }
 
-                        schemaField
-                      }
-                    }
-                }
-            }
+                  Chain.one(schemaField)
+              }
+
           }
         }
       }
 
-      fields.flatMap { fields =>
-        props.toChain.map { props =>
-          val record =
-            Schema.createRecord(
-              name,
-              doc.orNull,
-              namespace,
-              false,
-              fields.toList.asJava
-            )
+      (fields, props.toChain).mapN { (fields, props) =>
+        val record =
+          Schema.createRecord(
+            name,
+            doc.orNull,
+            namespace,
+            false,
+            fields.toList.asJava
+          )
 
-          aliases.foreach(record.addAlias)
+        aliases.foreach(record.addAlias)
 
-          props.foldLeft(()) {
-            case ((), (name, value)) =>
-              record.addProp(name, value)
-          }
-
-          record
+        props.foldLeft(()) {
+          case ((), (name, value)) =>
+            record.addProp(name, value)
         }
+
+        record
       }
     }.leftMap[Schema](err => throw err.throwable).merge
     Codec
@@ -939,22 +915,17 @@ object Codec {
           }
         }, {
           case (record: IndexedRecord, _) =>
-            val recordSchema = record.getSchema()
-            val recordFields = recordSchema.getFields()
-
             free.foldMap {
               new (Field[A, *] ~> Either[AvroError, *]) {
-                def apply[B](field: Field[A, B]) = {
-                  val schemaField = recordSchema.getField(field.name)
-                  if (schemaField != null) {
-                    val value = record.get(recordFields.indexOf(schemaField))
-                    field.codec.decode(value, schemaField.schema())
-                  } else {
-                    field.default.toRight {
-                      AvroError.decodeMissingRecordField(field.name)
+                def apply[B](field: Field[A, B]): Either[AvroError, B] =
+                  (field.name +: field.aliases.toList)
+                    .collectFirstSome { name =>
+                      Option(record.getSchema.getField(name))
                     }
-                  }
-                }
+                    .fold(field.default.toRight(AvroError.decodeMissingRecordField(field.name))) {
+                      schemaField =>
+                        field.codec.decode(record.get(schemaField.pos), schemaField.schema)
+                    }
               }
             }
         }
@@ -992,13 +963,10 @@ object Codec {
   /**
     * @group General
     */
-  implicit final val short: Codec.Aux[java.lang.Integer, Short] = {
-    val min: Int = Short.MinValue.toInt
-    val max: Int = Short.MaxValue.toInt
+  implicit final val short: Codec.Aux[Int, Short] = {
     Codec.int
       .imapError { integer =>
-        if (min <= integer && integer <= max)
-          Right(integer.toShort)
+        if (integer.isValidShort) Right(integer.toShort)
         else Left(AvroError.unexpectedShort(integer))
       }(_.toInt)
       .withTypeName("Short")
@@ -1020,12 +988,10 @@ object Codec {
         new Utf8(_).asRight,
         (value, schema) => {
           schema.getType() match {
-            case Schema.Type.STRING | Schema.Type.BYTES =>
+            case STRING | BYTES =>
               value match {
-                case string: String =>
-                  Right(string)
-                case utf8: Utf8 =>
-                  Right(utf8.toString())
+                case string: String => Right(string)
+                case utf8: Utf8     => Right(utf8.toString())
                 case bytes: ByteBuffer =>
                   AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
                 case other =>
@@ -1037,11 +1003,7 @@ object Codec {
 
             case schemaType =>
               Left {
-                AvroError
-                  .decodeUnexpectedSchemaType(
-                    schemaType,
-                    Schema.Type.STRING
-                  )
+                AvroError.decodeUnexpectedSchemaType(schemaType, STRING)
               }
           }
         }
@@ -1087,7 +1049,7 @@ object Codec {
     *
     * @group Create
     */
-  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[AnyRef, A] = {
+  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[Any, A] = {
     val alts = f(AltBuilder.instance)
     val schema =
       AvroError
@@ -1103,48 +1065,56 @@ object Codec {
         .leftMap[Schema](err => throw err.throwable)
         .merge
 
-    Codec.instance[AnyRef, A](
-      schema,
-      a =>
-        alts
-          .foldMapK { alt =>
-            alt.prism.getOption(a).map(alt.codec.encode(_))
-          }
-          .getOrElse {
-            Left(AvroError.encodeExhaustedAlternatives(a))
-          },
-      (value, schema) => {
-        val schemaTypes =
-          schema.getType() match {
-            case Schema.Type.UNION => schema.getTypes.asScala
-            case _                 => Seq(schema)
-          }
+    Codec
+      .instance[Any, A](
+        schema,
+        a =>
+          alts
+            .foldMapK { alt =>
+              alt.prism.getOption(a).map(alt.codec.encode(_))
+            }
+            .getOrElse {
+              Left(AvroError.encodeExhaustedAlternatives(a))
+            },
+        (value, schema) => {
+          val schemaTypes =
+            schema.getType match {
+              case UNION => schema.getTypes.asScala
+              case _     => Seq(schema)
+            }
 
-        value match {
-          case container: GenericContainer =>
+          def decodeNamedContainerType(container: GenericContainer) = {
             val altName =
               container.getSchema.getName
 
-            val altUnionSchema =
+            val altWriterSchema =
               schemaTypes
                 .find(_.getName == altName)
                 .toRight(AvroError.decodeMissingUnionSchema(altName))
 
             def altMatching =
               alts
-                .find(_.codec.schema.getName == altName)
+                .find { alt =>
+                  val schema = alt.codec.schema
+                  schema.getType match {
+                    case RECORD | FIXED | ENUM =>
+                      schema.getName == altName || schema.getAliases.asScala
+                        .exists(alias => alias == altName || alias.endsWith(s".$altName"))
+                    case _ => false
+                  }
+                }
                 .toRight(AvroError.decodeMissingUnionAlternative(altName))
 
-            altUnionSchema
-              .flatMap { altSchema =>
-                altMatching.flatMap { alt =>
-                  alt.codec
-                    .decode(container, altSchema)
-                    .map(alt.prism.reverseGet)
-                }
+            altWriterSchema.flatMap { altSchema =>
+              altMatching.flatMap { alt =>
+                alt.codec
+                  .decode(container, altSchema)
+                  .map(alt.prism.reverseGet)
               }
+            }
+          }
 
-          case other =>
+          def decodeUnnamedType(other: Any) =
             alts
               .collectFirstSome { alt =>
                 Right(alt.codec.schema)
@@ -1163,9 +1133,17 @@ object Codec {
               .getOrElse {
                 Left(AvroError.decodeExhaustedAlternatives(other))
               }
+
+          value match {
+            case container: GenericContainer =>
+              container.getSchema.getType match {
+                case RECORD | FIXED | ENUM => decodeNamedContainerType(container)
+                case _                     => decodeUnnamedType(container)
+              }
+            case other => decodeUnnamedType(other)
+          }
         }
-      }
-    )
+      )
   }.withTypeName("union")
 
   /**
@@ -1177,7 +1155,7 @@ object Codec {
       "Unit",
       SchemaBuilder.builder().nullType(),
       _ => Right(null),
-      { case (value, _) if (value == null) => Right(()) }
+      { case (null, _) => Right(()) }
     )
 
   /**
@@ -1190,12 +1168,10 @@ object Codec {
       LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType()),
       uuid => Right(new Utf8(uuid.toString())), {
         case (utf8: Utf8, schema) =>
-          val logicalType = schema.getLogicalType()
-          if (logicalType == LogicalTypes.uuid()) {
+          validateLogicalType(LogicalTypes.uuid, schema) *>
             AvroError.catchNonFatal {
               Right(UUID.fromString(utf8.toString()))
             }
-          } else Left(AvroError.decodeUnexpectedLogicalType(logicalType))
       }
     )
 
@@ -1233,8 +1209,13 @@ object Codec {
   /**
     * @group Cats
     */
-  implicit final def codecAuxShow[Repr <: AnyRef, A]: Show[Codec.Aux[Repr, A]] =
+  implicit final def codecAuxShow[Repr, A]: Show[Codec.Aux[Repr, A]] =
     Show.fromToString
+
+  private def validateLogicalType(expected: LogicalType, schema: Schema): Either[AvroError, Unit] =
+    if (expected == schema.getLogicalType) rightUnit
+    else Left(AvroError.decodeUnexpectedLogicalType(schema.getLogicalType))
+  private val rightUnit = Right(())
 
   /**
     * @group Create
@@ -1248,19 +1229,13 @@ object Codec {
   }
 
   private[vulcan] object Alt {
-    final def apply[A, B](
-      codec: Codec[B],
-      prism: Prism[A, B]
-    ): Alt[A] = {
-      type B0 = B
-      val _codec = codec
-      val _prism = prism
-
-      new Alt[A] {
-        override final type B = B0
-        override final val codec: Codec[B] = _codec
-        override final val prism: Prism[A, B] = _prism
-      }
+    final def apply[A, B0](
+      _codec: Codec[B0],
+      _prism: Prism[A, B0]
+    ): Alt[A] = new Alt[A] {
+      override final type B = B0
+      override final val codec: Codec[B] = _codec
+      override final val prism: Prism[A, B] = _prism
     }
   }
 
@@ -1312,39 +1287,6 @@ object Codec {
     def props: Props
   }
 
-  private[vulcan] object Field {
-    final def apply[A, B](
-      name: String,
-      access: A => B,
-      codec: Codec[B],
-      doc: Option[String],
-      default: Option[B],
-      order: Option[Schema.Field.Order],
-      aliases: Seq[String],
-      props: Props
-    ): Field[A, B] = {
-      val _name = name
-      val _access = access
-      val _codec = codec
-      val _doc = doc
-      val _default = default
-      val _order = order
-      val _aliases = aliases
-      val _props = props
-
-      new Field[A, B] {
-        override final val name: String = _name
-        override final val access: A => B = _access
-        override final val codec: Codec[B] = _codec
-        override final val doc: Option[String] = _doc
-        override final val default: Option[B] = _default
-        override final val order: Option[Schema.Field.Order] = _order
-        override final val aliases: Seq[String] = _aliases
-        override final val props: Props = _props
-      }
-    }
-  }
-
   /**
     * @group Create
     */
@@ -1371,19 +1313,29 @@ object Codec {
           order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
-        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, *], B] =
+        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, *], B] = {
+          val _name = name
+          val _access = access
+          val _codec = codec
+          val _doc = doc
+          val _default = default
+          val _order = order
+          val _aliases = aliases
+          val _props = props
+
           FreeApplicative.lift {
-            Field(
-              name = name,
-              access = access,
-              codec = codec,
-              doc = doc,
-              default = default,
-              order = order,
-              aliases = aliases,
-              props = props
-            )
+            new Field[Any, B] {
+              override val name: String = _name
+              override val access: Any => B = _access
+              override val codec: Codec[B] = _codec
+              override val doc: Option[String] = _doc
+              override val default: Option[B] = _default
+              override val order: Option[Schema.Field.Order] = _order
+              override val aliases: Seq[String] = _aliases
+              override val props: Props = _props
+            }
           }
+        }
 
         override final def toString: String =
           "FieldBuilder"

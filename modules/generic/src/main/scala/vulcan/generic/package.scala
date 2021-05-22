@@ -33,7 +33,7 @@ package object generic {
     tailCodec: Lazy[Codec[T]]
   ): Codec[H :+: T] =
     Codec
-      .instance[AnyRef, H :+: T](
+      .instance[Any, H :+: T](
         AvroError
           .catchNonFatal {
             val first = headCodec.schema
@@ -163,7 +163,7 @@ package object generic {
         .leftMap[Schema](err => throw err.throwable)
         .merge
       Codec
-        .instance[AnyRef, A](
+        .instance[Any, A](
           schema,
           if (caseClass.isValueClass) { a =>
             val param = caseClass.parameters.head
@@ -192,24 +192,29 @@ package object generic {
               .decode(value, schema)
               .map(decoded => caseClass.rawConstruct(List(decoded)))
           } else
-            (value, schema) => {
-              schema.getType() match {
+            (value, writerSchema) => {
+              writerSchema.getType() match {
                 case Schema.Type.RECORD =>
                   value match {
                     case record: IndexedRecord =>
-                      val recordSchema = record.getSchema()
-                      val recordFields = recordSchema.getFields()
-
-                      val fields =
-                        caseClass.parameters.toList.traverse { param =>
-                          val field = recordSchema.getField(param.label)
-                          if (field != null) {
-                            val value = record.get(recordFields.indexOf(field))
-                            param.typeclass.decode(value, field.schema())
-                          } else Left(AvroError.decodeMissingRecordField(param.label))
+                      caseClass.parameters.toList
+                        .traverse {
+                          param =>
+                            val field = record.getSchema.getField(param.label)
+                            if (field != null) {
+                              val value = record.get(field.pos)
+                              param.typeclass.decode(value, field.schema())
+                            } else {
+                              schema.getFields.asScala
+                                .find(_.name == param.label)
+                                .filter(_.hasDefaultValue)
+                                .toRight(AvroError.decodeMissingRecordField(param.label))
+                                .flatMap(
+                                  readerField => param.typeclass.decode(null, readerField.schema)
+                                )
+                            }
                         }
-
-                      fields.map(caseClass.rawConstruct)
+                        .map(caseClass.rawConstruct)
 
                     case other =>
                       Left(AvroError.decodeUnexpectedType(other, "IndexedRecord"))
@@ -237,10 +242,10 @@ package object generic {
     final def derive[A]: Codec[A] =
       macro Magnolia.gen[A]
 
-    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[AnyRef, A] = {
+    final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[Any, A] = {
       val typeName = sealedTrait.typeName.full
       Codec
-        .instance[AnyRef, A](
+        .instance[Any, A](
           AvroError
             .catchNonFatal(
               Right(
