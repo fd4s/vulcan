@@ -18,8 +18,15 @@ import cats.data.Chain
 import cats.free.FreeApplicative
 
 package object generic {
+  transparent inline def derive[A](using m: Mirror.Of[A]) = inline m match {
+    case mp: Mirror.ProductOf[A] => deriveProduct[A](using mp)
+    case ms: Mirror.SumOf[A] => deriveCoproduct[A](using ms)
+  }
 
-  inline def deriveCoproduct[A](using Mirror.SumOf[A]): Codec[A] =
+  inline def deriveProduct[A](using m: Mirror.ProductOf[A]): Codec.Aux[GenericRecord, A] = 
+    Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => deriveFields[A].map(fields => m.fromProduct(toTuple(fields))))
+
+  inline def deriveCoproduct[A](using Mirror.SumOf[A]): Codec.Aux[Any, A] =
     Codec.union(_ => Chain.fromSeq(summonAlts[A]))
 
   private inline def summonAlts[A](using m: Mirror.SumOf[A]): List[Codec.Alt[A]] =
@@ -46,21 +53,16 @@ package object generic {
       }
   }
 
-  private inline def deriveFields[A <: Product](using m: Mirror.ProductOf[A]): FreeApplicative[Codec.Field[A, *], List[_]] =
+  private inline def deriveFields[A](using m: Mirror.ProductOf[A]): FreeApplicative[Codec.Field[A, *], List[_]] =
     val l = Labelling[A]
     summonAll[m.MirroredElemTypes].zipWithIndex.traverse { 
-      case (codec, i) => Codec.FieldBuilder.instance[A].apply[Any](l.elemLabels(i), _.productElement(i))(using codec.asInstanceOf[Codec[Any]])
+      case (codec, i) => Codec.FieldBuilder.instance[A].apply[Any](l.elemLabels(i), _.asInstanceOf[Product].productElement(i))(using codec.asInstanceOf[Codec[Any]])
     }
 
   private def toTuple(l: List[_]): Tuple = l match {
     case Nil => EmptyTuple
     case t :: ts => t *: toTuple(ts)
   }
-
-    
-  inline def deriveProduct[A <: Product](using m: Mirror.ProductOf[A]): Codec[A] = 
-    Codec.record("foo", "bar")(_ => deriveFields[A].map(fields => m.fromProduct(toTuple(fields))))
-
 
   /**
     * Returns an enum `Codec` for type `A`, deriving details
