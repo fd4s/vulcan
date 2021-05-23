@@ -6,13 +6,37 @@
 
 package vulcan
 
+import cats.syntax.all._
+import vulcan.internal.converters.collection._
 import org.apache.avro.generic._
 import org.apache.avro.Schema
 import shapeless3.deriving._
 import scala.compiletime._
+import scala.deriving.Mirror
 import scala.reflect.ClassTag
+import cats.data.Chain
 
 package object generic {
+
+  inline def deriveCoproduct[A](using m: Mirror.SumOf[A]): Codec[A] =
+    Codec.union(_ => Chain.fromSeq(summonAlts[A]))
+
+  private inline def summonAll[T <: Tuple]: List[Codec[_]] =
+    inline erasedValue[T] match
+      case _: EmptyTuple => Nil
+      case _: (t *: ts) => summonInline[Codec[t]] :: summonAll[ts]
+
+  private inline def derivePrisms[A, T <: Tuple](i: Int)(using m: Mirror.SumOf[A]): List[Prism[A, A]] =
+    inline erasedValue[T] match {
+      case _: EmptyTuple => Nil
+      case _: (t *: ts) => Prism.instance[A, A](a => if (m.ordinal(a) == i) Some(a) else None)(identity) :: derivePrisms[A, ts](i + 1)
+    }
+
+  private inline def summonAlts[A](using m: Mirror.SumOf[A]): List[Codec.Alt[A]] =
+    summonAll[m.MirroredElemTypes].zip(derivePrisms[A, m.MirroredElemTypes](0)).map { 
+      (codec, prism) => Codec.Alt[A, A](codec.asInstanceOf, prism)
+    }
+
 
   /**
     * Returns an enum `Codec` for type `A`, deriving details
