@@ -15,11 +15,17 @@ import scala.compiletime._
 import scala.deriving.Mirror
 import scala.reflect.ClassTag
 import cats.data.Chain
+import cats.free.FreeApplicative
 
 package object generic {
 
-  inline def deriveCoproduct[A](using m: Mirror.SumOf[A]): Codec[A] =
+  inline def deriveCoproduct[A](using Mirror.SumOf[A]): Codec[A] =
     Codec.union(_ => Chain.fromSeq(summonAlts[A]))
+
+  private inline def summonAlts[A](using m: Mirror.SumOf[A]): List[Codec.Alt[A]] =
+    summonAll[m.MirroredElemTypes].zip(derivePrisms[A, m.MirroredElemTypes](0)).map { 
+      (codec, prism) => Codec.Alt[A, A](codec.asInstanceOf, prism)
+    }
 
   private inline def summonAll[T <: Tuple]: List[Codec[_]] =
     inline erasedValue[T] match
@@ -32,10 +38,28 @@ package object generic {
       case _: (t *: ts) => Prism.instance[A, A](a => if (m.ordinal(a) == i) Some(a) else None)(identity) :: derivePrisms[A, ts](i + 1)
     }
 
-  private inline def summonAlts[A](using m: Mirror.SumOf[A]): List[Codec.Alt[A]] =
-    summonAll[m.MirroredElemTypes].zip(derivePrisms[A, m.MirroredElemTypes](0)).map { 
-      (codec, prism) => Codec.Alt[A, A](codec.asInstanceOf, prism)
+  private inline def valueAt[A](n: Int): Any = erasedValue[A] match {
+    case _: (a *: as) =>
+      n match {
+        case 0 => constValue[a]
+        case _ => valueAt[as](n-1)
+      }
+  }
+
+  private inline def deriveFields[A <: Product](using m: Mirror.ProductOf[A]): FreeApplicative[Codec.Field[A, *], List[_]] =
+    val l = Labelling[A]
+    summonAll[m.MirroredElemTypes].zipWithIndex.traverse { 
+      case (codec, i) => Codec.FieldBuilder.instance[A].apply[Any](l.elemLabels(i), _.productElement(i))(using codec.asInstanceOf[Codec[Any]])
     }
+
+  private def toTuple(l: List[_]): Tuple = l match {
+    case Nil => EmptyTuple
+    case t :: ts => t *: toTuple(ts)
+  }
+
+    
+  inline def deriveProduct[A <: Product](using m: Mirror.ProductOf[A]): Codec[A] = 
+    Codec.record("foo", "bar")(_ => deriveFields[A].map(fields => m.fromProduct(toTuple(fields))))
 
 
   /**
