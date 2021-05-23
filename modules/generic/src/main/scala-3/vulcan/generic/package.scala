@@ -30,42 +30,7 @@ package object generic {
   }
 
   inline def deriveProduct[A](using m: Mirror.ProductOf[A]): Codec.Aux[GenericRecord, A] = 
-    Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => deriveFields[A].map(fields => m.fromProduct(toTuple(fields))))
-
-  inline def deriveCoproduct[A](using Mirror.SumOf[A]): Codec.Aux[Any, A] =
-    Codec.union(_ => Chain.fromSeq(summonAlts[A]))
-
-  private inline def summonAlts[A](using m: Mirror.SumOf[A]): List[Codec.Alt[A]] =
-    summonAll[m.MirroredElemTypes].zip(derivePrisms[A, m.MirroredElemTypes](0)).map { 
-      (codec, prism) => Codec.Alt[A, A](codec.asInstanceOf, prism)
-    }
-
-  private inline def summonAll[T <: Tuple]: List[Codec[_]] =
-    inline erasedValue[T] match
-      case _: EmptyTuple => Nil
-      case _: (t *: ts) => summonOrDerive[t] :: summonAll[ts]
-
-  private inline def summonOrDerive[A]: Codec[A] = summonFrom {
-    case c: Codec[A] => c
-    case m: Mirror.Of[A] => derive[A](using m)
-    case ct: ClassTag[A] =>
-      given ct0: ClassTag[A] = ct
-      Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => FreeApplicative.pure(summonInline[ValueOf[A]].value))
-  }
-
-  private inline def derivePrisms[A, T <: Tuple](i: Int)(using m: Mirror.SumOf[A]): List[Prism[A, A]] =
-    inline erasedValue[T] match {
-      case _: EmptyTuple => Nil
-      case _: (t *: ts) => Prism.instance[A, A](a => if (m.ordinal(a) == i) Some(a) else None)(identity) :: derivePrisms[A, ts](i + 1)
-    }
-
-  private inline def valueAt[A](n: Int): Any = erasedValue[A] match {
-    case _: (a *: as) =>
-      n match {
-        case 0 => constValue[a]
-        case _ => valueAt[as](n-1)
-      }
-  }
+    Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => deriveFields[A].map(fields => m.fromProduct(Tuple.fromArray(fields.toArray))))
 
   private inline def deriveFields[A](using m: Mirror.ProductOf[A]): FreeApplicative[Codec.Field[A, *], List[_]] =
     val l = Labelling[A]
@@ -87,14 +52,36 @@ package object generic {
         )(using codec.asInstanceOf[Codec[Any]])
     }
 
+  inline def deriveCoproduct[A](using Mirror.SumOf[A]): Codec.Aux[Any, A] =
+    Codec.union(_ => Chain.fromSeq(summonAlts[A]))
+
+  private inline def summonAlts[A](using m: Mirror.SumOf[A]): List[Codec.Alt[A]] =
+    summonAll[m.MirroredElemTypes].zip(derivePrisms[A, m.MirroredElemTypes](0)).map { 
+      (codec, prism) => Codec.Alt[A, A](codec.asInstanceOf, prism)
+    }
+
+  private inline def summonAll[T <: Tuple]: List[Codec[_]] =
+    inline erasedValue[T] match
+      case _: EmptyTuple => Nil
+      case _: (t *: ts) => summonOrDerive[t] :: summonAll[ts]
+
+  private inline given summonOrDerive[A]: Codec[A] = summonFrom {
+    case c: Codec[A] => c
+    case m: Mirror.Of[A] => derive[A](using m)
+    case ct: ClassTag[A] =>
+      given ct0: ClassTag[A] = ct
+      Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => FreeApplicative.pure(summonInline[ValueOf[A]].value))
+  }
+
+  private inline def derivePrisms[A, T <: Tuple](i: Int)(using m: Mirror.SumOf[A]): List[Prism[A, A]] =
+    inline erasedValue[T] match {
+      case _: EmptyTuple => Nil
+      case _: (t *: ts) => Prism.instance[A, A](a => if (m.ordinal(a) == i) Some(a) else None)(identity) :: derivePrisms[A, ts](i + 1)
+    }
+
   private inline def summonInlineOpt[A]: Option[A] = summonFrom {
     case a: A => Some(a)
     case _ => None
-  }
-
-  private def toTuple(l: List[_]): Tuple = l match {
-    case Nil => EmptyTuple
-    case t :: ts => t *: toTuple(ts)
   }
 
   /**
