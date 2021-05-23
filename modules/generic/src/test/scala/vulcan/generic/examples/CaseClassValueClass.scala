@@ -7,5 +7,6 @@ final case class CaseClassValueClass(value: Int) extends AnyVal
 
 object CaseClassValueClass {
   implicit val codec: Codec[CaseClassValueClass] =
-    Codec.derive
+    Codec.int.imap(apply)(_.value)
+    //Codec.derive
 }

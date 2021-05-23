@@ -18,6 +18,12 @@ import cats.data.Chain
 import cats.free.FreeApplicative
 
 package object generic {
+  implicit final class CodecOps private[generic] (
+    private val codec: Codec.type
+  ) extends AnyVal {
+    transparent inline def derive[A](using m: Mirror.Of[A]) = generic.derive[A]
+  }
+
   transparent inline def derive[A](using m: Mirror.Of[A]) = inline m match {
     case mp: Mirror.ProductOf[A] => deriveProduct[A](using mp)
     case ms: Mirror.SumOf[A] => deriveCoproduct[A](using ms)
@@ -37,7 +43,15 @@ package object generic {
   private inline def summonAll[T <: Tuple]: List[Codec[_]] =
     inline erasedValue[T] match
       case _: EmptyTuple => Nil
-      case _: (t *: ts) => summonInline[Codec[t]] :: summonAll[ts]
+      case _: (t *: ts) => summonOrDerive[t] :: summonAll[ts]
+
+  private inline def summonOrDerive[A]: Codec[A] = summonFrom {
+    case c: Codec[A] => c
+    case m: Mirror.Of[A] => derive[A](using m)
+    case ct: ClassTag[A] =>
+      given ct0: ClassTag[A] = ct
+      Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => FreeApplicative.pure(summonInline[ValueOf[A]].value))
+  }
 
   private inline def derivePrisms[A, T <: Tuple](i: Int)(using m: Mirror.SumOf[A]): List[Prism[A, A]] =
     inline erasedValue[T] match {
@@ -55,9 +69,28 @@ package object generic {
 
   private inline def deriveFields[A](using m: Mirror.ProductOf[A]): FreeApplicative[Codec.Field[A, *], List[_]] =
     val l = Labelling[A]
+    val nullDefaultBase: Boolean = summonInlineOpt[Annotation[AvroNullDefault, A]].fold(false)(_().enabled)
+    val nullDefaults = Annotations[AvroNullDefault, A].apply()
+    val docs = Annotations[AvroDoc, A].apply()
     summonAll[m.MirroredElemTypes].zipWithIndex.traverse { 
-      case (codec, i) => Codec.FieldBuilder.instance[A].apply[Any](l.elemLabels(i), _.asInstanceOf[Product].productElement(i))(using codec.asInstanceOf[Codec[Any]])
+      case (codec, i) => 
+        Codec.FieldBuilder.instance[A].apply[Any](
+          name = l.elemLabels(i), 
+          access = _.asInstanceOf[Product].productElement(i), 
+          doc = docs.productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
+          default = {
+            val fieldNullDefault: Option[Boolean] = nullDefaults.productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
+            val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
+            if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
+            else None
+          }
+        )(using codec.asInstanceOf[Codec[Any]])
     }
+
+  private inline def summonInlineOpt[A]: Option[A] = summonFrom {
+    case a: A => Some(a)
+    case _ => None
+  }
 
   private def toTuple(l: List[_]): Tuple = l match {
     case Nil => EmptyTuple
@@ -108,7 +141,7 @@ package object generic {
 
 
   private inline def nameOf[A]: String = summonFrom {
-    case ct: ClassTag[A] => ct.runtimeClass.getSimpleName
+    case ct: ClassTag[A] => ct.runtimeClass.getSimpleName.stripSuffix("$")
   }
 
   private inline def namespaceOf[A]: String = summonFrom {

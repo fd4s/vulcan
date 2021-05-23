@@ -27,7 +27,7 @@ lazy val vulcan = project
     console := (core / Compile / console).value,
     Test / console := (core / Test / console).value
   )
-  .aggregate(core, enumeratum, generic, refined)
+  .aggregate(core, generic, refined)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -51,22 +51,22 @@ lazy val core = project
     ),
     testSettings
   )
-
-lazy val enumeratum = project
-  .in(file("modules/enumeratum"))
-  .settings(
-    moduleName := "vulcan-enumeratum",
-    name := moduleName.value,
-    dependencySettings ++ Seq(
-      libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
-    ),
-    scalatestSettings,
-    publishSettings,
-    mimaSettings(),
-    scalaSettings,
-    testSettings
-  )
-  .dependsOn(core, generic)
+//
+//lazy val enumeratum = project
+//  .in(file("modules/enumeratum"))
+//  .settings(
+//    moduleName := "vulcan-enumeratum",
+//    name := moduleName.value,
+//    dependencySettings ++ Seq(
+//      libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
+//    ),
+//    scalatestSettings,
+//    publishSettings,
+//    mimaSettings(),
+//    scalaSettings,
+//    testSettings
+//  )
+//  .dependsOn(core, generic)
 
 lazy val generic = project
   .in(file("modules/generic"))
@@ -129,7 +129,7 @@ lazy val docs = project
     mdocSettings,
     buildInfoSettings
   )
-  .dependsOn(core, enumeratum, generic, refined)
+  .dependsOn(core, generic, refined)
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
@@ -176,7 +176,7 @@ lazy val mdocSettings = Seq(
   mdoc := (Compile / run).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
   crossScalaVersions := Seq(scalaVersion.value),
-  ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(core, enumeratum, generic, refined),
+  ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(core, generic, refined),
   ScalaUnidoc / unidoc / target := (LocalRootProject / baseDirectory).value / "website" / "static" / "api",
   cleanFiles += (ScalaUnidoc / unidoc / target).value,
   docusaurusCreateSite := docusaurusCreateSite
@@ -216,12 +216,12 @@ lazy val buildInfoSettings = Seq(
     BuildInfoKey.map(core / crossScalaVersions) {
       case (k, v) => "core" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(enumeratum / moduleName) {
-      case (k, v) => "enumeratum" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(enumeratum / crossScalaVersions) {
-      case (k, v) => "enumeratum" ++ k.capitalize -> v
-    },
+//    BuildInfoKey.map(enumeratum / moduleName) {
+//      case (k, v) => "enumeratum" ++ k.capitalize -> v
+//    },
+//    BuildInfoKey.map(enumeratum / crossScalaVersions) {
+//      case (k, v) => "enumeratum" ++ k.capitalize -> v
+//    },
     BuildInfoKey.map(generic / moduleName) {
       case (k, v) => "generic" ++ k.capitalize -> v
     },
@@ -303,7 +303,7 @@ lazy val noPublishSettings =
   )
 
 lazy val scalaSettings = Seq(
-  scalaVersion := scala213,
+  scalaVersion := scala3,
   crossScalaVersions := Seq(scala212, scala213),
   scalacOptions ++= {
     val commonScalacOptions =
