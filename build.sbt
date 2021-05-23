@@ -10,6 +10,8 @@ val refinedVersion = "0.9.25"
 
 val shapelessVersion = "2.3.7"
 
+val shapeless3Version = "3.0.0"
+
 val scala212 = "2.12.13"
 
 val scala213 = "2.13.6"
@@ -19,7 +21,7 @@ val scala3 = "3.0.0"
 lazy val vulcan = project
   .in(file("."))
   .settings(
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     noPublishSettings,
     console := (core / Compile / console).value,
@@ -43,7 +45,7 @@ lazy val core = project
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
@@ -60,7 +62,7 @@ lazy val enumeratum = project
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     testSettings
   )
@@ -72,16 +74,23 @@ lazy val generic = project
     moduleName := "vulcan-generic",
     name := moduleName.value,
     dependencySettings ++ Seq(
-      libraryDependencies ++= Seq(
-        "com.propensive" %% "magnolia" % magnoliaVersion,
-        "com.chuusai" %% "shapeless" % shapelessVersion,
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-      )
+      libraryDependencies ++= {
+        if (scalaVersion.value.startsWith("2"))
+          Seq(
+            "com.propensive" %% "magnolia" % magnoliaVersion,
+            "com.chuusai" %% "shapeless" % shapelessVersion,
+            "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+          )
+        else
+          Seq("org.typelevel" %% "shapeless3-deriving" % shapeless3Version)
+      }
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
-    scalaSettings,
+    mimaSettings(excludeScala3 = true), // re-include scala 3 after publishing
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
     testSettings
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -101,7 +110,7 @@ lazy val refined = project
     // incompatible scala-xml dependencies
     munitSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
@@ -265,9 +274,9 @@ lazy val publishSettings =
     )
   )
 
-lazy val mimaSettings = Seq(
+def mimaSettings(excludeScala3: Boolean = false) = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value) {
+    if (publishArtifact.value && !(excludeScala3 && scalaVersion.value.startsWith("3"))) {
       Set(organization.value %% moduleName.value % (ThisBuild / previousStableVersion).value.get)
     } else Set()
   },
@@ -330,7 +339,7 @@ lazy val scalaSettings = Seq(
 
     val scala213ScalacOptions =
       if (scalaVersion.value.startsWith("2.13")) {
-        Seq("-Wconf:msg=Block&src=test/scala/vulcan/generic/.*:silent")
+        Seq("-Wconf:msg=Block&src=test/scala-2/vulcan/generic/.*:silent")
       } else Seq()
 
     val scala3ScalacOptions =

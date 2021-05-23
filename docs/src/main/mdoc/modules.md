@@ -79,7 +79,7 @@ Codec[Day]
 
 ## Generic
 
-The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s using [Magnolia](https://github.com/propensive/magnolia) for records and unions, and reflection for enumerations and fixed types.
+The `@GENERIC_MODULE_NAME@` module provides generic derivation of [`Codec`][codec]s using [Magnolia](https://github.com/propensive/magnolia) for records and unions (currently not supported in Scala 3), and reflection for enumerations and fixed types.
 
 To derive [`Codec`][codec]s for `case class`es or `sealed trait`s, we can use `Codec.derive`. Annotations like `@AvroDoc` and `@AvroNamespace` can be used to customize the documentation and namespace during derivation.
 
