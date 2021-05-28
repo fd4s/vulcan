@@ -31,30 +31,30 @@ package object generic {
   }
 
   inline def deriveProduct[A](using m: Mirror.ProductOf[A]): Codec.Aux[GenericRecord, A] = 
-    Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => deriveFields[A].map(fields => m.fromProduct(Tuple.fromArray(fields.toArray))))
-
-  private inline def deriveFields[A](using m: Mirror.ProductOf[A]): FreeApplicative[Codec.Field[A, *], List[_]] =
-    val l = Labelling[A]
-    val nullDefaultBase: Boolean = summonFrom {
-      case a: Annotation[AvroNullDefault, A] => a.apply().enabled
-      case _ => false
-    }
-    val nullDefaults = Annotations[AvroNullDefault, A].apply()
-    val docs = Annotations[AvroDoc, A].apply()
-    summonAllCodecs[m.MirroredElemTypes].zipWithIndex.traverse { 
-      case (codec, i) => 
-        Codec.FieldBuilder.instance[A].apply[Any](
-          name = l.elemLabels(i), 
-          access = _.asInstanceOf[Product].productElement(i), 
-          doc = docs.productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
-          default = {
-            val fieldNullDefault: Option[Boolean] = nullDefaults.productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
-            val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
-            if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
-            else None
-          }
-        )(using codec.asInstanceOf[Codec[Any]])
-    }
+    Codec.record(nameOf[A], namespaceOf[A], docOf[A]){
+      fb => 
+        val l = Labelling[A]
+        val nullDefaultBase: Boolean = summonFrom {
+          case a: Annotation[AvroNullDefault, A] => a.apply().enabled
+          case _ => false
+        }
+        val nullDefaults = Annotations[AvroNullDefault, A].apply()
+        val docs = Annotations[AvroDoc, A].apply()
+        summonAllCodecs[m.MirroredElemTypes].zipWithIndex.traverse { 
+          case (codec, i) => 
+            fb[Any](
+              name = l.elemLabels(i), 
+              access = _.asInstanceOf[Product].productElement(i), 
+              doc = docs.productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
+              default = {
+                val fieldNullDefault: Option[Boolean] = nullDefaults.productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
+                val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
+                if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
+                else None
+              }
+            )(using codec.asInstanceOf[Codec[Any]])
+        }.map(fields => m.fromProduct(Tuple.fromArray(fields.toArray)))
+      }
   
   inline def deriveCoproduct[A](using m: Mirror.SumOf[A]): Codec.Aux[Any, A] =
     Codec.union { (alt: AltBuilder[A]) =>
