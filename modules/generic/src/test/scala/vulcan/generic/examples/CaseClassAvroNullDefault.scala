@@ -26,6 +26,6 @@ object CaseClassAvroNullDefault {
   implicit val caseClassAvroNamespaceEq: Eq[CaseClassAvroNullDefault] =
     Eq.fromUniversalEquals
 
-  implicit val codec: Codec[CaseClassAvroNullDefault] =
+  implicit def codec: Codec[CaseClassAvroNullDefault] =
     Codec.derive
 }

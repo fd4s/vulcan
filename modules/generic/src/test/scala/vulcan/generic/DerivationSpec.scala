@@ -1,4 +1,4 @@
-package vulcan.generic
+package vulcanTests
 
 import vulcan.generic.examples._
 import vulcan.BaseSpec
@@ -30,7 +30,7 @@ final class DerivationSpec extends BaseSpec with RoundtripHelpers with CodecSpec
         it("should derive name, namespace, doc") {
           assertSchemaIs[FixedAvroDoc] {
             """{"type":"fixed","name":"FixedAvroDoc","namespace":"vulcan.generic.examples","doc":"Some documentation","size":1}"""
-          }
+          }(using FixedAvroDoc.codec)
         }
 
         it("should use namespace annotation") {

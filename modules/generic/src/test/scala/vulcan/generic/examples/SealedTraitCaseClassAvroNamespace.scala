@@ -11,9 +11,17 @@ sealed trait SealedTraitCaseClassAvroNamespace
 final case class FirstInSealedTraitCaseClassAvroNamespace(value: Int)
     extends SealedTraitCaseClassAvroNamespace
 
+object FirstInSealedTraitCaseClassAvroNamespace {
+  implicit val codec: vulcan.Derived[Codec[FirstInSealedTraitCaseClassAvroNamespace]] = vulcan.generic.derive
+}
+
 @AvroNamespace("com.example")
 final case class SecondInSealedTraitCaseClassAvroNamespace(value: String)
     extends SealedTraitCaseClassAvroNamespace
+
+object SecondInSealedTraitCaseClassAvroNamespace {
+  // implicit val codec: Codec[SecondInSealedTraitCaseClassAvroNamespace] = Codec.derive
+}
 
 object SealedTraitCaseClassAvroNamespace {
   implicit val sealedTraitCaseClassAvroNamespaceArbitrary

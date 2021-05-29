@@ -1304,7 +1304,7 @@ object Codec extends CodecCompanionCompat {
     * @group Create
     */
   sealed abstract class FieldBuilder[A] {
-    def apply[B](
+    private[vulcan] def mk[B](
       name: String,
       access: A => B,
       doc: Option[String] = None,
@@ -1312,13 +1312,23 @@ object Codec extends CodecCompanionCompat {
       order: Option[Schema.Field.Order] = None,
       aliases: Seq[String] = Seq.empty,
       props: Props = Props.empty
-    )(implicit codec: Codec[B]): FreeApplicative[Field[A, *], B]
+    )(implicit codec: Codec[B]): Field[A, B]
+
+    final def apply[B](
+          name: String,
+          access: A => B,
+          doc: Option[String] = None,
+          default: Option[B] = None,
+          order: Option[Schema.Field.Order] = None,
+          aliases: Seq[String] = Seq.empty,
+          props: Props = Props.empty
+        )(implicit codec: Codec[B]): FreeApplicative[Field[A, *], B] = FreeApplicative.lift(mk(name, access, doc, default, order, aliases, props))
   }
 
   private[vulcan] object FieldBuilder {
     private[this] final val Instance: FieldBuilder[Any] =
       new FieldBuilder[Any] {
-        override final def apply[B](
+        override final def mk[B](
           name: String,
           access: Any => B,
           doc: Option[String],
@@ -1326,7 +1336,7 @@ object Codec extends CodecCompanionCompat {
           order: Option[Schema.Field.Order],
           aliases: Seq[String],
           props: Props
-        )(implicit codec: Codec[B]): FreeApplicative[Field[Any, *], B] = {
+        )(implicit codec: Codec[B]): Field[Any, B]= {
           val _name = name
           val _access = access
           val _codec = codec
@@ -1336,7 +1346,6 @@ object Codec extends CodecCompanionCompat {
           val _aliases = aliases
           val _props = props
 
-          FreeApplicative.lift {
             new Field[Any, B] {
               override val name: String = _name
               override val access: Any => B = _access
@@ -1346,7 +1355,7 @@ object Codec extends CodecCompanionCompat {
               override val order: Option[Schema.Field.Order] = _order
               override val aliases: Seq[String] = _aliases
               override val props: Props = _props
-            }
+            
           }
         }
 

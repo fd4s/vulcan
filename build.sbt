@@ -81,8 +81,8 @@ lazy val generic = project
             "com.chuusai" %% "shapeless" % shapelessVersion,
             "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
           )
-        else
-          Seq("org.typelevel" %% "shapeless3-deriving" % shapeless3Version)
+        else Seq()
+        //  Seq("org.typelevel" %% "shapeless3-deriving" % shapeless3Version)
       }
     ),
     scalatestSettings,
@@ -303,7 +303,7 @@ lazy val noPublishSettings =
   )
 
 lazy val scalaSettings = Seq(
-  scalaVersion := scala213,
+  scalaVersion := scala3,
   crossScalaVersions := Seq(scala212, scala213),
   scalacOptions ++= {
     val commonScalacOptions =
@@ -346,6 +346,7 @@ lazy val scalaSettings = Seq(
       if (scalaVersion.value.startsWith("3")) {
         Seq(
           "-Ykind-projector"
+          
         )
       } else Seq()
 
@@ -355,6 +356,7 @@ lazy val scalaSettings = Seq(
       scala213ScalacOptions ++
       scala3ScalacOptions
   },
+  Test / scalacOptions += "-source:3.0-migration",
   Compile / console / scalacOptions --= Seq("-Xlint", "-Ywarn-unused"),
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
   Compile / unmanagedSourceDirectories ++= {

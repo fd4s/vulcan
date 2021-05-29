@@ -12,37 +12,42 @@ import vulcan.Codec.{Alt, AltBuilder, Field}
 import org.apache.avro.generic._
 import org.apache.avro.Schema
 import shapeless3.deriving._
+import shapeless3.deriving.K0._
 import scala.compiletime._
 import scala.deriving.Mirror
 import scala.reflect.ClassTag
 import cats.data.Chain
 import cats.free.FreeApplicative
 
-package object generic {
+final case class Derived[+A](value: A)
+
+package object generic extends generic.LowPriority {
   implicit final class CodecOps private[generic] (
     private val codec: Codec.type
   ) extends AnyVal {
-    transparent inline def derive[A](using m: Mirror.Of[A]) = generic.derive[A]
+    transparent inline def derive[A](using inst: Instances[Codec, A]) = generic.derive[A].value
   }
 
-  transparent inline def derive[A](using m: Mirror.Of[A]) = inline m match {
-    case mp: Mirror.ProductOf[A] => deriveProduct[A](using mp)
-    case ms: Mirror.SumOf[A] => deriveCoproduct[A](using ms)
+  transparent inline given derive[A](using inst: Instances[Codec, A]): Derived[Codec[A]] = inline inst match {
+    case i: ProductInstances[Codec, A] => deriveProduct[A](using i, summonInline)
+    case i: CoproductInstances[Codec, A] => deriveCoproduct[A](using i)
+    case v: ValueOf[A] => sgt[A](using v)
   }
 
-  inline def deriveProduct[A](using m: Mirror.ProductOf[A]): Codec.Aux[GenericRecord, A] = 
-    Codec.record(nameOf[A], namespaceOf[A], docOf[A]){
+  inline def deriveProduct[A](using inst: ProductInstances[Codec, A], m: Mirror.ProductOf[A]): Derived[Codec.Aux[GenericRecord, A]] = Derived {
+    val l = summonInline[Labelling[A]]
+    val nullDefaultBase: Boolean = summonFrom {
+      case a: Annotation[AvroNullDefault, A] => a.apply().enabled
+      case _ => false
+    }
+    val nullDefaults = Annotations[AvroNullDefault, A].apply()
+    val docs = Annotations[AvroDoc, A].apply()
+    Codec.record("as", namespaceOf[A], docOf[A]){
       fb => 
-        val l = Labelling[A]
-        val nullDefaultBase: Boolean = summonFrom {
-          case a: Annotation[AvroNullDefault, A] => a.apply().enabled
-          case _ => false
-        }
-        val nullDefaults = Annotations[AvroNullDefault, A].apply()
-        val docs = Annotations[AvroDoc, A].apply()
-        summonAllCodecs[m.MirroredElemTypes].zipWithIndex.traverse { 
-          case (codec, i) => 
-            fb[Any](
+        
+        val fields: List[Field[A, Any]] = (inst.instances.toList.asInstanceOf[List[Codec[Any]]]).zipWithIndex.map { 
+          (codec, i) => 
+            fb.mk(
               name = l.elemLabels(i), 
               access = _.asInstanceOf[Product].productElement(i), 
               doc = docs.productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
@@ -52,31 +57,27 @@ package object generic {
                 if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
                 else None
               }
-            )(using codec.asInstanceOf[Codec[Any]])
-        }.map(fields => m.fromProduct(Tuple.fromArray(fields.toArray)))
+            )(using codec)
+        }
+        val free = fields.traverse(FreeApplicative.lift)
+        
+        free.map(as => m.fromProduct(Tuple.fromArray(as.toArray)))
       }
-  
-  inline def deriveCoproduct[A](using m: Mirror.SumOf[A]): Codec.Aux[Any, A] =
-    Codec.union { (alt: AltBuilder[A]) =>
-      Chain.fromSeq(summonAllCodecs[m.MirroredElemTypes].zipWithIndex).flatMap { 
-        (codec, i) => 
-          val prism: Prism[A, A] = Prism.instance[A, A](a => if (m.ordinal(a) == i) Some(a) else None)(identity)
-          alt[A](using codec.asInstanceOf, prism)
-      }    
     }
 
-  private inline def summonAllCodecs[T <: Tuple]: List[Codec[_]] =
-    inline erasedValue[T] match
-      case _: EmptyTuple => Nil
-      case _: (t *: ts) => summonOrDerive[t] :: summonAllCodecs[ts]
-
-  private inline def summonOrDerive[A]: Codec[A] = summonFrom {
-    case c: Codec[A] => c
-    case m: Mirror.Of[A] => derive[A](using m)
-    case ct: ClassTag[A] =>
-      given ct0: ClassTag[A] = ct
-      Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => FreeApplicative.pure(summonInline[ValueOf[A]].value))
-  }
+  private def dpImpl[A](using Annotations[AvroNullDefault, A], Annotations[AvroDoc, A])(using inst: ProductInstances[Codec, A], m: Mirror.ProductOf[A], l: Labelling[A]) = ???
+  
+  inline def deriveCoproduct[A](using inline inst: CoproductInstances[Codec, A]): Derived[Codec.Aux[Any, A]] =
+    Derived {
+      val m = summonInline[Mirror.SumOf[A]]
+      Codec.union { (alt: AltBuilder[A]) =>
+        Chain.fromSeq(inst.instances.toList.asInstanceOf[List[Codec[Any]]].zipWithIndex).flatMap { 
+          (codec, i) => 
+              val prism: Prism[A, A] = Prism.instance[A, A](a => if (m.ordinal(a) == i) Some(a) else None)(identity)
+              alt[A](using codec.asInstanceOf, prism)
+          }    
+      }    
+    }    
 
   /**
     * Returns an enum `Codec` for type `A`, deriving details
@@ -120,18 +121,32 @@ package object generic {
       doc = docOf[A]
     )
 
+}
 
-  private inline def nameOf[A]: String = summonFrom {
-    case ct: ClassTag[A] => ct.runtimeClass.getSimpleName.stripSuffix("$")
-  }
+package generic {
+  trait LowPriority {
 
-  private inline def namespaceOf[A]: String = summonFrom {
-    case a: Annotation[AvroNamespace, A] => a().namespace
-    case ct: ClassTag[A] => ct.runtimeClass.getPackage.getName
-  }
+    inline given fromDerived[A](using derived: Derived[Codec[A]]): Codec[A] = derived.value
 
-  private inline def docOf[A]: Option[String] = summonFrom {
-    case a: Annotation[AvroDoc, A] => Some(a().doc)
-    case _ => None
+    protected inline def sgt[A](using ValueOf[A]): Derived[Codec[A]] =
+        Derived(Codec.record(nameOf[A], namespaceOf[A], docOf[A])(_ => FreeApplicative.pure(valueOf[A])))
+        
+    protected inline def nameOf[A]: String =
+      summonFrom {
+        case ct: ClassTag[A] => ct.runtimeClass.getSimpleName.stripSuffix("$")
+      }
+
+    protected inline def namespaceOf[A]: String =
+      summonFrom {
+        case a: Annotation[AvroNamespace, A] => a().namespace
+        case ct: ClassTag[A] => ct.runtimeClass.getPackage.getName
+        case _ => ""
+      }
+
+    protected inline def docOf[A]: Option[String] =
+      summonFrom {
+        case a: Annotation[AvroDoc, A] => Some(a().doc)
+        case _ => None
+      }
   }
 }
