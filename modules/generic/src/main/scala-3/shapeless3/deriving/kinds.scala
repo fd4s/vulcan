@@ -103,7 +103,8 @@ object K0 {
     inline def map2(x: T, y: T)(f: [t] => (F[t], t, t) => t): T =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def unfold[Acc](i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
-      inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf
+      inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf 
+    inline def unfold0[Acc](i: Acc)(f: [t] => (Acc, F[t]) => Acc): Acc = ???
     inline def foldLeft[Acc](x: T)(i: Acc)(f: [t] => (Acc, F[t], t) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[Acc](x: T, y: T)(i: Acc)(f: [t] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =

@@ -45,23 +45,27 @@ package object generic extends generic.LowPriority {
 
   private def dpImpl[A](name: String, namespace: String, doc: Option[String], nullDefaultBase: Boolean)(using nullDefaults: Annotations[AvroNullDefault, A], docs: Annotations[AvroDoc, A], inst: ProductInstances[Codec, A], m: Mirror.ProductOf[A], l: Labelling[A]) = 
     Codec.record[A](name, namespace, doc){ fb => 
-      val fields: List[Field[A, Any]] = (inst.instances.toList.asInstanceOf[List[Codec[Any]]]).zipWithIndex.map { 
-        case (codec @ given Codec[Any], i) => 
-          fb.mk(
-            name = l.elemLabels(i), 
-            access = _.asInstanceOf[Product].productElement(i), 
-            doc = docs().productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
-            default = {
-              val fieldNullDefault: Option[Boolean] = nullDefaults().productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
-              val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
-              if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
-              else None
-            }
-          )
-      }
-      val free: FreeApplicative[Field[A, *], List[Any]] = fields.traverse(FreeApplicative.lift)
+      val fields: Chain[Field[A, Any]] = 
+      inst.unfold0[(Int, Chain[Field[A, _]])](0, Chain.empty) { [t] => // (inst.instances.toList.asInstanceOf[List[Codec[Any]]]).zipWithIndex.map { 
+        (acc: (Int, Chain[Field[A, _]]), codec: Codec[t]) =>
+          val i = acc._1
+          (i + 1, acc._2.append {
+            fb.mk[t](
+              name = l.elemLabels(i), 
+              access = _.asInstanceOf[Product].productElement(i).asInstanceOf, 
+              doc = docs().productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
+              default = {
+                val fieldNullDefault: Option[Boolean] = nullDefaults().productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
+                val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
+                if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
+                else None
+              }
+            )(using codec)
+        })
+      }._2.asInstanceOf[Chain[Field[A, Any]]]
+      val free: FreeApplicative[Field[A, *], Chain[Any]] = fields.traverse(FreeApplicative.lift)
       free.map{ as => 
-          m.fromProduct(Tuple.fromArray(as.toArray))
+          m.fromProduct(Tuple.fromArray(as.toList.toArray))
         }
     }
   
