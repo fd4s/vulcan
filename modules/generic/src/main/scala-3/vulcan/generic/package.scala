@@ -59,8 +59,8 @@ package object generic extends generic.LowPriority {
             }
           )
       }
-      fields.traverse(FreeApplicative.lift)
-        .map{ as => 
+      val free: FreeApplicative[Field[A, *], List[Any]] = fields.traverse(FreeApplicative.lift)
+      free.map{ as => 
           m.fromProduct(Tuple.fromArray(as.toArray))
         }
     }
