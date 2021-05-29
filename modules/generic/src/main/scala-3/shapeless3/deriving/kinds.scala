@@ -76,7 +76,7 @@ object K0 {
   extension [T](gen: CoproductGeneric[T])
     inline def toRepr(o: T): Union[gen.MirroredElemTypes] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes]): T = r.asInstanceOf
-    inline def select[t](o: T): Option[T] = gen.ordinal(o) match {
+    inline def select[t](o: T): Option[t] = gen.ordinal(o.asInstanceOf) match {
       case _: IndexOf[t, gen.MirroredElemTypes] => Some(o.asInstanceOf)
       case _ => None
     }

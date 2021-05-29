@@ -29,12 +29,13 @@ package object generic extends generic.LowPriority {
   }
 
   transparent inline given derive[A](using inst: Instances[Codec, A]): Derived[Codec[A]] = inline inst match {
-    case i: ProductInstances[Codec, A] => deriveProduct[A](using i, summonInline)
-    case i: CoproductInstances[Codec, A] => deriveCoproduct[A](using i)
-    case v: ValueOf[A] => sgt[A](using v)
+    case given ProductInstances[Codec, A] => deriveProduct
+    case given CoproductInstances[Codec, A] => deriveCoproduct
+    case given ValueOf[A] => sgt
   }
 
-  inline def deriveProduct[A](using inst: ProductInstances[Codec, A], m: Mirror.ProductOf[A]): Derived[Codec.Aux[GenericRecord, A]] = Derived {
+  inline def deriveProduct[A](using inst: ProductInstances[Codec, A]): Derived[Codec.Aux[GenericRecord, A]] = Derived {
+    given Mirror.ProductOf[A] = summonInline
     val nullDefaultBase: Boolean = summonFrom {
       case a: Annotation[AvroNullDefault, A] => a.apply().enabled
       case _ => false
@@ -45,42 +46,36 @@ package object generic extends generic.LowPriority {
   private def dpImpl[A](name: String, namespace: String, doc: Option[String], nullDefaultBase: Boolean)(using nullDefaults: Annotations[AvroNullDefault, A], docs: Annotations[AvroDoc, A], inst: ProductInstances[Codec, A], m: Mirror.ProductOf[A], l: Labelling[A]) = 
     Codec.record[A](name, namespace, doc){ fb => 
       val fields: List[Field[A, Any]] = (inst.instances.toList.asInstanceOf[List[Codec[Any]]]).zipWithIndex.map { 
-      (codec, i) => 
-        fb.mk(
-          name = l.elemLabels(i), 
-          access = _.asInstanceOf[Product].productElement(i), 
-          doc = docs().productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
-          default = {
-            val fieldNullDefault: Option[Boolean] = nullDefaults().productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
-            val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
-            if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
-            else None
-          }
-        )(using codec)
+        case (codec @ given Codec[Any], i) => 
+          fb.mk(
+            name = l.elemLabels(i), 
+            access = _.asInstanceOf[Product].productElement(i), 
+            doc = docs().productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
+            default = {
+              val fieldNullDefault: Option[Boolean] = nullDefaults().productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
+              val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
+              if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
+              else None
+            }
+          )
       }
-      val free = fields.traverse(FreeApplicative.lift)
-      free.map{ as => 
-        m.fromProduct(Tuple.fromArray(as.toArray))
-      }
+      fields.traverse(FreeApplicative.lift)
+        .map{ as => 
+          m.fromProduct(Tuple.fromArray(as.toArray))
+        }
     }
   
   inline def deriveCoproduct[A](using inline inst: CoproductInstances[Codec, A]): Derived[Codec.Aux[Any, A]] =
     Derived {
-      val m = summonInline[Mirror.SumOf[A]]
+      val gen: CoproductGeneric[A] = summonInline
       Codec.union { (alt: AltBuilder[A]) =>
-        inst.unfold0(Chain.empty[Alt[A]]) { [t <: A] => (acc: Chain[Alt[A]], codec: Codec[t]) =>
-          acc ++ {
-            val prism = Prism.instance[A, t]( (a: A) =>
-              m.ordinal(a) match {
-                case _: IndexOf[t, m.MirroredElemTypes] => Some(a.asInstanceOf)
-                case _ => None
-              }
-            )(identity)
-            alt[t](using codec, prism)
-          }    
-      }    
-    }
-  }    
+        inst.unfold0(Chain.empty[Alt[A]]) { 
+          [t <: A] => 
+            (acc: Chain[Alt[A]], codec: Codec[t]) =>
+              acc ++ alt[t](using codec, Prism.instance(gen.select[t](_))(identity))
+        }    
+      }
+    }    
 
   /**
     * Returns an enum `Codec` for type `A`, deriving details
