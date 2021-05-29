@@ -76,6 +76,10 @@ object K0 {
   extension [T](gen: CoproductGeneric[T])
     inline def toRepr(o: T): Union[gen.MirroredElemTypes] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes]): T = r.asInstanceOf
+    inline def select[t](o: T): Option[T] = gen.ordinal(o) match {
+      case _: IndexOf[t, gen.MirroredElemTypes] => Some(o.asInstanceOf)
+      case _ => None
+    }
 
   extension [F[_], T](gen: Generic[T])
     inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
@@ -117,6 +121,7 @@ object K0 {
     @deprecated("use inject", "3.0.2")
     inline def project[Acc](p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedProject(p)(i)(f.asInstanceOf).asInstanceOf
+    inline def unfold0[Acc](i: Acc)(f: [t <: T] => (Acc, F[t]) => Acc): Acc = ???
     inline def fold[R](x: T)(f: [t <: T] => (F[t], t) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
     inline def fold2[R](x: T, y: T)(a: => R)(f: [t <: T] => (F[t], t, t) => R): R =
