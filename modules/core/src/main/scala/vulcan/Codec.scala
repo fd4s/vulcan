@@ -914,7 +914,7 @@ object Codec extends CodecCompanionCompat {
         schema,
         a =>
           schema.flatMap { schema =>
-            val fields =
+            val fields: Either[AvroError, Chain[(String, Any)]] =
               free.analyze {
                 new (Field[A, *] ~> λ[a => Either[AvroError, Chain[(String, Any)]]]) {
                   def apply[B](field: Field[A, B]) =

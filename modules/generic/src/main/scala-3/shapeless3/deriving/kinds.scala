@@ -56,7 +56,7 @@ object K0 {
 
   type LiftP[F[_], T] <: Tuple =
     T match {
-      case h *: t => F[h] *: LiftP[F, t]
+      case _ *: _ => F[Head[T]] *: LiftP[F, Tail[T]]
       case _ => EmptyTuple
     }
 
@@ -98,13 +98,16 @@ object K0 {
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
   extension [F[_], T](inst: ProductInstances[F, T])
+    inline def generic: ProductGeneric[T] = 
+      inst.mirror.asInstanceOf
     inline def construct(f: [t] => F[t] => t): T =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
     inline def map2(x: T, y: T)(f: [t] => (F[t], t, t) => t): T =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def unfold[Acc](i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf 
-    inline def unfold0[Acc](i: Acc)(f: [t] => (Acc, F[t]) => Acc): Acc = ???
+    inline def unfold0[Acc](i: Acc)(f: [t] => (Acc, F[t]) => Acc): Acc =
+      inst.erasedUnfold0(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[Acc](x: T)(i: Acc)(f: [t] => (Acc, F[t], t) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[Acc](x: T, y: T)(i: Acc)(f: [t] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =

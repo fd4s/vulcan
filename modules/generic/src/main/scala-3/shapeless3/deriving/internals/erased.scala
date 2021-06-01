@@ -31,8 +31,10 @@ private[shapeless3] abstract class ErasedInstances[K, FT] {
 }
 
 private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, FT] {
+  val mirror: Mirror.Product
   def erasedConstruct(f: Any => Any): Any
   def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any])
+  def erasedUnfold0(a: Any)(f: (Any, Any) => Any): Any
   def erasedMap(x0: Any)(f: (Any, Any) => Any): Any
   def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any
   def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any
@@ -57,6 +59,9 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
       case None => (acc0, None)
     }
   }
+
+  final def erasedUnfold0(a: Any)(f: (Any, Any) => Any): Any =
+    f(a, i)
 
   final def erasedMap(x0: Any)(f: (Any, Any) => Any): Any =
     mirror.fromProduct(Tuple1(f(i, toProduct(x0).productElement(0))))
@@ -139,6 +144,20 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
         i = i+1
       }
       (acc, Some(mirror.fromProduct(new ArrayProduct(arr))))
+    }
+  }
+
+  final def erasedUnfold0(a: Any)(f: (Any, Any) => Any): Any = {
+    val n = is.length
+    if (n == 0) a
+    else {
+      var acc = a
+      var i = 0
+      while(i < n) {
+        acc = f(acc, is(i))
+        i = i+1
+      }
+      acc
     }
   }
 

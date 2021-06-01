@@ -21,11 +21,11 @@ import cats.free.FreeApplicative
 
 final case class Derived[+A](value: A)
 
-package object generic extends generic.LowPriority {
+package object generic extends vulcan.generic.LowPriority {
   implicit final class CodecOps private[generic] (
     private val codec: Codec.type
   ) extends AnyVal {
-    transparent inline def derive[A](using inst: Instances[Codec, A]) = generic.derive[A].value
+    transparent inline def derive[A](using inst: Instances[Codec, A]) = vulcan.generic.derive[A].value
   }
 
   transparent inline given derive[A](using inst: Instances[Codec, A]): Derived[Codec[A]] = inline inst match {
@@ -35,7 +35,8 @@ package object generic extends generic.LowPriority {
   }
 
   inline def deriveProduct[A](using inst: ProductInstances[Codec, A]): Derived[Codec.Aux[GenericRecord, A]] = Derived {
-    given Mirror.ProductOf[A] = summonInline
+    given ProductGeneric[A] = inst.generic
+    given Labelling[A] = summonInline
     val nullDefaultBase: Boolean = summonFrom {
       case a: Annotation[AvroNullDefault, A] => a.apply().enabled
       case _ => false
@@ -43,30 +44,104 @@ package object generic extends generic.LowPriority {
     dpImpl(nameOf[A], namespaceOf[A], docOf[A], nullDefaultBase)
   }
 
-  private def dpImpl[A](name: String, namespace: String, doc: Option[String], nullDefaultBase: Boolean)(using nullDefaults: Annotations[AvroNullDefault, A], docs: Annotations[AvroDoc, A], inst: ProductInstances[Codec, A], m: Mirror.ProductOf[A], l: Labelling[A]) = 
+  private def dpImpl[A](name: String, namespace: String, doc: Option[String], nullDefaultBase: Boolean)(using nullDefaults: Annotations[AvroNullDefault, A], docs: Annotations[AvroDoc, A], inst: ProductInstances[Codec, A], l: Labelling[A]) = {
+    // val schema = AvroError.catchNonFatal {
+    //   type Acc = (Either[AvroError, Chain[Schema.Field]], List[String], List[Option[AvroNullDefault]], List[Option[AvroDoc]])
+    //   val stuff = l
+    //   inst.unfold0[Acc](Right(Chain.empty), l.elemLabels.toList, nullDefaults().toList.asInstanceOf, docs().toList.asInstanceOf) { [t] =>
+    //     (acc: Acc, codec: Codec[t]) =>
+    //       val newFields = (acc._1, codec.schema).mapN { (fields, schema) =>
+    //         fields.append {
+    //           new Schema.Field(
+    //             acc._2.head,
+    //             schema,
+    //             acc._4.doc.orNull,
+    //             default = {
+    //               val fieldNullDefault: Option[Boolean] = acc._3.head.map(_.enabled)
+    //               val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
+    //               if (wantNullDefault && schema.isNullable) codec.decode(null, schema).toOption
+    //               else None
+    //             }
+    //           )
+    //         }
+    //       }
+    //       (newFields, acc._1.tail, acc._2.tail, acc._3.tail)
+    //   }._1.map { 
+    //     fields => 
+    //       Schema.createRecord(
+    //         name,
+    //         doc.orNull,
+    //         namespace,
+    //         false,
+    //         fields.toList.asJava
+    //       )
+    //   }
+    //   Codec
+    //     .instanceForTypes[GenericRecord, A](
+    //       "IndexedRecord",
+    //       "srta",
+    //       schema,
+    //       a =>
+    //         schema.flatMap { schema =>
+    //           type Acc = (Either[AvroError, Chain[(String, Any)]], List[String])
+    //           val fields: Either[AvroError, Chain[(String, Any)]] =
+    //             inst.foldLeft[Acc]((Right(Chain.empty), l.elemlabels.toList)) {
+    //               [t] => (acc: Acc, codec: Codec[t], field: t) =>
+    //                 (acc._1.flatMap { fds => 
+    //                   codec.encode(t).map(result => (acc._2.head, result))
+    //                 }, acc._2.tail)
+    //               }
+
+    //           fields.map { values =>
+    //             val record = new GenericData.Record(schema)
+    //             values.foldLeft(()) {
+    //               case ((), (name, value)) => record.put(name, value)
+    //             }
+    //             record
+    //           }
+    //         }, {
+    //         case (record: IndexedRecord, _) =>
+    //           inst.
+    //           free.foldMap {
+    //             new (Field[A, *] ~> Either[AvroError, *]) {
+    //               def apply[B](field: Field[A, B]): Either[AvroError, B] =
+    //                 (field.name +: field.aliases.toList)
+    //                   .collectFirstSome { name =>
+    //                     Option(record.getSchema.getField(name))
+    //                   }
+    //                   .fold(field.default.toRight(AvroError.decodeMissingRecordField(field.name))) {
+    //                     schemaField =>
+    //                       field.codec.decode(record.get(schemaField.pos), schemaField.schema)
+    //                   }
+    //             }
+    //           }
+    //       }
+    //     )
+    // }
     Codec.record[A](name, namespace, doc){ fb => 
-      val fields: Chain[Field[A, Any]] = 
-      inst.unfold0[(Int, Chain[Field[A, _]])](0, Chain.empty) { [t] => // (inst.instances.toList.asInstanceOf[List[Codec[Any]]]).zipWithIndex.map { 
-        (acc: (Int, Chain[Field[A, _]]), codec: Codec[t]) =>
-          val i = acc._1
-          (i + 1, acc._2.append {
-            fb.mk[t](
-              name = l.elemLabels(i), 
-              access = _.asInstanceOf[Product].productElement(i).asInstanceOf, 
-              doc = docs().productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
-              default = {
-                val fieldNullDefault: Option[Boolean] = nullDefaults().productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
-                val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
-                if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
-                else None
-              }
-            )(using codec)
-        })
-      }._2.asInstanceOf[Chain[Field[A, Any]]]
-      val free: FreeApplicative[Field[A, *], Chain[Any]] = fields.traverse(FreeApplicative.lift)
-      free.map{ as => 
-          m.fromProduct(Tuple.fromArray(as.toList.toArray))
-        }
+        val fields: Chain[Field[A, Any]] = 
+        inst.unfold0[(Int, Chain[Field[A, _]])](0, Chain.empty) { [t] => // (inst.instances.toList.asInstanceOf[List[Codec[Any]]]).zipWithIndex.map { 
+          (acc: (Int, Chain[Field[A, _]]), codec: Codec[t]) =>
+            val i = acc._1
+            (i + 1, acc._2.append {
+              fb.mk[t](
+                name = l.elemLabels(i), 
+                access = _.asInstanceOf[Product].productElement(i).asInstanceOf, 
+                doc = docs().productElement(i).asInstanceOf[Option[AvroDoc]].map(_.doc),
+                default = {
+                  val fieldNullDefault: Option[Boolean] = nullDefaults().productElement(i).asInstanceOf[Option[AvroNullDefault]].map(_.enabled)
+                  val wantNullDefault: Boolean = fieldNullDefault.getOrElse(nullDefaultBase)
+                  if (wantNullDefault && codec.schema.exists(_.isNullable)) codec.schema.flatMap(codec.decode(null, _)).toOption
+                  else None
+                }
+              )(using codec)
+          })
+        }._2.asInstanceOf[Chain[Field[A, Any]]]
+        val free: FreeApplicative[Field[A, *], Chain[Any]] = fields.traverse(FreeApplicative.lift)
+        free.map{ as => 
+            inst.generic.fromRepr(Tuple.fromArray(as.toList.toArray).asInstanceOf)
+          }
+      }
     }
   
   inline def deriveCoproduct[A](using inline inst: CoproductInstances[Codec, A]): Derived[Codec.Aux[Any, A]] =
