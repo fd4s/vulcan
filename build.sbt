@@ -137,7 +137,7 @@ lazy val dependencySettings = Seq(
     if (scalaVersion.value.startsWith("3")) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.0").cross(CrossVersion.full))
       )
   },
