@@ -1,7 +1,7 @@
 package vulcan.generic.examples
 
 import vulcan.Codec
-import vulcan.generic._
+import vulcan.generic.{AvroDoc, deriveEnum}
 
 @AvroDoc("documentation")
 final case class CaseClassEnumAvroDoc(value: Option[String])

@@ -1,7 +1,8 @@
-package vulcan.generic
+package vulcanTests
 
 import vulcan.{BaseSpec, Codec}
 import vulcan.generic.examples.CaseClassAvroNullDefault
+import vulcan.generic.{derive => _, fromDerived => _, _}
 
 final class AvroNullDefaultSpec extends BaseSpec {
   describe("AvroNullDefault") {
