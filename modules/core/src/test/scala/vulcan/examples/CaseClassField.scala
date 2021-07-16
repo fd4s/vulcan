@@ -9,7 +9,7 @@ final case class CaseClassField(value: Int)
 
 object CaseClassField {
   implicit val codec: Codec[CaseClassField] =
-    Codec.record("CaseClassField") { field =>
+    Codec.record("CaseClassField", "") { field =>
       field("value", _.value).map(CaseClassField(_))
     }
 

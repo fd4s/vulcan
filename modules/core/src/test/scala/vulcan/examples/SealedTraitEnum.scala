@@ -6,7 +6,7 @@ import vulcan.{AvroError, Codec, Props}
 
 sealed trait SealedTraitEnum
 
-final object SealedTraitEnum {
+object SealedTraitEnum {
   implicit final val arbitrary: Arbitrary[SealedTraitEnum] =
     Arbitrary(Gen.oneOf(FirstInSealedTraitEnum, SecondInSealedTraitEnum))
 
@@ -14,9 +14,9 @@ final object SealedTraitEnum {
     Eq.fromUniversalEquals
 
   implicit final val codec: Codec[SealedTraitEnum] =
-    Codec.enum(
+    Codec.enumeration(
       name = "SealedTraitEnum",
-      namespace = Some("vulcan.examples"),
+      namespace = "vulcan.examples",
       symbols = List("first", "second"),
       aliases = List("first", "second"),
       doc = Some("documentation"),
@@ -34,6 +34,6 @@ final object SealedTraitEnum {
     )
 }
 
-final case object FirstInSealedTraitEnum extends SealedTraitEnum
+case object FirstInSealedTraitEnum extends SealedTraitEnum
 
-final case object SecondInSealedTraitEnum extends SealedTraitEnum
+case object SecondInSealedTraitEnum extends SealedTraitEnum

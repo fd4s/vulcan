@@ -5,7 +5,8 @@ import enumeratum.VulcanEnumSpec.Suit
 import org.scalacheck.Gen
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import vulcan._
+import vulcan.Codec
+import vulcan.generic.{AvroDoc, AvroNamespace}
 
 final class VulcanEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("VulcanEnum") {
@@ -30,7 +31,7 @@ final class VulcanEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with
       val roundtrip = Codec.encode[Suit](Suit.Clubs).flatMap(Codec.decode[Suit])
       assert {
         roundtrip.swap.value.message ===
-          "clubs is not a member of Suit (clubs, diamonds, hearts, spades)"
+          "Error decoding com.example.Suit: clubs is not a member of Suit (clubs, diamonds, hearts, spades)"
       }
     }
   }

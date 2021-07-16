@@ -28,35 +28,24 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
     Arbitrary {
       schemaGen.flatMap { schema =>
         charsetGen.map { charset =>
-          Codec.instance(
-            schema,
-            (s, schema) => {
-              if (schema.getType() == Schema.Type.STRING)
-                Right(s.getBytes(charset))
-              else
-                Left {
-                  AvroError
-                    .encodeUnexpectedSchemaType(
-                      "String",
-                      schema.getType(),
-                      Schema.Type.STRING
-                    )
-                }
-            },
-            (value, schema) => {
-              if (schema.getType() == Schema.Type.STRING)
-                Right(new String(value.asInstanceOf[Array[Byte]], charset))
-              else
-                Left {
-                  AvroError
-                    .decodeUnexpectedSchemaType(
-                      "String",
-                      schema.getType(),
-                      Schema.Type.STRING
-                    )
-                }
-            }
-          )
+          Codec
+            .instance[Any, String](
+              schema,
+              s => Right(s.getBytes(charset)),
+              (value, schema) => {
+                if (schema.getType() == Schema.Type.STRING)
+                  Right(new String(value.asInstanceOf[Array[Byte]], charset))
+                else
+                  Left {
+                    AvroError
+                      .decodeUnexpectedSchemaType(
+                        schema.getType(),
+                        Schema.Type.STRING
+                      )
+                  }
+              }
+            )
+            .withTypeName("String")
         }
       }
     }
@@ -65,8 +54,8 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
     Eq.instance { (c1, c2) =>
       Try {
         forAll { (s: String) =>
-          val e1 = c1.schema.flatMap(c1.encode(s, _))
-          val e2 = c2.schema.flatMap(c2.encode(s, _))
+          val e1 = c1.encode(s)
+          val e2 = c2.encode(s)
 
           assert(e1.isRight == e2.isRight)
           if (e1.isRight && e2.isRight) {

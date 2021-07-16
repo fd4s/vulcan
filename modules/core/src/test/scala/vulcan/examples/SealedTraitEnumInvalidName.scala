@@ -6,14 +6,15 @@ sealed trait `-SealedTraitEnumInvalidName`
 
 object `-SealedTraitEnumInvalidName` {
   implicit val codec: Codec[`-SealedTraitEnumInvalidName`] =
-    Codec.enum(
+    Codec.enumeration(
       "-SealedTraitEnumInvalidName",
       symbols = Seq("value"),
       encode = _ => "value",
-      decode = _ => Left(AvroError("error"))
+      decode = _ => Left(AvroError("error")),
+      namespace = ""
     )
 }
 
-final case object FirstInSealedTraitEnumInvalidName extends `-SealedTraitEnumInvalidName`
+case object FirstInSealedTraitEnumInvalidName extends `-SealedTraitEnumInvalidName`
 
-final case object SecondInSealedTraitEnumInvalidName extends `-SealedTraitEnumInvalidName`
+case object SecondInSealedTraitEnumInvalidName extends `-SealedTraitEnumInvalidName`

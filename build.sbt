@@ -1,29 +1,31 @@
-import ReleaseTransformations._
+val avroVersion = "1.10.2"
 
-val avroVersion = "1.9.1"
+val catsVersion = "2.6.1"
 
-val catsVersion = "2.0.0"
+val enumeratumVersion = "1.7.0"
 
-val enumeratumVersion = "1.5.13"
+val magnoliaVersion = "0.17.0"
 
-val magnoliaVersion = "0.12.0"
+val refinedVersion = "0.9.26"
 
-val refinedVersion = "0.9.10"
+val shapelessVersion = "2.3.7"
 
-val shapelessVersion = "2.3.3"
+val shapeless3Version = "3.0.1"
 
-val scala212 = "2.12.10"
+val scala212 = "2.12.14"
 
 val scala213 = "2.13.6"
+
+val scala3 = "3.0.1"
 
 lazy val vulcan = project
   .in(file("."))
   .settings(
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     noPublishSettings,
-    console := (console in (core, Compile)).value,
-    console in Test := (console in (core, Test)).value
+    console := (core / Compile / console).value,
+    Test / console := (core / Test / console).value
   )
   .aggregate(core, enumeratum, generic, refined)
 
@@ -32,10 +34,21 @@ lazy val core = project
   .settings(
     moduleName := "vulcan",
     name := moduleName.value,
-    dependencySettings,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "org.apache.avro" % "avro" % avroVersion,
+        "org.typelevel" %% "cats-free" % catsVersion
+      ) ++ {
+        if (scalaVersion.value.startsWith("3")) Nil
+        else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+      }
+    ),
+    scalatestSettings,
     publishSettings,
-    mimaSettings,
-    scalaSettings,
+    mimaSettings(),
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
     testSettings
   )
 
@@ -47,12 +60,13 @@ lazy val enumeratum = project
     dependencySettings ++ Seq(
       libraryDependencies += "com.beachape" %% "enumeratum" % enumeratumVersion
     ),
+    scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     testSettings
   )
-  .dependsOn(core)
+  .dependsOn(core, generic)
 
 lazy val generic = project
   .in(file("modules/generic"))
@@ -60,17 +74,26 @@ lazy val generic = project
     moduleName := "vulcan-generic",
     name := moduleName.value,
     dependencySettings ++ Seq(
-      libraryDependencies ++= Seq(
-        "com.propensive" %% "magnolia" % magnoliaVersion,
-        "com.chuusai" %% "shapeless" % shapelessVersion
-      )
+      libraryDependencies ++= {
+        if (scalaVersion.value.startsWith("2"))
+          Seq(
+            "com.propensive" %% "magnolia" % magnoliaVersion,
+            "com.chuusai" %% "shapeless" % shapelessVersion,
+            "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+          )
+        else
+          Seq("org.typelevel" %% "shapeless3-deriving" % shapeless3Version)
+      }
     ),
+    scalatestSettings,
     publishSettings,
-    mimaSettings,
-    scalaSettings,
+    mimaSettings(excludeScala3 = true), // re-include scala 3 after publishing
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
     testSettings
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val refined = project
   .in(file("modules/refined"))
@@ -83,9 +106,14 @@ lazy val refined = project
         "eu.timepit" %% "refined-scalacheck" % refinedVersion % Test
       )
     ),
+    // uses munit because Scalatest and Refined for Scala 3.0.0-RC2 have
+    // incompatible scala-xml dependencies
+    munitSettings,
     publishSettings,
-    mimaSettings,
-    scalaSettings,
+    mimaSettings(),
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
     testSettings
   )
   .dependsOn(core)
@@ -105,34 +133,67 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
 
 lazy val dependencySettings = Seq(
+  libraryDependencies ++= {
+    if (scalaVersion.value.startsWith("3")) Nil
+    else
+      Seq(
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0" % Test,
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.0").cross(CrossVersion.full))
+      )
+  },
+  pomPostProcess := { (node: xml.Node) =>
+    new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
+      def scopedDependency(e: xml.Elem): Boolean =
+        e.label == "dependency" && e.child.exists(_.label == "scope")
+
+      override def transform(node: xml.Node): xml.NodeSeq =
+        node match {
+          case e: xml.Elem if scopedDependency(e) => Nil
+          case _                                  => Seq(node)
+        }
+    }).transform(node).head
+  }
+)
+
+lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.apache.avro" % "avro" % avroVersion,
-    "org.typelevel" %% "cats-free" % catsVersion,
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value
-  ),
-  libraryDependencies ++= Seq(
-    "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
-    "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC1",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.5",
     "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.28"
+    "org.slf4j" % "slf4j-nop" % "1.7.31"
+  ).map(_ % Test)
+)
+
+lazy val munitSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.scalameta" %% "munit" % "0.7.27",
+    "org.scalameta" %% "munit-scalacheck" % "0.7.27",
+    "org.slf4j" % "slf4j-nop" % "1.7.31"
   ).map(_ % Test),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary)
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val mdocSettings = Seq(
-  mdoc := run.in(Compile).evaluated,
+  mdoc := (Compile / run).evaluated,
   scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused"),
   crossScalaVersions := Seq(scalaVersion.value),
-  unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(core, enumeratum, generic, refined),
-  target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
-  cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
-  docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(unidoc in Compile).value,
+  ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(core, enumeratum, generic, refined),
+  ScalaUnidoc / unidoc / target := (LocalRootProject / baseDirectory).value / "website" / "static" / "api",
+  cleanFiles += (ScalaUnidoc / unidoc / target).value,
+  docusaurusCreateSite := docusaurusCreateSite
+    .dependsOn(Compile / unidoc)
+    .dependsOn(ThisBuild / updateSiteVariables)
+    .value,
+  docusaurusPublishGhpages :=
+    docusaurusPublishGhpages
+      .dependsOn(Compile / unidoc)
+      .dependsOn(ThisBuild / updateSiteVariables)
+      .value,
   // format: off
-  scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
-    "-doc-source-url", s"https://github.com/ovotech/vulcan/tree/v${(latestVersion in ThisBuild).value}€{FILE_PATH}.scala",
-    "-sourcepath", baseDirectory.in(LocalRootProject).value.getAbsolutePath,
+  ScalaUnidoc / unidoc / scalacOptions ++= Seq(
+    "-doc-source-url", s"https://github.com/fd4s/vulcan/tree/v${(ThisBuild / latestVersion).value}€{FILE_PATH}.scala",
+    "-sourcepath", (LocalRootProject / baseDirectory).value.getAbsolutePath,
     "-doc-title", "Vulcan",
-    "-doc-version", s"v${(latestVersion in ThisBuild).value}",
+    "-doc-version", s"v${(ThisBuild / latestVersion).value}",
     "-groups"
   )
   // format: on
@@ -145,33 +206,36 @@ lazy val buildInfoSettings = Seq(
     scalaVersion,
     scalacOptions,
     sourceDirectory,
-    latestVersion in ThisBuild,
-    BuildInfoKey.map(moduleName in core) {
+    ThisBuild / latestVersion,
+    BuildInfoKey.map(ThisBuild / version) {
+      case (_, v) => "latestSnapshotVersion" -> v
+    },
+    BuildInfoKey.map(core / moduleName) {
       case (k, v) => "core" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(crossScalaVersions in core) {
+    BuildInfoKey.map(core / crossScalaVersions) {
       case (k, v) => "core" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(moduleName in enumeratum) {
+    BuildInfoKey.map(enumeratum / moduleName) {
       case (k, v) => "enumeratum" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(crossScalaVersions in enumeratum) {
+    BuildInfoKey.map(enumeratum / crossScalaVersions) {
       case (k, v) => "enumeratum" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(moduleName in generic) {
+    BuildInfoKey.map(generic / moduleName) {
       case (k, v) => "generic" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(crossScalaVersions in generic) {
+    BuildInfoKey.map(generic / crossScalaVersions) {
       case (k, v) => "generic" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(moduleName in refined) {
+    BuildInfoKey.map(refined / moduleName) {
       case (k, v) => "refined" ++ k.capitalize -> v
     },
-    BuildInfoKey.map(crossScalaVersions in refined) {
+    BuildInfoKey.map(refined / crossScalaVersions) {
       case (k, v) => "refined" ++ k.capitalize -> v
     },
-    organization in LocalRootProject,
-    crossScalaVersions in core,
+    LocalRootProject / organization,
+    core / crossScalaVersions,
     BuildInfoKey("avroVersion" -> avroVersion),
     BuildInfoKey("catsVersion" -> catsVersion),
     BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
@@ -182,27 +246,24 @@ lazy val buildInfoSettings = Seq(
 )
 
 lazy val metadataSettings = Seq(
-  organization := "com.ovoenergy",
-  organizationName := "OVO Energy Limited",
-  organizationHomepage := Some(url("https://ovoenergy.com"))
+  organization := "com.github.fd4s"
 )
 
 lazy val publishSettings =
   metadataSettings ++ Seq(
-    publishMavenStyle := true,
-    publishArtifact in Test := false,
-    publishTo := sonatypePublishToBundle.value,
+    Test / publishArtifact := false,
     pomIncludeRepository := (_ => false),
-    homepage := Some(url("https://ovotech.github.io/vulcan")),
+    homepage := Some(url("https://fd4s.github.io/vulcan")),
     licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     startYear := Some(2019),
     headerLicense := Some(
       de.heikoseeberger.sbtheader.License.ALv2(
-        s"${startYear.value.get}",
-        organizationName.value
+        s"${startYear.value.get}-${java.time.Year.now}",
+        "OVO Energy Limited",
+        HeaderLicenseStyle.SpdxSyntax
       )
     ),
-    excludeFilter.in(headerSources) := HiddenFileFilter,
+    headerSources / excludeFilter := HiddenFileFilter,
     developers := List(
       Developer(
         id = "vlovgr",
@@ -210,55 +271,26 @@ lazy val publishSettings =
         email = "github@vlovgr.se",
         url = url("https://vlovgr.se")
       )
-    ),
-    scmInfo := Some(
-      ScmInfo(
-        url("https://github.com/ovotech/vulcan"),
-        "scm:git@github.com:ovotech/vulcan.git"
-      )
-    ),
-    releaseCrossBuild := false, // See https://github.com/sbt/sbt-release/issues/214
-    releaseUseGlobalVersion := true,
-    releaseTagName := s"v${(version in ThisBuild).value}",
-    releaseTagComment := s"Release version ${(version in ThisBuild).value}",
-    releaseCommitMessage := s"Set version to ${(version in ThisBuild).value}",
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      releaseStepCommandAndRemaining("+test"),
-      setReleaseVersion,
-      setLatestVersion,
-      releaseStepTask(updateSiteVariables in ThisBuild),
-      releaseStepTask(addDateToReleaseNotes in ThisBuild),
-      commitReleaseVersion,
-      tagRelease,
-      releaseStepCommandAndRemaining("+publish"),
-      releaseStepCommand("sonatypeBundleRelease"),
-      setNextVersion,
-      commitNextVersion,
-      pushChanges,
-      releaseStepCommand("docs/docusaurusPublishGhpages")
     )
   )
 
-lazy val mimaSettings = Seq(
+def mimaSettings(excludeScala3: Boolean = false) = Seq(
   mimaPreviousArtifacts := {
-    val released = !unreleasedModuleNames.value.contains(moduleName.value)
-    val publishing = publishArtifact.value
-
-    if (publishing && released)
-      binaryCompatibleVersions.value
-        .map(version => organization.value %% moduleName.value % version)
-    else
-      Set()
+    if (publishArtifact.value && !(excludeScala3 && scalaVersion.value.startsWith("3"))) {
+      Set(organization.value %% moduleName.value % (ThisBuild / previousStableVersion).value.get)
+    } else Set()
   },
   mimaBinaryIssueFilters ++= {
     import com.typesafe.tools.mima.core._
     // format: off
     Seq(
       ProblemFilters.exclude[Problem]("vulcan.internal.*"),
-      ProblemFilters.exclude[IncompatibleSignatureProblem]("*") // https://github.com/lightbend/mima/issues/361
+      ProblemFilters.exclude[IncompatibleSignatureProblem]("*"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.Codec.withDecodingTypeName"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.decode*"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.encode*"),
+      ProblemFilters.exclude[MissingClassProblem]("vulcan.Codec$Field$"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroException.*")
     )
     // format: on
   }
@@ -266,131 +298,136 @@ lazy val mimaSettings = Seq(
 
 lazy val noPublishSettings =
   publishSettings ++ Seq(
-    skip in publish := true,
+    publish / skip := true,
     publishArtifact := false
   )
 
 lazy val scalaSettings = Seq(
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala212, scala213),
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding",
-    "UTF-8",
-    "-feature",
-    "-language:experimental.macros",
-    "-language:higherKinds",
-    "-language:implicitConversions",
-    "-unchecked",
-    "-Xfatal-warnings",
-    "-Xlint",
-    "-Yno-adapted-args",
-    "-Ywarn-dead-code",
-    "-Ywarn-numeric-widen",
-    "-Ywarn-value-discard",
-    "-Ywarn-unused",
-    "-Ypartial-unification"
-  ).filter {
-    case ("-Yno-adapted-args" | "-Ypartial-unification") if scalaVersion.value.startsWith("2.13") =>
-      false
-    case _ => true
+  scalacOptions ++= {
+    val commonScalacOptions =
+      Seq(
+        "-deprecation",
+        "-encoding",
+        "UTF-8",
+        "-feature",
+        "-unchecked",
+        "-Xfatal-warnings",
+        "-language:implicitConversions"
+      )
+
+    val scala2ScalacOptions =
+      if (scalaVersion.value.startsWith("2.")) {
+        Seq(
+          "-language:higherKinds",
+          "-Xlint",
+          "-Ywarn-dead-code",
+          "-Ywarn-numeric-widen",
+          "-Ywarn-value-discard",
+          "-Ywarn-unused"
+        )
+      } else Seq()
+
+    val scala212ScalacOptions =
+      if (scalaVersion.value.startsWith("2.12")) {
+        Seq(
+          "-Yno-adapted-args",
+          "-Ypartial-unification"
+        )
+      } else Seq()
+
+    val scala213ScalacOptions =
+      if (scalaVersion.value.startsWith("2.13")) {
+        Seq("-Wconf:msg=Block&src=test/scala-2/vulcan/generic/.*:silent")
+      } else Seq()
+
+    val scala3ScalacOptions =
+      if (scalaVersion.value.startsWith("3")) {
+        Seq(
+          "-Ykind-projector"
+        )
+      } else Seq()
+
+    commonScalacOptions ++
+      scala2ScalacOptions ++
+      scala212ScalacOptions ++
+      scala213ScalacOptions ++
+      scala3ScalacOptions
   },
-  scalacOptions in (Compile, console) --= Seq("-Xlint", "-Ywarn-unused"),
-  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value
+  Compile / console / scalacOptions --= Seq("-Xlint", "-Ywarn-unused"),
+  Test / console / scalacOptions := (Compile / console / scalacOptions).value,
+  Compile / unmanagedSourceDirectories ++= {
+    val sourceDir = (Compile / sourceDirectory).value
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 12)) => Seq(sourceDir / "scala-2.12", sourceDir / "scala-2")
+      case Some((2, 13)) => Seq(sourceDir / "scala-2.13+", sourceDir / "scala-2")
+      case _             => Seq(sourceDir / "scala-2.13+", sourceDir / "scala-3")
+    }
+  },
+  Test / unmanagedSourceDirectories ++= {
+    val sourceDir = (Test / sourceDirectory).value
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq(sourceDir / "scala-2")
+      case _            => Nil
+    }
+  }
 )
 
 lazy val testSettings = Seq(
-  logBuffered in Test := false,
-  parallelExecution in Test := false,
-  testOptions in Test += Tests.Argument("-oDF")
+  Test / logBuffered := false,
+  Test / parallelExecution := false,
+  Test / testOptions += Tests.Argument("-oDF")
 )
 
-def minorVersion(version: String): String = {
-  val (major, minor) =
-    CrossVersion.partialVersion(version).get
-  s"$major.$minor"
+def scalaVersionOf(version: String): String = {
+  if (version.contains("-")) version
+  else {
+    val (major, minor) =
+      CrossVersion.partialVersion(version).get
+    s"$major.$minor"
+  }
 }
 
-val releaseNotesFile = taskKey[File]("Release notes for current version")
-releaseNotesFile in ThisBuild := {
-  val currentVersion = (version in ThisBuild).value
-  file("notes") / s"$currentVersion.markdown"
+val latestVersion = settingKey[String]("Latest stable released version")
+ThisBuild / latestVersion := {
+  val snapshot = (ThisBuild / isSnapshot).value
+  val stable = (ThisBuild / isVersionStable).value
+
+  if (!snapshot && stable) {
+    (ThisBuild / version).value
+  } else {
+    (ThisBuild / previousStableVersion).value.get
+  }
 }
 
 val updateSiteVariables = taskKey[Unit]("Update site variables")
-updateSiteVariables in ThisBuild := {
-  val file = (baseDirectory in LocalRootProject).value / "website" / "siteConfig.js"
-  val lines = IO.read(file).trim.split('\n').toVector
+ThisBuild / updateSiteVariables := {
+  val file =
+    (LocalRootProject / baseDirectory).value / "website" / "variables.js"
 
   val variables =
     Map[String, String](
-      "organization" -> (organization in LocalRootProject).value,
-      "coreModuleName" -> (moduleName in core).value,
-      "latestVersion" -> (latestVersion in ThisBuild).value,
+      "organization" -> (LocalRootProject / organization).value,
+      "coreModuleName" -> (core / moduleName).value,
+      "latestVersion" -> (ThisBuild / latestVersion).value,
       "scalaPublishVersions" -> {
-        val minorVersions = (crossScalaVersions in core).value.map(minorVersion)
-        if (minorVersions.size <= 2) minorVersions.mkString(" and ")
-        else minorVersions.init.mkString(", ") ++ " and " ++ minorVersions.last
+        val scalaVersions = (core / crossScalaVersions).value.map(scalaVersionOf)
+        if (scalaVersions.size <= 2) scalaVersions.mkString(" and ")
+        else scalaVersions.init.mkString(", ") ++ " and " ++ scalaVersions.last
       }
     )
 
-  val newLine =
+  val fileHeader =
+    "// Generated by sbt. Do not edit directly."
+
+  val fileContents =
     variables.toList
-      .map { case (k, v) => s"$k: '$v'" }
-      .mkString("const buildInfo = { ", ", ", " };")
+      .sortBy { case (key, _) => key }
+      .map { case (key, value) => s"  $key: '$value'" }
+      .mkString(s"$fileHeader\nmodule.exports = {\n", ",\n", "\n};\n")
 
-  val lineIndex = lines.indexWhere(_.trim.startsWith("const buildInfo"))
-  val newLines = lines.updated(lineIndex, newLine)
-  val newFileContents = newLines.mkString("", "\n", "\n")
-  IO.write(file, newFileContents)
-
-  sbtrelease.Vcs.detect((baseDirectory in LocalRootProject).value).foreach { vcs =>
-    vcs.add(file.getAbsolutePath).!
-    vcs
-      .commit(
-        s"Update site variables for v${(version in ThisBuild).value}",
-        sign = true,
-        signOff = false
-      )
-      .!
-  }
-}
-
-val ensureReleaseNotesExists = taskKey[Unit]("Ensure release notes exists")
-ensureReleaseNotesExists in ThisBuild := {
-  val currentVersion = (version in ThisBuild).value
-  val notes = releaseNotesFile.value
-  if (!notes.isFile) {
-    throw new IllegalStateException(
-      s"no release notes found for version [$currentVersion] at [$notes]."
-    )
-  }
-}
-
-val addDateToReleaseNotes = taskKey[Unit]("Add current date to release notes")
-addDateToReleaseNotes in ThisBuild := {
-  ensureReleaseNotesExists.value
-
-  val dateString = {
-    val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val now = java.time.ZonedDateTime.now()
-    now.format(formatter)
-  }
-
-  val file = releaseNotesFile.value
-  val newContents = IO.read(file).trim + s"\n\nReleased on $dateString.\n"
-  IO.write(file, newContents)
-
-  sbtrelease.Vcs.detect((baseDirectory in LocalRootProject).value).foreach { vcs =>
-    vcs.add(file.getAbsolutePath).!
-    vcs
-      .commit(
-        s"Add release date for v${(version in ThisBuild).value}",
-        sign = true,
-        signOff = false
-      )
-      .!
-  }
+  IO.write(file, fileContents)
 }
 
 def addCommandsAlias(name: String, values: List[String]) =
@@ -400,13 +437,11 @@ addCommandsAlias(
   "validate",
   List(
     "+clean",
-    "+coverage",
     "+test",
-    "+coverageReport",
     "+mimaReportBinaryIssues",
-    "scalafmtCheck",
+    "+scalafmtCheck",
     "scalafmtSbtCheck",
-    "headerCheck",
+    "+headerCheck",
     "+doc",
     "docs/run"
   )

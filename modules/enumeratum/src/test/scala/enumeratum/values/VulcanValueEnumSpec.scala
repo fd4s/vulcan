@@ -4,7 +4,8 @@ import enumeratum.EitherValues
 import org.scalacheck.Gen
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import vulcan._
+import vulcan.Codec
+import vulcan.generic.{AvroDoc, AvroNamespace}
 
 final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
   describe("ByteVulcanEnum") {
@@ -239,7 +240,7 @@ final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks
       val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
       assert {
         roundtrip.swap.value.message ===
-          """third is not a member of CustomEnum (first, second, third)"""
+          """Error decoding com.example.CustomEnum: third is not a member of CustomEnum (first, second, third)"""
       }
     }
   }

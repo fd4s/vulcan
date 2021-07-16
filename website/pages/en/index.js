@@ -2,6 +2,8 @@ const React = require("react");
 
 const CompLibrary = require("../../core/CompLibrary.js");
 
+const variables = require(process.cwd() + "/variables.js");
+
 const MarkdownBlock = CompLibrary.MarkdownBlock;
 const Container = CompLibrary.Container;
 const GridBlock = CompLibrary.GridBlock;
@@ -12,9 +14,9 @@ class HomeSplash extends React.Component {
     const { baseUrl, docsUrl } = siteConfig;
     const docsPart = `${docsUrl ? `${docsUrl}/` : ""}`;
     const langPart = `${language ? `${language}/` : ""}`;
-    const docUrl = doc => `${baseUrl}${docsPart}${langPart}${doc}`;
+    const docUrl = (doc) => `${baseUrl}${docsPart}${langPart}${doc}`;
 
-    const SplashContainer = props => (
+    const SplashContainer = (props) => (
       <div className="homeContainer">
         <div className="homeSplashFade">
           <div className="wrapper homeWrapper">{props.children}</div>
@@ -32,7 +34,7 @@ class HomeSplash extends React.Component {
       </h2>
     );
 
-    const PromoSection = props => (
+    const PromoSection = (props) => (
       <div className="section promoSection">
         <div className="promoRow">
           <div className="pluginRowBlock">{props.children}</div>
@@ -40,7 +42,7 @@ class HomeSplash extends React.Component {
       </div>
     );
 
-    const Button = props => (
+    const Button = (props) => (
       <div className="pluginWrapper buttonWrapper">
         <a className="button" href={props.href} target={props.target}>
           {props.children}
@@ -66,19 +68,19 @@ class HomeSplash extends React.Component {
 class Index extends React.Component {
   render() {
     const { config: siteConfig, language = "" } = this.props;
-    const { baseUrl, buildInfo } = siteConfig;
+    const { baseUrl } = siteConfig;
     const {
       coreModuleName,
       latestVersion,
       organization,
-      scalaPublishVersions
-    } = buildInfo;
+      scalaPublishVersions,
+    } = variables;
 
     const latestVersionBadge = latestVersion
       .replace("-", "--")
       .replace("_", "__");
 
-    const Block = props => (
+    const Block = (props) => (
       <Container
         padding={["bottom", "top"]}
         id={props.id}
@@ -92,7 +94,7 @@ class Index extends React.Component {
       </Container>
     );
 
-    const index = `[![Travis](https://img.shields.io/travis/ovotech/vulcan/master.svg)](https://travis-ci.org/ovotech/vulcan) [![Codecov](https://img.shields.io/codecov/c/github/ovotech/vulcan.svg)](https://codecov.io/gh/ovotech/vulcan) [![Gitter](https://img.shields.io/gitter/room/ovotech/vulcan.svg?colorB=36bc97)](https://gitter.im/ovotech/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/ovotech/vulcan)
+    const index = `[![GitHub Actions](https://img.shields.io/github/workflow/status/fd4s/vulcan/ci)](https://github.com/fd4s/vulcan/actions) [![Gitter](https://img.shields.io/gitter/room/fd4s/vulcan.svg?colorB=36bc97)](https://gitter.im/fd4s/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/fd4s/vulcan)
 
 Functional Avro encodings for Scala using the official Apache Avro library.<br>
 Project is under active development. Feedback and contributions welcome.
@@ -104,7 +106,7 @@ To get started with [sbt](https://scala-sbt.org), simply add the following line 
 libraryDependencies += "${organization}" %% "${coreModuleName}" % "${latestVersion}"
 \`\`\`
 
-Published for Scala ${scalaPublishVersions}. For changes, refer to the [release notes](https://github.com/ovotech/vulcan/releases).
+Published for Scala ${scalaPublishVersions}. For changes, refer to the [release notes](https://github.com/fd4s/vulcan/releases).
 `.trim();
 
     return (

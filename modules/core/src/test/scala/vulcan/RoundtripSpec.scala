@@ -3,18 +3,14 @@ package vulcan
 import cats.data._
 import cats.Eq
 import cats.implicits._
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.time.{Instant, LocalDate}
-import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter}
-import org.apache.avro.io.{DecoderFactory, EncoderFactory}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.Assertion
 import scala.collection.immutable.SortedSet
 import vulcan.examples._
 import java.util.UUID
-
-final class RoundtripSpec extends BaseSpec {
+final class RoundtripSpec extends BaseSpec with RoundtripHelpers {
   describe("BigDecimal") {
     it("roundtrip") {
       implicit val bigDecimalCodec: Codec[BigDecimal] =
@@ -63,12 +59,6 @@ final class RoundtripSpec extends BaseSpec {
   }
 
   describe("Char") { it("roundtrip") { roundtrip[Char] } }
-
-  describe("derived.enum") {
-    it("SealedTraitEnumDerived") { roundtrip[SealedTraitEnumDerived] }
-  }
-
-  describe("deriveFixed") { it("roundtrip") { roundtrip[FixedNamespace] } }
 
   describe("Double") { it("roundtrip") { roundtrip[Double] } }
 
@@ -216,13 +206,17 @@ final class RoundtripSpec extends BaseSpec {
   describe("Unit") { it("roundtrip") { roundtrip[Unit] } }
 
   describe("Vector") { it("roundtrip") { roundtrip[Vector[Int]] } }
+}
+
+trait RoundtripHelpers {
+  self: BaseSpec =>
 
   def roundtrip[A](
     implicit codec: Codec[A],
     arbitrary: Arbitrary[A],
     eq: Eq[A]
   ): Assertion = {
-    forAll { a: A =>
+    forAll { (a: A) =>
       roundtrip(a)
       binaryRoundtrip(a)
       jsonRoundtrip(a)
@@ -236,70 +230,38 @@ final class RoundtripSpec extends BaseSpec {
     val avroSchema = codec.schema
     assert(avroSchema.isRight)
 
-    val encoded = codec.encode(a, avroSchema.value)
+    val encoded = codec.encode(a)
     assert(encoded.isRight)
 
-    val decoded = codec.decode(encoded.value, avroSchema.value)
-    assert(decoded === Right(a))
+    val decoded: Either[AvroError, A] = codec.decode(encoded.value, avroSchema.value)
+    withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+      assert(decoded === Right(a))
+    }
   }
 
   def binaryRoundtrip[A](a: A)(
     implicit codec: Codec[A],
     eq: Eq[A]
   ): Assertion = {
-    val binary = toBinary(a)
+    val binary = Codec.toBinary(a)
     assert(binary.isRight)
 
-    val decoded = fromBinary(binary.value)
+    val decoded = codec.schema.flatMap(Codec.fromBinary[A](binary.value, _))
     withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
       assert(decoded === Right(a))
     }
   }
-
-  def toBinary[A](a: A)(
-    implicit codec: Codec[A]
-  ): Either[AvroError, Array[Byte]] =
-    codec.schema.flatMap { schema =>
-      codec.encode(a, schema).map { encoded =>
-        val baos = new ByteArrayOutputStream()
-        val serializer = EncoderFactory.get().binaryEncoder(baos, null)
-        new GenericDatumWriter[Any](schema)
-          .write(encoded, serializer)
-        serializer.flush()
-        baos.toByteArray()
-      }
-    }
-
-  def fromBinary[A](bytes: Array[Byte])(
-    implicit codec: Codec[A]
-  ): Either[AvroError, A] =
-    codec.schema.flatMap { schema =>
-      val bais = new ByteArrayInputStream(bytes)
-      val deserializer = DecoderFactory.get().binaryDecoder(bais, null)
-      val read =
-        new GenericDatumReader[Any](
-          schema,
-          schema,
-          new GenericData
-        ).read(null, deserializer)
-
-      codec.decode(read, schema)
-    }
 
   def jsonRoundtrip[A](a: A)(
     implicit codec: Codec[A],
     eq: Eq[A]
   ): Assertion = {
     val json = Codec.toJson(a)
+    assert(json.isRight)
 
-    json
-      .map(Codec.fromJson[A])
-      .map(
-        decoded =>
-          withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
-            assert(decoded === Right(a))
-          }
-      )
-      .getOrElse(fail(s"Codec failed to create Json, $json"))
+    val decoded = codec.schema.flatMap(Codec.fromJson[A](json.value, _))
+    withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+      assert(decoded === Right(a))
+    }
   }
 }
