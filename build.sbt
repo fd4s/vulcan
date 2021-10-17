@@ -6,17 +6,17 @@ val enumeratumVersion = "1.7.0"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.26"
+val refinedVersion = "0.9.27"
 
 val shapelessVersion = "2.3.7"
 
-val shapeless3Version = "3.0.1"
+val shapeless3Version = "3.0.3"
 
 val scala212 = "2.12.14"
 
 val scala213 = "2.13.6"
 
-val scala3 = "3.0.1"
+val scala3 = "3.0.2"
 
 lazy val vulcan = project
   .in(file("."))
@@ -138,7 +138,7 @@ lazy val dependencySettings = Seq(
     else
       Seq(
         "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0" % Test,
-        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.0").cross(CrossVersion.full))
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
       )
   },
   pomPostProcess := { (node: xml.Node) =>
@@ -159,7 +159,7 @@ lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "discipline-scalatest" % "2.1.5",
     "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.31"
+    "org.slf4j" % "slf4j-nop" % "1.7.32"
   ).map(_ % Test)
 )
 
@@ -167,7 +167,7 @@ lazy val munitSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "munit" % "0.7.27",
     "org.scalameta" %% "munit-scalacheck" % "0.7.27",
-    "org.slf4j" % "slf4j-nop" % "1.7.31"
+    "org.slf4j" % "slf4j-nop" % "1.7.32"
   ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")
 )
