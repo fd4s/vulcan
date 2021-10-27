@@ -1,4 +1,4 @@
-val avroVersion = "1.10.2"
+val avroVersion = "1.11.0"
 
 val catsVersion = "2.6.1"
 
