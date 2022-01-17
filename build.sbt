@@ -1,6 +1,6 @@
-val avroVersion = "1.10.2"
+val avroVersion = "1.11.0"
 
-val catsVersion = "2.6.1"
+val catsVersion = "2.7.0"
 
 val enumeratumVersion = "1.7.0"
 
@@ -16,7 +16,7 @@ val scala212 = "2.12.14"
 
 val scala213 = "2.13.6"
 
-val scala3 = "3.1.0"
+val scala3 = "3.0.2"
 
 lazy val vulcan = project
   .in(file("."))
@@ -137,7 +137,7 @@ lazy val dependencySettings = Seq(
     if (scalaVersion.value.startsWith("3")) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
       )
   },
