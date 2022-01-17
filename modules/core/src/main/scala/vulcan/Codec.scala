@@ -658,7 +658,12 @@ object Codec extends CodecCompanionCompat {
       "Integer",
       "LocalDate",
       Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
-      localDate => Right(localDate.toEpochDay.toInt), {
+      localDate =>
+        Either.cond(
+          localDate.toEpochDay.isValidInt,
+          localDate.toEpochDay.toInt,
+          AvroError.encodeDateSizeExceeded(localDate)
+        ), {
         case (int: Int, schema) =>
           validateLogicalType(LogicalTypes.date, schema).as(LocalDate.ofEpochDay(int.toLong))
       }

@@ -1120,6 +1120,15 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Right(value)
           )
         }
+
+        it("should error if local date epoch days exceeds maximum integer size") {
+          val value = LocalDate.MAX
+
+          assertEncodeError[LocalDate](
+            value,
+            s"Error encoding LocalDate: Unable to encode date as epoch days of ${value.toEpochDay} exceeds the maximum integer size"
+          )
+        }
       }
     }
 
