@@ -20,7 +20,13 @@ object Avro {
 
   type Bytes = java.nio.ByteBuffer
   type Null = scala.Null
+
   type Fixed = org.apache.avro.generic.GenericFixed
+  private[vulcan] object Fixed {
+    def apply(schema: Schema, bytes: scala.Array[Byte]): Avro.Fixed =
+      new org.apache.avro.generic.GenericData.Fixed(schema, bytes)
+  }
+
   type Record = org.apache.avro.generic.GenericRecord
 
   type EnumSymbol = org.apache.avro.generic.GenericData.EnumSymbol

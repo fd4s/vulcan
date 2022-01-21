@@ -468,7 +468,7 @@ object Codec extends CodecCompanionCompat {
           val bytes = encode(a)
           if (bytes.length <= size) {
             val buffer = ByteBuffer.allocate(size).put(bytes)
-            schema.map(new GenericData.Fixed(_, buffer.array()))
+            schema.map(Avro.Fixed(_, buffer.array()))
           } else {
             Left(AvroError.encodeExceedsFixedSize(bytes.length, size))
           }
