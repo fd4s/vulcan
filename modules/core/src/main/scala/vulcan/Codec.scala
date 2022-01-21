@@ -26,6 +26,7 @@ import org.apache.avro.util.Utf8
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
 import vulcan.internal.converters.collection._
+import vulcan.internal.syntax._
 import vulcan.internal.schema.adaptForSchema
 
 import scala.util.Try
@@ -365,10 +366,7 @@ object Codec extends CodecCompanionCompat {
 
         aliases.foreach(schema.addAlias)
 
-        props.foldLeft(()) {
-          case ((), (name, value)) =>
-            schema.addProp(name, value)
-        }
+        props.foreach { case (name, value) => schema.addProp(name, value) }
 
         schema
       }
@@ -440,10 +438,7 @@ object Codec extends CodecCompanionCompat {
             .doc(doc.orNull)
             .size(size)
 
-        props.foldLeft(()) {
-          case ((), (name, value)) =>
-            schema.addProp(name, value)
-        }
+        props.foreach { case (name, value) => schema.addProp(name, value) }
 
         schema
       }
@@ -881,10 +876,7 @@ object Codec extends CodecCompanionCompat {
 
                 field.aliases.foreach(schemaField.addAlias)
 
-                props.foldLeft(()) {
-                  case ((), (name, value)) =>
-                    schemaField.addProp(name, value)
-                }
+                props.foreach { case (name, value) => schemaField.addProp(name, value) }
 
                 Chain.one(schemaField)
               }
@@ -903,10 +895,7 @@ object Codec extends CodecCompanionCompat {
 
         aliases.foreach(record.addAlias)
 
-        props.foldLeft(()) {
-          case ((), (name, value)) =>
-            record.addProp(name, value)
-        }
+        props.foreach { case (name, value) => record.addProp(name, value) }
 
         record
       }
@@ -931,9 +920,7 @@ object Codec extends CodecCompanionCompat {
 
             fields.map { values =>
               val record = new GenericData.Record(schema)
-              values.foldLeft(()) {
-                case ((), (name, value)) => record.put(name, value)
-              }
+              values.foreach { case (name, value) => record.put(name, value) }
               record
             }
           }, {
