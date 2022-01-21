@@ -11,7 +11,6 @@ import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyVecto
 import cats.free.FreeApplicative
 import cats.implicits._
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
@@ -20,7 +19,7 @@ import java.util.UUID
 import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._
-import org.apache.avro.io.{DecoderFactory, EncoderFactory}
+import vulcan.internal.{Deserializer, Serializer}
 import org.apache.avro.util.Utf8
 
 import scala.annotation.implicitNotFound
@@ -512,15 +511,8 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def fromBinary[A](bytes: Array[Byte], writerSchema: Schema)(
-    implicit codec: Codec[A]
-  ): Either[AvroError, A] =
-    AvroError.catchNonFatal {
-      val bais = new ByteArrayInputStream(bytes)
-      val decoder = DecoderFactory.get.binaryDecoder(bais, null)
-      val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
-      codec.decode(value, writerSchema)
-    }
+  final def fromBinary[A: Codec](bytes: Array[Byte], writerSchema: Schema): Either[AvroError, A] =
+    Deserializer.fromBinary[A](bytes, writerSchema)
 
   /**
     * Returns the result of decoding the specified
@@ -528,15 +520,8 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def fromJson[A](json: String, writerSchema: Schema)(
-    implicit codec: Codec[A]
-  ): Either[AvroError, A] =
-    AvroError.catchNonFatal {
-      val bais = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))
-      val decoder = DecoderFactory.get.jsonDecoder(writerSchema, bais)
-      val value = new GenericDatumReader[Any](writerSchema).read(null, decoder)
-      codec.decode(value, writerSchema)
-    }
+  final def fromJson[A: Codec](json: String, writerSchema: Schema): Either[AvroError, A] =
+    Deserializer.fromJson[A](json, writerSchema)
 
   /**
     * Returns a new [[Codec]] instance using the specified
@@ -1039,18 +1024,8 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def toBinary[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Array[Byte]] =
-    codec.schema.flatMap { schema =>
-      codec.encode(a).flatMap { encoded =>
-        AvroError.catchNonFatal {
-          val baos = new ByteArrayOutputStream
-          val encoder = EncoderFactory.get.binaryEncoder(baos, null)
-          new GenericDatumWriter[Any](schema).write(encoded, encoder)
-          encoder.flush()
-          Right(baos.toByteArray)
-        }
-      }
-    }
+  final def toBinary[A: Codec](a: A): Either[AvroError, Array[Byte]] =
+    Serializer.toBinary(a)
 
   /**
     * Returns the result of encoding the specified
@@ -1058,18 +1033,8 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Utilities
     */
-  final def toJson[A](a: A)(implicit codec: Codec[A]): Either[AvroError, String] =
-    codec.schema.flatMap { schema =>
-      codec.encode(a).flatMap { encoded =>
-        AvroError.catchNonFatal {
-          val baos = new ByteArrayOutputStream
-          val encoder = EncoderFactory.get.jsonEncoder(schema, baos)
-          new GenericDatumWriter[Any](schema).write(encoded, encoder)
-          encoder.flush()
-          Right(new String(baos.toByteArray, StandardCharsets.UTF_8))
-        }
-      }
-    }
+  final def toJson[A: Codec](a: A): Either[AvroError, String] =
+    Serializer.toJson(a)
 
   /**
     * Returns a new union [[Codec]] for type `A`.
