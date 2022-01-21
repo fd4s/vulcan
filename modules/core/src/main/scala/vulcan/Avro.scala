@@ -15,7 +15,7 @@ object Avro {
   type Null = scala.Null
   type Fixed = org.apache.avro.generic.GenericFixed
   type Record = org.apache.avro.generic.GenericRecord
-  type Enum = org.apache.avro.generic.GenericData.EnumSymbol
+  type EnumSymbol = org.apache.avro.generic.GenericData.EnumSymbol
   type Array[A] = java.util.List[A]
   type Map[A] = java.util.Map[String, A]
 }

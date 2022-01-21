@@ -25,7 +25,7 @@ package object generic {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  ): Codec.Aux[Avro.Enum, A] =
+  ): Codec.Aux[Avro.EnumSymbol, A] =
     Codec.enumeration(
       name = nameOf[A],
       symbols = symbols,

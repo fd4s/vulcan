@@ -65,6 +65,6 @@ trait StringVulcanEnum[EntryType <: StringEnumEntry] extends VulcanValueEnum[Str
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[Avro.Enum, EntryType] =
+  ): Codec.Aux[Avro.EnumSymbol, EntryType] =
     Vulcan.enumCodec(this)
 }

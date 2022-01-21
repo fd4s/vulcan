@@ -20,7 +20,7 @@ private[vulcan] trait CodecCompanionCompat {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  )(implicit tag: WeakTypeTag[A]): Codec.Aux[Avro.Enum, A] =
+  )(implicit tag: WeakTypeTag[A]): Codec.Aux[Avro.EnumSymbol, A] =
     Codec.enumeration(
       name = nameFrom(tag),
       symbols = symbols,

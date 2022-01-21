@@ -27,7 +27,7 @@ object Vulcan {
 
   def enumCodec[EntryType <: ValueEnumEntry[String]](
     enum: ValueEnum[String, EntryType]
-  )(implicit tag: WeakTypeTag[EntryType]): Codec.Aux[Avro.Enum, EntryType] = {
+  )(implicit tag: WeakTypeTag[EntryType]): Codec.Aux[Avro.EnumSymbol, EntryType] = {
     lazy val typeName = tag.tpe.typeSymbol.name.decodedName
     lazy val entries = enum.values.map(_.value).mkString(", ")
     val notFound = (value: String) => AvroError(s"$value is not a member of $typeName ($entries)")
