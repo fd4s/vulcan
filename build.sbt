@@ -6,11 +6,11 @@ val enumeratumVersion = "1.7.0"
 
 val magnoliaVersion = "0.17.0"
 
-val refinedVersion = "0.9.28"
+val refinedVersion = "0.9.27"
 
 val shapelessVersion = "2.3.7"
 
-val shapeless3Version = "3.0.3"
+val shapeless3Version = "3.0.4"
 
 val scala212 = "2.12.14"
 
