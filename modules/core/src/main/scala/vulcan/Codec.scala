@@ -21,7 +21,6 @@ import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBu
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
-import org.apache.avro.util.Utf8
 
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.SortedSet
@@ -220,7 +219,7 @@ object Codec extends CodecCompanionCompat {
       "Utf8",
       "Char",
       Right(SchemaBuilder.builder().stringType()),
-      char => Right(new Utf8(char.toString)), {
+      char => Right(Avro.String(char.toString)), {
         case (avroString: Avro.String, _) =>
           val string = avroString.toString
           if (string.length == 1) Right(string.charAt(0))
@@ -392,7 +391,7 @@ object Codec extends CodecCompanionCompat {
       a => {
         val symbol = encode(a)
         if (symbols.contains(symbol))
-          schema.map(new GenericData.EnumSymbol(_, symbol))
+          schema.map(Avro.EnumSymbol(_, symbol))
         else
           Left(AvroError.encodeSymbolNotInSchema(symbol, symbols))
       }, {
@@ -765,7 +764,7 @@ object Codec extends CodecCompanionCompat {
           case (key, value) =>
             codec
               .encode(value)
-              .tupleLeft(new Utf8(key))
+              .tupleLeft(Avro.String(key))
         }
         .map(_.toMap.asJava), {
         case (map: java.util.Map[_, _], schema) =>
@@ -1020,7 +1019,7 @@ object Codec extends CodecCompanionCompat {
     Codec
       .instance[Avro.String, String](
         Right(SchemaBuilder.builder().stringType()),
-        new Utf8(_).asRight,
+        Avro.String(_).asRight,
         (value, schema) => {
           schema.getType() match {
             case STRING | BYTES =>
@@ -1196,7 +1195,7 @@ object Codec extends CodecCompanionCompat {
       "Utf8",
       "UUID",
       Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
-      uuid => Right(new Utf8(uuid.toString())), {
+      uuid => Right(Avro.String(uuid.toString())), {
         case (avroString: Avro.String, schema) =>
           validateLogicalType(LogicalTypes.uuid, schema) *>
             AvroError.catchNonFatal {
