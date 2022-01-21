@@ -18,7 +18,7 @@ object Vulcan {
   )(
     implicit codec: Codec[ValueType],
     tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[codec.Repr, EntryType] = {
+  ): Codec.Aux[codec.AvroType, EntryType] = {
     lazy val typeName = tag.tpe.typeSymbol.name.decodedName
     lazy val entries = enum.values.map(_.value).mkString(", ")
     val notFound = (value: ValueType) =>
