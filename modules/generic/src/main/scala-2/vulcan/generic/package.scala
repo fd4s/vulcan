@@ -153,7 +153,11 @@ package object generic {
 
             fields.map { fields =>
               Schema.createRecord(
-                caseClass.typeName.short,
+                caseClass.annotations.collectFirst {
+                  case AvroName(name) => name
+                }.getOrElse(
+                  caseClass.typeName.short
+                ),
                 caseClass.annotations.collectFirst {
                   case AvroDoc(doc) => doc
                 }.orNull,
