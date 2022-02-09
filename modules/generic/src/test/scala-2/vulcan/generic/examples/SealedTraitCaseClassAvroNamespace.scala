@@ -20,8 +20,8 @@ object SealedTraitCaseClassAvroNamespace {
     : Arbitrary[SealedTraitCaseClassAvroNamespace] =
     Arbitrary(
       Gen.oneOf(
-        arbitrary[Int].map(FirstInSealedTraitCaseClassAvroNamespace(_)),
-        arbitrary[String].map(SecondInSealedTraitCaseClassAvroNamespace(_))
+        arbitrary[Int].map(FirstInSealedTraitCaseClassAvroNamespace),
+        arbitrary[String].map(SecondInSealedTraitCaseClassAvroNamespace)
       )
     )
 

@@ -33,6 +33,12 @@ final class DerivationSpec extends BaseSpec with RoundtripHelpers with CodecSpec
           }
         }
 
+        it("should derive overridden name") {
+          assertSchemaIs[FixedAvroName] {
+            """{"type":"fixed","name":"FixedOtherName","namespace":"vulcan.generic.examples","size":1}"""
+          }
+        }
+
         it("should use namespace annotation") {
           assertSchemaIs[FixedNamespace] {
             """{"type":"fixed","name":"FixedNamespace","namespace":"vulcan.generic.examples.overridden","doc":"Some documentation","size":1}"""

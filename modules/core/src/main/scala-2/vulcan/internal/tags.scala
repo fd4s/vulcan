@@ -40,6 +40,6 @@ private[vulcan] object tags {
           namespace.substring(1, namespace.length - 1)
       }
       .getOrElse {
-        tag.tpe.typeSymbol.fullName.dropRight(nameFrom(tag).length + 1)
+        tag.tpe.typeSymbol.fullName.dropRight(tag.tpe.typeSymbol.name.decodedName.toString.length + 1)
       }
 }
