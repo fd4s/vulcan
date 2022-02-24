@@ -25,7 +25,7 @@ package object generic {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  ): Codec.Aux[GenericData.EnumSymbol, A] =
+  ): Codec.Aux[Avro.EnumSymbol, A] =
     Codec.enumeration(
       name = nameOf[A],
       symbols = symbols,
@@ -46,7 +46,7 @@ package object generic {
     size: Int,
     encode: A => Array[Byte],
     decode: Array[Byte] => Either[AvroError, A]
-  ): Codec.Aux[GenericFixed, A] =
+  ): Codec.Aux[Avro.Fixed, A] =
     Codec.fixed(
       name = nameOf[A],
       size = size,

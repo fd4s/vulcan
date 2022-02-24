@@ -11,7 +11,6 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData
-import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
 import org.scalatest.Assertion
 import vulcan.examples.{SecondInSealedTraitCaseClass, _}
@@ -248,7 +247,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 'a'
           assertEncodeIs[Char](
             value,
-            Right(new Utf8("a"))
+            Right(Avro.String("a"))
           )
         }
       }
@@ -577,7 +576,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should encode a valid symbol") {
           assertEncodeIs[SealedTraitEnum](
             FirstInSealedTraitEnum,
-            Right(new GenericData.EnumSymbol(unsafeSchema[SealedTraitEnum], "first"))
+            Right(Avro.EnumSymbol(unsafeSchema[SealedTraitEnum], "first"))
           )
         }
       }
@@ -601,7 +600,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should return default value if encoded value is not a schema symbol") {
           assertDecodeIs[SealedTraitEnum](
-            new GenericData.EnumSymbol(
+            Avro.EnumSymbol(
               SchemaBuilder
                 .enumeration("vulcan.examples.SealedTraitEnum")
                 .symbols("symbol"),
@@ -614,7 +613,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should error if encoded value is not a schema symbol and there is no default value") {
           assertDecodeError[SealedTraitEnumNoDefault](
-            new GenericData.EnumSymbol(
+            Avro.EnumSymbol(
               SchemaBuilder
                 .enumeration("vulcan.examples.SealedTraitEnumNoDefault")
                 .symbols("symbol"),
@@ -1311,7 +1310,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should encode as java map using encoder for value") {
           assertEncodeIs[Map[String, Int]](
             Map("key" -> 1),
-            Right(Map(new Utf8("key") -> 1).asJava)
+            Right(Map(Avro.String("key") -> 1).asJava)
           )
         }
       }
@@ -2727,7 +2726,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = "abc"
           assertEncodeIs[String](
             value,
-            Right(new Utf8(value))
+            Right(Avro.String(value))
           )
         }
       }
@@ -2965,7 +2964,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = UUID.randomUUID()
           assertEncodeIs[UUID](
             value,
-            Right(new Utf8(value.toString()))
+            Right(Avro.String(value.toString()))
           )
         }
       }
@@ -2997,7 +2996,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should error if value is not uuid") {
           assertDecodeError[UUID](
-            new Utf8("not-uuid"),
+            Avro.String("not-uuid"),
             unsafeSchema[UUID],
             "Error decoding UUID: java.lang.IllegalArgumentException: Invalid UUID string: not-uuid"
           )
