@@ -12,16 +12,16 @@ import vulcan.generic.deriveEnum
 
 object Vulcan {
   def enumCodec[A <: EnumEntry](
-    enum: Enum[A]
+    `enum`: Enum[A]
   )(implicit tag: WeakTypeTag[A]): Codec.Aux[Avro.EnumSymbol, A] = {
     lazy val typeName = tag.tpe.typeSymbol.name.decodedName
-    lazy val entries = enum.values.map(_.entryName).mkString(", ")
+    lazy val entries = `enum`.values.map(_.entryName).mkString(", ")
     val notFound = (name: String) => AvroError(s"$name is not a member of $typeName ($entries)")
 
     deriveEnum(
-      symbols = enum.values.map(_.entryName),
+      symbols = `enum`.values.map(_.entryName),
       encode = _.entryName,
-      decode = name => enum.withNameOption(name).toRight(notFound(name))
+      decode = name => `enum`.withNameOption(name).toRight(notFound(name))
     )
   }
 }

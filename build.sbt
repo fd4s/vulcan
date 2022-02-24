@@ -10,11 +10,11 @@ val refinedVersion = "0.9.27"
 
 val shapelessVersion = "2.3.7"
 
-val shapeless3Version = "3.0.3"
+val shapeless3Version = "3.0.4"
 
 val scala212 = "2.12.14"
 
-val scala213 = "2.13.6"
+val scala213 = "2.13.8"
 
 val scala3 = "3.0.2"
 
@@ -159,7 +159,7 @@ lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "discipline-scalatest" % "2.1.5",
     "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.32"
+    "org.slf4j" % "slf4j-nop" % "1.7.33"
   ).map(_ % Test)
 )
 
@@ -167,7 +167,7 @@ lazy val munitSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "munit" % "0.7.29",
     "org.scalameta" %% "munit-scalacheck" % "0.7.29",
-    "org.slf4j" % "slf4j-nop" % "1.7.32"
+    "org.slf4j" % "slf4j-nop" % "1.7.33"
   ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")
 )
