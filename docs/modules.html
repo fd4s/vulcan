@@ -102,7 +102,7 @@
 }
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Color</span>]
-<span class="hljs-comment">// res2: Codec.Aux[org.apache.avro.generic.GenericData.EnumSymbol, Color] = Codec({</span>
+<span class="hljs-comment">// res2: Codec.Aux[vulcan.Avro.EnumSymbol, Color] = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Color",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -216,7 +216,7 @@ deriveEnum[<span class="hljs-type">Fruit</span>](
     <span class="hljs-keyword">case</span> other    =&gt; <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$other</span> is not a Fruit"</span>))
   }
 )
-<span class="hljs-comment">// res7: Codec.Aux[org.apache.avro.generic.GenericData.EnumSymbol, Fruit] = Codec({</span>
+<span class="hljs-comment">// res7: Codec.Aux[vulcan.Avro.EnumSymbol, Fruit] = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Fruit",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -240,7 +240,7 @@ deriveFixed[<span class="hljs-type">Pence</span>](
   encode = pence =&gt; <span class="hljs-type">Array</span>[<span class="hljs-type">Byte</span>](pence.value),
   decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head)
 )
-<span class="hljs-comment">// res8: Codec.Aux[org.apache.avro.generic.GenericFixed, Pence] = Codec({</span>
+<span class="hljs-comment">// res8: Codec.Aux[vulcan.Avro.Fixed, Pence] = Codec({</span>
 <span class="hljs-comment">//   "type" : "fixed",</span>
 <span class="hljs-comment">//   "name" : "Pence",</span>
 <span class="hljs-comment">//   "namespace" : "repl.MdocSession.App0",</span>
@@ -258,7 +258,7 @@ deriveFixed[<span class="hljs-type">Pence</span>](
 <span class="hljs-comment">// res9: Codec[eu.timepit.refined.api.Refined[Int, eu.timepit.refined.numeric.Positive]] = Codec("int")</span>
 
 <span class="hljs-type">Codec</span>.encode[<span class="hljs-type">PosInt</span>](<span class="hljs-number">1</span>)
-<span class="hljs-comment">// res10: Either[AvroError, Codec[eu.timepit.refined.api.Refined[Int, eu.timepit.refined.numeric.Positive]]#Repr] = Right(</span>
+<span class="hljs-comment">// res10: Either[AvroError, Codec[eu.timepit.refined.api.Refined[Int, eu.timepit.refined.numeric.Positive]]#AvroType] = Right(</span>
 <span class="hljs-comment">//   value = 1</span>
 <span class="hljs-comment">// )</span>
 

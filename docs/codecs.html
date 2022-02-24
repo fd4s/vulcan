@@ -66,7 +66,7 @@
 </code></pre>
 <p>In some cases, it's not possible to generate Avro schemas. This is why <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> <code>schema</code>s are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. For example, Avro doesn't support nested unions, so what would happen when we try to ask for a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> for <code>Option[Option[Instant]]</code>?</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Instant</span>]]]
-<span class="hljs-comment">// res2: Codec[Option[Option[Instant]]] = vulcan.AvroError$$anon$3@34874ef6</span>
+<span class="hljs-comment">// res2: Codec[Option[Option[Instant]]] = vulcan.AvroError$$anon$3@4978cde5</span>
 </code></pre>
 <p>Encoding and decoding with a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> might also be unsuccessful, so results are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. Encoding accepts a value to be encoded according to the schema defined by the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>, and decoding accepts a value and a schema to decode the value against. For example, what happens if we try to decode <code>Int</code>s using a <code>Boolean</code> schema?</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> org.apache.avro.<span class="hljs-type">SchemaBuilder</span>
@@ -84,7 +84,7 @@
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InstallationTime</span>(<span class="hljs-params">value: <span class="hljs-type">Instant</span></span>)</span>
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Instant</span>].imap(<span class="hljs-type">InstallationTime</span>(_))(_.value)
-<span class="hljs-comment">// res4: Codec.Aux[Codec.instant.Repr, InstallationTime] = Codec({</span>
+<span class="hljs-comment">// res4: Codec.Aux[Codec.instant.AvroType, InstallationTime] = Codec({</span>
 <span class="hljs-comment">//   "type" : "long",</span>
 <span class="hljs-comment">//   "logicalType" : "timestamp-millis"</span>
 <span class="hljs-comment">// })</span>
@@ -102,13 +102,13 @@
 }
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">String</span>].imapError(<span class="hljs-type">SerialNumber</span>(_))(_.value)
-<span class="hljs-comment">// res5: Codec.Aux[Codec.string.Repr, SerialNumber] = Codec("string")</span>
+<span class="hljs-comment">// res5: Codec.Aux[Codec.string.AvroType, SerialNumber] = Codec("string")</span>
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="decimals"></a><a href="#decimals" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Decimals</h2>
 <p>Avro decimals closely correspond to <code>BigDecimal</code>s with a fixed precision and scale.</p>
 <p><code>Codec.decimal</code> can be used to create a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> for <code>BigDecimal</code> given the precision and scale. When encoding, the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> checks the precision and scale of the <code>BigDecimal</code> to make sure it matches the precision and scale defined in the schema. When decoding, we check the precision is not exceeded.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.decimal(precision = <span class="hljs-number">10</span>, scale = <span class="hljs-number">2</span>)
-<span class="hljs-comment">// res6: Codec.Aux[java.nio.ByteBuffer, BigDecimal] = Codec({</span>
+<span class="hljs-comment">// res6: Codec.Aux[vulcan.Avro.Bytes, BigDecimal] = Codec({</span>
 <span class="hljs-comment">//   "type" : "bytes",</span>
 <span class="hljs-comment">//   "logicalType" : "decimal",</span>
 <span class="hljs-comment">//   "precision" : 10,</span>
@@ -141,7 +141,7 @@
   },
   <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">Banana</span>)
 )
-<span class="hljs-comment">// res7: Codec.Aux[org.apache.avro.generic.GenericData.EnumSymbol, Fruit] = Codec({</span>
+<span class="hljs-comment">// res7: Codec.Aux[vulcan.Avro.EnumSymbol, Fruit] = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Fruit",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -170,7 +170,7 @@
   decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head),
   doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"Amount of pence as a single byte"</span>)
 )
-<span class="hljs-comment">// res8: Codec.Aux[org.apache.avro.generic.GenericFixed, Pence] = Codec({</span>
+<span class="hljs-comment">// res8: Codec.Aux[vulcan.Avro.Fixed, Pence] = Codec({</span>
 <span class="hljs-comment">//   "type" : "fixed",</span>
 <span class="hljs-comment">//   "name" : "Pence",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -197,7 +197,7 @@
     field(<span class="hljs-string">"age"</span>, _.age, <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">None</span>))
   ).mapN(<span class="hljs-type">Person</span>(_, _, _))
 }
-<span class="hljs-comment">// res9: Codec.Aux[org.apache.avro.generic.GenericRecord, Person] = Codec({</span>
+<span class="hljs-comment">// res9: Codec.Aux[vulcan.Avro.Record, Person] = Codec({</span>
 <span class="hljs-comment">//   "type" : "record",</span>
 <span class="hljs-comment">//   "name" : "Person",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
