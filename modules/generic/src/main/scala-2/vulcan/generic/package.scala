@@ -118,8 +118,14 @@ package object generic {
           .collectFirst { case AvroNamespace(namespace) => namespace }
           .getOrElse(caseClass.typeName.owner)
 
+      val shortName =
+        caseClass.annotations
+          .collectFirst { case AvroName(namespace) => namespace }
+          .getOrElse(caseClass.typeName.short)
+
       val typeName =
-        s"$namespace.${caseClass.typeName.short}"
+        s"$namespace.$shortName"
+
       val schema =
         if (caseClass.isValueClass) {
           caseClass.parameters.head.typeclass.schema

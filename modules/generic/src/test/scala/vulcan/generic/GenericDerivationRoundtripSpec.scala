@@ -5,42 +5,12 @@ import cats.implicits._
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter}
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
-import org.scalacheck.{Arbitrary, Gen}
-import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.{Arbitrary}
 import org.scalatest.Assertion
-import shapeless.{:+:, CNil, Coproduct}
 import vulcan._
 import vulcan.generic.examples._
 
-final class RoundtripSpec extends BaseSpec {
-  describe("coproduct") {
-    type Types = CaseClassField :+: Int :+: CaseClassAvroDoc :+: CNil
-
-    implicit val arbitraryTypes: Arbitrary[Types] =
-      Arbitrary {
-        Gen.oneOf(
-          arbitrary[Int].map(n => Coproduct[Types](CaseClassField(n))),
-          arbitrary[Int].map(n => Coproduct[Types](n)),
-          arbitrary[Option[String]].map(os => Coproduct[Types](CaseClassAvroDoc(os)))
-        )
-      }
-
-    implicit val eqTypes: Eq[Types] =
-      Eq.fromUniversalEquals
-
-    it("roundtrip.derived") {
-      roundtrip[Types]
-    }
-
-    it("roundtrip.union") {
-      implicit val codec: Codec[Types] =
-        Codec.union { alt =>
-          alt[CaseClassField] |+| alt[Int] |+| alt[CaseClassAvroDoc]
-        }
-
-      roundtrip[Types]
-    }
-  }
+final class GenericDerivationRoundtripSpec extends BaseSpec {
 
   describe("derive") {
     it("CaseClassAvroNamespace") { roundtrip[CaseClassAvroNamespace] }
