@@ -21,8 +21,7 @@ private[vulcan] object tags {
   final def nameFrom[A](tag: WeakTypeTag[A]): String =
     tag.tpe.typeSymbol.annotations
       .collectFirst {
-        case annotation
-          if annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroName" =>
+        case annotation if annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroName" =>
           val name = annotation.tree.children.last.toString
           name.substring(1, name.length - 1)
       }
@@ -40,6 +39,7 @@ private[vulcan] object tags {
           namespace.substring(1, namespace.length - 1)
       }
       .getOrElse {
-        tag.tpe.typeSymbol.fullName.dropRight(tag.tpe.typeSymbol.name.decodedName.toString.length + 1)
+        tag.tpe.typeSymbol.fullName
+          .dropRight(tag.tpe.typeSymbol.name.decodedName.toString.length + 1)
       }
 }
