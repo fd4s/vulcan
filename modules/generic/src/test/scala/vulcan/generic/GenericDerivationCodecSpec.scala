@@ -5,7 +5,7 @@ import org.apache.avro.generic.GenericData
 import vulcan.generic.examples._
 import vulcan.internal.converters.collection._
 
-final class CodecSpec extends CodecBase {
+final class GenericDerivationCodecSpec extends CodecBase {
   describe("Codec") {
 
     describe("derive") {
@@ -167,6 +167,13 @@ final class CodecSpec extends CodecBase {
             assertSchemaIs[SealedTraitCaseObject] {
               """[{"type":"record","name":"CaseObjectInSealedTrait","namespace":"vulcan.generic.examples","fields":[]}]"""
             }
+          }
+
+          // Preserving existing behaviour from Magnolia for scala 2
+          it("should order alternatives alphabetically by class name") {
+            assertSchemaIs[SealedTraitCaseClassAvroNamespace](
+              """[{"type":"record","name":"FirstInSealedTraitCaseClassAvroNamespace","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":"int"}]},{"type":"record","name":"SecondInSealedTraitCaseClassAvroNamespace","namespace":"com.example","fields":[{"name":"value","type":"string"}]}]"""
+            )
           }
 
           it("should capture errors on nested unions") {
