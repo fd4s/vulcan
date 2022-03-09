@@ -32,8 +32,14 @@ package object generic {
           .collectFirst { case AvroNamespace(namespace) => namespace }
           .getOrElse(caseClass.typeInfo.owner)
 
-      val typeName =
-        s"$namespace.${caseClass.typeInfo.short}"
+      val shortName =
+        caseClass.annotations
+          .collectFirst { case AvroName(namespace) => namespace }
+          .getOrElse(caseClass.typeInfo.short)
+          
+      val typeName = 
+        s"$namespace.$shortName"
+
       val schema =
         if (caseClass.isValueClass) {
           caseClass.params.head.typeclass.schema
@@ -67,7 +73,7 @@ package object generic {
 
             fields.map { fields =>
               Schema.createRecord(
-                caseClass.typeInfo.short,
+                shortName,
                 caseClass.annotations.collectFirst {
                   case AvroDoc(doc) => doc
                 }.orNull,

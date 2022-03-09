@@ -209,48 +209,50 @@ lazy val buildInfoSettings = Seq(
   buildInfoPackage := "vulcan.build",
   buildInfoObject := "info",
   buildInfoKeys := {
-  val magnolia: String = if (scalaVersion.value.startsWith("3")) magnolia3Version else magnolia2Version
-  Seq[BuildInfoKey](
-    scalaVersion,
-    scalacOptions,
-    sourceDirectory,
-    ThisBuild / latestVersion,
-    BuildInfoKey.map(ThisBuild / version) {
-      case (_, v) => "latestSnapshotVersion" -> v
-    },
-    BuildInfoKey.map(core / moduleName) {
-      case (k, v) => "core" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(core / crossScalaVersions) {
-      case (k, v) => "core" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(enumeratum / moduleName) {
-      case (k, v) => "enumeratum" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(enumeratum / crossScalaVersions) {
-      case (k, v) => "enumeratum" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(generic / moduleName) {
-      case (k, v) => "generic" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(generic / crossScalaVersions) {
-      case (k, v) => "generic" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(refined / moduleName) {
-      case (k, v) => "refined" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(refined / crossScalaVersions) {
-      case (k, v) => "refined" ++ k.capitalize -> v
-    },
-    LocalRootProject / organization,
-    core / crossScalaVersions,
-    BuildInfoKey("avroVersion" -> avroVersion),
-    BuildInfoKey("catsVersion" -> catsVersion),
-    BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
-    BuildInfoKey("magnoliaVersion" -> magnolia),
-    BuildInfoKey("refinedVersion" -> refinedVersion),
-    BuildInfoKey("shapelessVersion" -> shapelessVersion)
-  )}
+    val magnolia: String =
+      if (scalaVersion.value.startsWith("3")) magnolia3Version else magnolia2Version
+    Seq[BuildInfoKey](
+      scalaVersion,
+      scalacOptions,
+      sourceDirectory,
+      ThisBuild / latestVersion,
+      BuildInfoKey.map(ThisBuild / version) {
+        case (_, v) => "latestSnapshotVersion" -> v
+      },
+      BuildInfoKey.map(core / moduleName) {
+        case (k, v) => "core" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(core / crossScalaVersions) {
+        case (k, v) => "core" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(enumeratum / moduleName) {
+        case (k, v) => "enumeratum" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(enumeratum / crossScalaVersions) {
+        case (k, v) => "enumeratum" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(generic / moduleName) {
+        case (k, v) => "generic" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(generic / crossScalaVersions) {
+        case (k, v) => "generic" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(refined / moduleName) {
+        case (k, v) => "refined" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(refined / crossScalaVersions) {
+        case (k, v) => "refined" ++ k.capitalize -> v
+      },
+      LocalRootProject / organization,
+      core / crossScalaVersions,
+      BuildInfoKey("avroVersion" -> avroVersion),
+      BuildInfoKey("catsVersion" -> catsVersion),
+      BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
+      BuildInfoKey("magnoliaVersion" -> magnolia),
+      BuildInfoKey("refinedVersion" -> refinedVersion),
+      BuildInfoKey("shapelessVersion" -> shapelessVersion)
+    )
+  }
 )
 
 lazy val metadataSettings = Seq(
