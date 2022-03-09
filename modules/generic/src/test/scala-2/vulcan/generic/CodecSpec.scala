@@ -211,6 +211,12 @@ final class CodecSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Eith
             }
           }
 
+          it("should support annotation for record name") {
+            assertSchemaIs[CaseClassAvroName] {
+              """{"type":"record","name":"CaseClassOtherName","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"]}]}"""
+            }
+          }
+
           it("should capture errors on invalid names") {
             assertSchemaError[CaseClassFieldInvalidName] {
               """org.apache.avro.SchemaParseException: Illegal initial character: -value"""

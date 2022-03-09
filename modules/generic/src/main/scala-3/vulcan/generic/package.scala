@@ -58,6 +58,7 @@ package object generic {
 
 
   private inline def nameOf[A]: String = summonFrom {
+    case a: Annotation[AvroName, A] => a().name
     case ct: ClassTag[A] => ct.runtimeClass.getSimpleName
   }
 
