@@ -4,7 +4,9 @@ val catsVersion = "2.7.0"
 
 val enumeratumVersion = "1.7.0"
 
-val magnoliaVersion = "0.17.0"
+val magnolia2Version = "0.17.0"
+
+val magnolia3Version = "1.1.0"
 
 val refinedVersion = "0.9.27"
 
@@ -12,11 +14,12 @@ val shapelessVersion = "2.3.8"
 
 val shapeless3Version = "3.0.4"
 
-val scala212 = "2.12.14"
+val scala212 = "2.12.15"
 
 val scala213 = "2.13.8"
 
 val scala3 = "3.0.2"
+val scala3_1 = "3.1.1" // used in generic module as requiried for Magnolia
 
 lazy val vulcan = project
   .in(file("."))
@@ -77,19 +80,21 @@ lazy val generic = project
       libraryDependencies ++= {
         if (scalaVersion.value.startsWith("2"))
           Seq(
-            "com.propensive" %% "magnolia" % magnoliaVersion,
+            "com.propensive" %% "magnolia" % magnolia2Version,
             "com.chuusai" %% "shapeless" % shapelessVersion,
             "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
           )
         else
-          Seq("org.typelevel" %% "shapeless3-deriving" % shapeless3Version)
+          Seq(
+            "com.softwaremill.magnolia1_3" %% "magnolia" % magnolia3Version,
+            "org.typelevel" %% "shapeless3-deriving" % shapeless3Version
+          )
       }
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings(excludeScala3 = true), // re-include scala 3 after publishing
     scalaSettings ++ Seq(
-      crossScalaVersions += scala3
+      crossScalaVersions += scala3_1
     ),
     testSettings
   )
@@ -202,7 +207,9 @@ lazy val mdocSettings = Seq(
 lazy val buildInfoSettings = Seq(
   buildInfoPackage := "vulcan.build",
   buildInfoObject := "info",
-  buildInfoKeys := Seq[BuildInfoKey](
+  buildInfoKeys := {
+  val magnolia: String = if (scalaVersion.value.startsWith("3")) magnolia3Version else magnolia2Version
+  Seq[BuildInfoKey](
     scalaVersion,
     scalacOptions,
     sourceDirectory,
@@ -239,10 +246,10 @@ lazy val buildInfoSettings = Seq(
     BuildInfoKey("avroVersion" -> avroVersion),
     BuildInfoKey("catsVersion" -> catsVersion),
     BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
-    BuildInfoKey("magnoliaVersion" -> magnoliaVersion),
+    BuildInfoKey("magnoliaVersion" -> magnolia),
     BuildInfoKey("refinedVersion" -> refinedVersion),
     BuildInfoKey("shapelessVersion" -> shapelessVersion)
-  )
+  )}
 )
 
 lazy val metadataSettings = Seq(
