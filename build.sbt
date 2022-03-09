@@ -93,6 +93,7 @@ lazy val generic = project
     ),
     scalatestSettings,
     publishSettings,
+    mimaSettings(),
     scalaSettings ++ Seq(
       crossScalaVersions += scala3_1
     ),
