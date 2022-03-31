@@ -66,7 +66,7 @@
 </code></pre>
 <p>In some cases, it's not possible to generate Avro schemas. This is why <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> <code>schema</code>s are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. For example, Avro doesn't support nested unions, so what would happen when we try to ask for a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> for <code>Option[Option[Instant]]</code>?</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Instant</span>]]]
-<span class="hljs-comment">// res2: Codec[Option[Option[Instant]]] = vulcan.AvroError$$anon$3@6228e67d</span>
+<span class="hljs-comment">// res2: Codec[Option[Option[Instant]]] = vulcan.AvroError$$anon$3@65ce6db8</span>
 </code></pre>
 <p>Encoding and decoding with a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> might also be unsuccessful, so results are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. Encoding accepts a value to be encoded according to the schema defined by the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>, and decoding accepts a value and a schema to decode the value against. For example, what happens if we try to decode <code>Int</code>s using a <code>Boolean</code> schema?</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> org.apache.avro.<span class="hljs-type">SchemaBuilder</span>
