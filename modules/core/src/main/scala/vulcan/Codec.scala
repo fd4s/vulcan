@@ -15,7 +15,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
-import java.util.UUID
+import java.util.{Arrays, UUID}
 import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._
@@ -188,7 +188,10 @@ object Codec extends CodecCompanionCompat {
           schema.getType match {
             case BYTES | STRING =>
               value match {
-                case avroBytes: Avro.Bytes   => Right(avroBytes.array())
+                case avroBytes: Avro.Bytes if avroBytes.limit() =!= avroBytes.capacity() =>
+                  val nonPadded = Arrays.copyOfRange(avroBytes.array, 0, avroBytes.limit())
+                  Right(nonPadded)
+                case avroBytes: Avro.Bytes   => Right(avroBytes.array)
                 case avroString: Avro.String => Right(avroString.getBytes)
                 case string: String          => Right(string.getBytes(StandardCharsets.UTF_8))
                 case other                   => Left(AvroError.decodeUnexpectedType(other, "ByteBuffer"))
