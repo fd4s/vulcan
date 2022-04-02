@@ -104,6 +104,17 @@ sealed abstract class Codec[A] {
       encode(_).leftMap(AvroError.errorEncodingFrom(typeName, _)),
       decode(_, _).leftMap(AvroError.errorDecodingTo(typeName, _))
     )
+
+  private[vulcan] def validateLogicalType(expected: LogicalType): Codec.Aux[AvroType, A] =
+    Codec.instance(
+      schema,
+      encode(_),
+      // validate logical type afterwards to preserve existing error behaviour
+      (value, schema) =>
+        decode(value, schema).ensure(AvroError.decodeUnexpectedLogicalType(schema.getLogicalType))(
+          _ => schema.getLogicalType == expected
+        )
+    )
 }
 
 /**
@@ -598,11 +609,10 @@ object Codec extends CodecCompanionCompat {
         "Long",
         Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
         instant => Right(instant.toEpochMilli), {
-          case (long: Long, schema) =>
-            validateLogicalType(LogicalTypes.timestampMillis(), schema)
-              .as(Instant.ofEpochMilli(long))
+          case (long: Long, _) => Right(Instant.ofEpochMilli(long))
         }
       )
+      .validateLogicalType(LogicalTypes.timestampMillis)
       .withTypeName("Instant")
 
   /**
@@ -654,10 +664,10 @@ object Codec extends CodecCompanionCompat {
             localDate.toEpochDay.toInt,
             AvroError.encodeDateSizeExceeded(localDate)
           ), {
-          case (int: Avro.Int, schema) =>
-            validateLogicalType(LogicalTypes.date, schema).as(LocalDate.ofEpochDay(int.toLong))
+          case (int: Avro.Int, _) => LocalDate.ofEpochDay(int.toLong).asRight
         }
       )
+      .validateLogicalType(LogicalTypes.date)
       .withTypeName("LocalDate")
 
   /**
@@ -672,13 +682,12 @@ object Codec extends CodecCompanionCompat {
             val millis = TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay)
             Right(millis.toInt)
         }, {
-          case (int: Avro.Int, schema) =>
-            validateLogicalType(LogicalTypes.timeMillis, schema).as {
-              val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
-              LocalTime.ofNanoOfDay(nanos)
-            }
+          case (int: Avro.Int, _) =>
+            val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
+            LocalTime.ofNanoOfDay(nanos).asRight
         }
       )
+      .validateLogicalType(LogicalTypes.timeMillis)
       .withTypeName("LocalTime")
 
   /**
@@ -693,13 +702,12 @@ object Codec extends CodecCompanionCompat {
             val micros = TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay)
             Right(micros)
         }, {
-          case (long: Avro.Long, schema) =>
-            validateLogicalType(LogicalTypes.timeMicros, schema).as {
-              val nanos = TimeUnit.MICROSECONDS.toNanos(long)
-              LocalTime.ofNanoOfDay(nanos)
-            }
+          case (long: Avro.Long, _) =>
+            val nanos = TimeUnit.MICROSECONDS.toNanos(long)
+            LocalTime.ofNanoOfDay(nanos).asRight
         }
       )
+      .validateLogicalType(LogicalTypes.timeMicros)
       .withTypeName("LocalTime")
 
   /**
@@ -1151,13 +1159,13 @@ object Codec extends CodecCompanionCompat {
         "Utf8",
         Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
         uuid => Right(Avro.String(uuid.toString)), {
-          case (avroString: Avro.String, schema) =>
-            validateLogicalType(LogicalTypes.uuid, schema) *>
-              AvroError.catchNonFatal {
-                Right(UUID.fromString(avroString.toString))
-              }
+          case (avroString: Avro.String, _) =>
+            AvroError.catchNonFatal {
+              Right(UUID.fromString(avroString.toString))
+            }
         }
       )
+      .validateLogicalType(LogicalTypes.uuid)
       .withTypeName("UUID")
 
   /**
@@ -1197,11 +1205,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final def codecAuxShow[AvroType, A]: Show[Codec.Aux[AvroType, A]] =
     Show.fromToString
-
-  private def validateLogicalType(expected: LogicalType, schema: Schema): Either[AvroError, Unit] =
-    if (expected == schema.getLogicalType) rightUnit
-    else Left(AvroError.decodeUnexpectedLogicalType(schema.getLogicalType))
-  private val rightUnit = Right(())
 
   /**
     * @group Create
