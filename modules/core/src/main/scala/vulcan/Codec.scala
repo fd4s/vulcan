@@ -676,19 +676,12 @@ object Codec extends CodecCompanionCompat {
     * @group JavaTime
     */
   final val localTimeMillis: Codec.Aux[Avro.Int, LocalTime] =
-    Codec
-      .instanceForTypes[Avro.Int, LocalTime](
-        "Integer",
-        Right(LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType())), {
-          localTime =>
-            val millis = TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay)
-            Right(millis.toInt)
-        }, {
-          case (int: Avro.Int, _) =>
-            val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
-            LocalTime.ofNanoOfDay(nanos).asRight
-        }
-      )
+    Codec.int
+      .withSchema(LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType()))
+      .imap { int =>
+        val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
+        LocalTime.ofNanoOfDay(nanos)
+      }(localTime => TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay).toInt)
       .validateLogicalType(LogicalTypes.timeMillis)
       .withTypeName("LocalTime")
 
@@ -696,26 +689,19 @@ object Codec extends CodecCompanionCompat {
     * @group JavaTime
     */
   final val localTimeMicros: Codec.Aux[Avro.Long, LocalTime] =
-    Codec
-      .instanceForTypes[Avro.Long, LocalTime](
-        "Long",
-        Right(LogicalTypes.timeMicros().addToSchema(SchemaBuilder.builder().longType())), {
-          localTime =>
-            val micros = TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay)
-            Right(micros)
-        }, {
-          case (long: Avro.Long, _) =>
-            val nanos = TimeUnit.MICROSECONDS.toNanos(long)
-            LocalTime.ofNanoOfDay(nanos).asRight
-        }
-      )
+    Codec.long
+      .withSchema(LogicalTypes.timeMicros.addToSchema(SchemaBuilder.builder().longType()))
+      .imap { long =>
+        val nanos = TimeUnit.MICROSECONDS.toNanos(long)
+        LocalTime.ofNanoOfDay(nanos)
+      }(localTime => TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay))
       .validateLogicalType(LogicalTypes.timeMicros)
       .withTypeName("LocalTime")
 
   /**
     * @group General
     */
-  implicit final val long: Codec.Aux[Avro.Long, Long] =
+  implicit lazy val long: Codec.Aux[Avro.Long, Long] =
     Codec
       .instance[Avro.Long, Long](
         Right(SchemaBuilder.builder().longType()),

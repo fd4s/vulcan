@@ -1124,27 +1124,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not int") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(LocalTime.now()),
-            unsafeSchema[Long],
-            "Error decoding LocalTime: Got unexpected schema type LONG, expected schema type INT"
-          )
-        }
 
         it("should error if logical type is not time-millis") {
           assertDecodeError[LocalTime](
             unsafeEncode(LocalTime.now()),
             unsafeSchema[Int],
             "Error decoding LocalTime: Got unexpected missing logical type"
-          )
-        }
-
-        it("should error if value is not int") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(123L),
-            unsafeSchema[LocalTime],
-            "Error decoding LocalTime: Got unexpected type java.lang.Long, expected type Integer"
           )
         }
 
@@ -1179,13 +1164,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not int") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(LocalTime.now()),
-            unsafeSchema[Int],
-            "Error decoding LocalTime: Got unexpected schema type INT, expected schema type LONG"
-          )
-        }
 
         it("should error if logical type is not time-micros") {
           assertDecodeError[LocalTime](
@@ -1195,15 +1173,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           )
         }
 
-        it("should error if value is not long") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(123),
-            unsafeSchema[LocalTime],
-            "Error decoding LocalTime: Got unexpected type java.lang.Integer, expected type Long"
-          )
-        }
-
-        it("should decode int as local time-micros") {
+        it("should decode long as local time-micros") {
           val value = LocalTime.now()
           assertDecodeIs[LocalTime](
             unsafeEncode(value),
