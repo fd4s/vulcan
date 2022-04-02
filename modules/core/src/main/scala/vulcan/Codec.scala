@@ -761,16 +761,20 @@ object Codec extends CodecCompanionCompat {
       )
       .withTypeName("Map")
 
+  private val `null`: Codec.Aux[Avro.Null, Null] =
+    Codec
+      .instanceForTypes[Avro.Null, Null](
+        "null",
+        Right(SchemaBuilder.builder().nullType()),
+        _ => Right(null), { case (null, _) => Right(null) }
+      )
+
   /**
     * @group General
     */
   implicit final val none: Codec.Aux[Avro.Null, None.type] =
-    Codec
-      .instanceForTypes[Avro.Null, None.type](
-        "null",
-        Right(SchemaBuilder.builder().nullType()),
-        _ => Right(null), { case (null, _) => Right(None) }
-      )
+    `null`
+      .imap(_ => None)(_ => null)
       .withTypeName("None")
 
   /**
@@ -1134,12 +1138,8 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final val unit: Codec.Aux[Avro.Null, Unit] =
-    Codec
-      .instanceForTypes[Avro.Null, Unit](
-        "null",
-        Right(SchemaBuilder.builder().nullType()),
-        _ => Right(null), { case (null, _) => Right(()) }
-      )
+    `null`
+      .imap(_ => ())(_ => null)
       .withTypeName("Unit")
 
   /**
