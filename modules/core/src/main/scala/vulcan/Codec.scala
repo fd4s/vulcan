@@ -610,15 +610,10 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  implicit final val instant: Codec.Aux[Avro.Long, Instant] =
-    Codec
-      .instanceForTypes[Avro.Long, Instant](
-        "Long",
-        Right(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType())),
-        instant => Right(instant.toEpochMilli), {
-          case (long: Long, _) => Right(Instant.ofEpochMilli(long))
-        }
-      )
+  implicit lazy val instant: Codec.Aux[Avro.Long, Instant] =
+    Codec.long
+      .withSchema(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType()))
+      .imap(Instant.ofEpochMilli)(_.toEpochMilli)
       .validateLogicalType(LogicalTypes.timestampMillis)
       .withTypeName("Instant")
 

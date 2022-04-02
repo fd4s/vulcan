@@ -813,13 +813,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not long") {
-          assertDecodeError[Instant](
-            unsafeEncode(Instant.now()),
-            unsafeSchema[Int],
-            "Error decoding Instant: Got unexpected schema type INT, expected schema type LONG"
-          )
-        }
 
         it("should error if logical type is missing") {
           assertDecodeError[Instant](
@@ -837,14 +830,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               }
             },
             "Error decoding Instant: Got unexpected logical type timestamp-micros"
-          )
-        }
-
-        it("should error if value is not long") {
-          assertDecodeError[Instant](
-            unsafeEncode(123),
-            unsafeSchema[Instant],
-            "Error decoding Instant: Got unexpected type java.lang.Integer, expected type Long"
           )
         }
 
