@@ -8,7 +8,6 @@ package vulcan
 
 import scala.reflect.runtime.universe.WeakTypeTag
 import vulcan.internal.tags._
-import org.apache.avro.generic.GenericData
 
 private[vulcan] trait CodecCompanionCompat {
 
