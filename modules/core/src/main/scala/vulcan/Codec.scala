@@ -1068,98 +1068,99 @@ object Codec extends CodecCompanionCompat {
   final def toJson[A: Codec](a: A): Either[AvroError, String] =
     Serializer.toJson(a)
 
-  /**
-    * Returns a new union [[Codec]] for type `A`.
-    *
-    * @group Create
-    */
-  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[Any, A] = {
-    val alts = f(AltBuilder.instance)
+  private[vulcan] final case class UnionCodec[A](alts: Chain[Alt[A]]) extends Codec[A] {
+    type AvroType = Any
+    override def encode(a: A): Either[AvroError, AvroType] =
+      alts
+        .foldMapK { alt =>
+          alt.prism.getOption(a).map(alt.codec.encode(_))
+        }
+        .getOrElse {
+          Left(AvroError.encodeExhaustedAlternatives(a))
+        }
+
+    override def decode(value: Any, schema: Schema): Either[AvroError, A] = {
+      val schemaTypes =
+        schema.getType match {
+          case UNION => schema.getTypes.asScala
+          case _     => Seq(schema)
+        }
+
+      def decodeNamedContainerType(container: GenericContainer) = {
+        val altName =
+          container.getSchema.getName
+
+        val altWriterSchema =
+          schemaTypes
+            .find(_.getName == altName)
+            .toRight(AvroError.decodeMissingUnionSchema(altName))
+
+        def altMatching =
+          alts
+            .find(_.codec.schema.exists { schema =>
+              schema.getType match {
+                case RECORD | FIXED | ENUM =>
+                  schema.getName == altName || schema.getAliases.asScala
+                    .exists(alias => alias == altName || alias.endsWith(s".$altName"))
+                case _ => false
+              }
+            })
+            .toRight(AvroError.decodeMissingUnionAlternative(altName))
+
+        altWriterSchema.flatMap { altSchema =>
+          altMatching.flatMap { alt =>
+            alt.codec
+              .decode(container, altSchema)
+              .map(alt.prism.reverseGet)
+          }
+        }
+      }
+
+      def decodeUnnamedType(other: Any) =
+        alts
+          .collectFirstSome { alt =>
+            alt.codec.schema
+              .traverse { altSchema =>
+                val altName = altSchema.getName
+                schemaTypes
+                  .find(_.getName == altName)
+                  .flatMap { schema =>
+                    alt.codec
+                      .decode(other, schema)
+                      .map(alt.prism.reverseGet)
+                      .toOption
+                  }
+              }
+          }
+          .getOrElse {
+            Left(AvroError.decodeExhaustedAlternatives(other))
+          }
+
+      value match {
+        case container: GenericContainer =>
+          container.getSchema.getType match {
+            case RECORD | FIXED | ENUM => decodeNamedContainerType(container)
+            case _                     => decodeUnnamedType(container)
+          }
+        case other => decodeUnnamedType(other)
+      }
+    }
+
     val schema = AvroError.catchNonFatal {
       alts.toList
         .traverse(_.codec.schema)
         .map(schemas => Schema.createUnion(schemas.asJava))
     }
+  }
 
-    Codec
-      .instance[Any, A](
-        schema,
-        a =>
-          alts
-            .foldMapK { alt =>
-              alt.prism.getOption(a).map(alt.codec.encode(_))
-            }
-            .getOrElse {
-              Left(AvroError.encodeExhaustedAlternatives(a))
-            },
-        (value, schema) => {
-          val schemaTypes =
-            schema.getType match {
-              case UNION => schema.getTypes.asScala
-              case _     => Seq(schema)
-            }
-
-          def decodeNamedContainerType(container: GenericContainer) = {
-            val altName =
-              container.getSchema.getName
-
-            val altWriterSchema =
-              schemaTypes
-                .find(_.getName == altName)
-                .toRight(AvroError.decodeMissingUnionSchema(altName))
-
-            def altMatching =
-              alts
-                .find(_.codec.schema.exists { schema =>
-                  schema.getType match {
-                    case RECORD | FIXED | ENUM =>
-                      schema.getName == altName || schema.getAliases.asScala
-                        .exists(alias => alias == altName || alias.endsWith(s".$altName"))
-                    case _ => false
-                  }
-                })
-                .toRight(AvroError.decodeMissingUnionAlternative(altName))
-
-            altWriterSchema.flatMap { altSchema =>
-              altMatching.flatMap { alt =>
-                alt.codec
-                  .decode(container, altSchema)
-                  .map(alt.prism.reverseGet)
-              }
-            }
-          }
-
-          def decodeUnnamedType(other: Any) =
-            alts
-              .collectFirstSome { alt =>
-                alt.codec.schema
-                  .traverse { altSchema =>
-                    val altName = altSchema.getName
-                    schemaTypes
-                      .find(_.getName == altName)
-                      .flatMap { schema =>
-                        alt.codec
-                          .decode(other, schema)
-                          .map(alt.prism.reverseGet)
-                          .toOption
-                      }
-                  }
-              }
-              .getOrElse {
-                Left(AvroError.decodeExhaustedAlternatives(other))
-              }
-
-          value match {
-            case container: GenericContainer =>
-              container.getSchema.getType match {
-                case RECORD | FIXED | ENUM => decodeNamedContainerType(container)
-                case _                     => decodeUnnamedType(container)
-              }
-            case other => decodeUnnamedType(other)
-          }
-        }
-      )
-  }.withTypeName("union")
+  /**
+    * Returns a new union [[Codec]] for type `A`.
+    *
+    * @group Create
+    */
+  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[Any, A] =
+    UnionCodec(f(AltBuilder.instance))
+      .withTypeName("union")
 
   /**
     * @group General
