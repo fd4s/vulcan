@@ -253,21 +253,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not string") {
-          assertDecodeError[Char](
-            unsafeEncode('a'),
-            unsafeSchema[Int],
-            "Error decoding Char: Got unexpected schema type INT, expected schema type STRING"
-          )
-        }
-
-        it("should error if value is not utf8") {
-          assertDecodeError[Char](
-            unsafeEncode(10),
-            unsafeSchema[String],
-            "Error decoding Char: Got unexpected type java.lang.Integer, expected type Utf8"
-          )
-        }
 
         it("should error if utf8 value is empty") {
           assertDecodeError[Char](

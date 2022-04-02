@@ -214,18 +214,13 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val char: Codec.Aux[Avro.String, Char] =
-    Codec
-      .instanceForTypes[Avro.String, Char](
-        "Utf8",
-        Right(SchemaBuilder.builder().stringType()),
-        char => Right(Avro.String(char.toString)), {
-          case (avroString: Avro.String, _) =>
-            val string = avroString.toString
-            if (string.length == 1) Right(string.charAt(0))
-            else Left(AvroError.unexpectedChar(string.length))
-        }
-      )
+  implicit lazy val char: Codec.Aux[Avro.String, Char] =
+    Codec.string
+      .imapError(
+        string =>
+          if (string.length == 1) Right(string.charAt(0))
+          else Left(AvroError.unexpectedChar(string.length))
+      )(_.toString)
       .withTypeName("Char")
 
   /**
