@@ -2955,27 +2955,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not string") {
-          assertDecodeError[UUID](
-            unsafeEncode(UUID.randomUUID()),
-            unsafeSchema[Int],
-            "Error decoding UUID: Got unexpected schema type INT, expected schema type STRING"
-          )
-        }
 
         it("should error if logical type is not uuid") {
           assertDecodeError[UUID](
             unsafeEncode(UUID.randomUUID()),
             unsafeSchema[String],
             "Error decoding UUID: Got unexpected missing logical type"
-          )
-        }
-
-        it("should error if value is not utf8") {
-          assertDecodeError[UUID](
-            10,
-            unsafeSchema[UUID],
-            "Error decoding UUID: Got unexpected type java.lang.Integer, expected type Utf8"
           )
         }
 

@@ -115,6 +115,13 @@ sealed abstract class Codec[A] {
           _ => schema.getLogicalType == expected
         )
     )
+
+  private[vulcan] def withSchema(schema: Schema): Codec.Aux[AvroType, A] =
+    Codec.instance(
+      Right(schema),
+      encode(_),
+      decode(_, _)
+    )
 }
 
 /**
@@ -1154,17 +1161,14 @@ object Codec extends CodecCompanionCompat {
     * @group JavaUtil
     */
   implicit final val uuid: Codec.Aux[Avro.String, UUID] =
-    Codec
-      .instanceForTypes[Avro.String, UUID](
-        "Utf8",
-        Right(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType())),
-        uuid => Right(Avro.String(uuid.toString)), {
-          case (avroString: Avro.String, _) =>
-            AvroError.catchNonFatal {
-              Right(UUID.fromString(avroString.toString))
-            }
-        }
-      )
+    Codec.string
+      .withSchema(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType()))
+      .imapError(
+        string =>
+          AvroError.catchNonFatal {
+            Right(UUID.fromString(string))
+          }
+      )(_.toString)
       .validateLogicalType(LogicalTypes.uuid)
       .withTypeName("UUID")
 
