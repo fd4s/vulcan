@@ -227,7 +227,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def chain[A](
     implicit codec: Codec[A]
   ): Codec.Aux[Avro.Array[codec.AvroType], Chain[A]] =
-    Codec.list[A].imap(Chain.fromSeq)(_.toList).withTypeName("Chain")
+    Codec.vector[A].imap(Chain.fromSeq)(_.toVector).withTypeName("Chain")
 
   /**
     * @group General
@@ -635,6 +635,37 @@ object Codec extends CodecCompanionCompat {
   implicit final def left[A, B](implicit codec: Codec[A]): Codec.Aux[codec.AvroType, Left[A, B]] =
     codec.imap(Left[A, B])(_.value)
 
+  import java.{util => ju}
+
+  def collection[A](
+    implicit codec: Codec[A]
+  ): Codec.Aux[Avro.Array[codec.AvroType], ju.Collection[A]] =
+    Codec.instanceForTypes[Avro.Array[codec.AvroType], ju.Collection[A]](
+      "Collection",
+      codec.schema.map(Schema.createArray), { collection =>
+        val it = collection.iterator()
+        val coll: ju.List[codec.AvroType] = new ju.ArrayList
+        AvroError.catchNonFatal {
+          while (it.hasNext)(coll
+            .add(codec.encode(it.next()).fold(err => throw err.throwable, identity)))
+          Right(coll)
+        }
+      }, {
+        case (as: java.util.Collection[_], schema) =>
+          val it = as.iterator()
+          val coll: ju.Collection[A] = new ju.ArrayList
+          AvroError.catchNonFatal {
+            while (it.hasNext)(coll
+              .add(
+                codec
+                  .decode(it.next(), schema.getElementType)
+                  .fold(err => throw err.throwable, identity)
+              ))
+            Right(coll)
+          }
+      }
+    )
+
   /**
     * @group Collection
     */
@@ -642,14 +673,8 @@ object Codec extends CodecCompanionCompat {
     implicit codec: Codec[A]
   ): Codec.Aux[Avro.Array[codec.AvroType], List[A]] =
     Codec
-      .instanceForTypes[Avro.Array[codec.AvroType], List[A]](
-        "Collection",
-        codec.schema.map(Schema.createArray),
-        _.traverse(codec.encode(_)).map(_.asJava), {
-          case (collection: java.util.Collection[_], schema) =>
-            collection.asScala.toList.traverse(codec.decode(_, schema.getElementType))
-        }
-      )
+      .collection[A]
+      .imap(_.asScala.toList)(_.asJava)
       .withTypeName("List")
 
   /**
@@ -965,8 +990,8 @@ object Codec extends CodecCompanionCompat {
     implicit codec: Codec[A]
   ): Codec.Aux[Avro.Array[codec.AvroType], Set[A]] =
     Codec
-      .list[A]
-      .imap(_.toSet)(_.toList)
+      .collection[A]
+      .imap(_.asScala.toSet)(_.asJava)
       .withTypeName("Set")
 
   /**
@@ -1160,14 +1185,8 @@ object Codec extends CodecCompanionCompat {
     implicit codec: Codec[A]
   ): Codec.Aux[Avro.Array[codec.AvroType], Vector[A]] =
     Codec
-      .instanceForTypes[Avro.Array[codec.AvroType], Vector[A]](
-        "Collection",
-        codec.schema.map(Schema.createArray),
-        _.traverse(codec.encode(_)).map(_.asJava), {
-          case (collection: java.util.Collection[_], schema) =>
-            collection.asScala.toVector.traverse(codec.decode(_, schema.getElementType))
-        }
-      )
+      .collection[A]
+      .imap(_.asScala.toVector)(_.asJava)
       .withTypeName("Vector")
 
   /**

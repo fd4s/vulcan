@@ -2567,7 +2567,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Set[Int]](
             unsafeEncode(Set(1, 2, 3)),
             unsafeSchema[Int],
-            "Error decoding Set: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding Set: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -2575,7 +2575,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Set[Int]](
             unsafeEncode(10),
             unsafeSchema[Set[Int]],
-            "Error decoding Set: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding Set: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
