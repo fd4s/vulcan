@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
 import java.util.UUID
+
 import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._

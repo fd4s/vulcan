@@ -30,7 +30,7 @@ package object generic {
   implicit final def coproductCodec[H, T <: Coproduct](
     implicit headCodec: Codec[H],
     tailCodec: Lazy[Codec[T]]
-  ): Codec[H :+: T] =
+  ): Codec.Aux[AnyRef, H :+: T] =
     Codec
       .instance[Any, H :+: T](
         AvroError.catchNonFatal {

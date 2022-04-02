@@ -30,7 +30,7 @@ lazy val vulcan = project
     console := (core / Compile / console).value,
     Test / console := (core / Test / console).value
   )
-  .aggregate(core, enumeratum, generic, refined)
+  .aggregate(core, binary, enumeratum, generic, refined)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -40,7 +40,9 @@ lazy val core = project
     dependencySettings ++ Seq(
       libraryDependencies ++= Seq(
         "org.apache.avro" % "avro" % avroVersion,
-        "org.typelevel" %% "cats-free" % catsVersion
+        "org.typelevel" %% "cats-free" % catsVersion,
+        "org.scodec" %% "scodec-core" % "1.11.7",
+        "org.scodec" %% "scodec-cats" % "1.1.0-RC2"
       ) ++ {
         if (scalaVersion.value.startsWith("3")) Nil
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
@@ -54,6 +56,16 @@ lazy val core = project
     ),
     testSettings
   )
+
+lazy val tests = project
+  .in(file("modules/tests"))
+  .settings(
+    dependencySettings,
+    noPublishSettings,
+    scalaSettings,
+    testSettings
+  )
+  .dependsOn(core, binary)
 
 lazy val enumeratum = project
   .in(file("modules/enumeratum"))
@@ -121,6 +133,25 @@ lazy val refined = project
       crossScalaVersions += scala3
     ),
     testSettings
+  )
+  .dependsOn(core)
+
+lazy val binary = project
+  .in(file("modules/binary"))
+  .settings(
+    moduleName := "vulcan-binary",
+    name := moduleName.value,
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "org.scodec" %% "scodec-core" % "1.11.7",
+        "org.scodec" %% "scodec-cats" % "1.1.0-M3"
+      )
+    ),
+    publishSettings,
+    mimaSettings,
+    scalaSettings,
+    testSettings,
+    scalatestSettings
   )
   .dependsOn(core)
 
@@ -323,7 +354,7 @@ lazy val scalaSettings = Seq(
         "UTF-8",
         "-feature",
         "-unchecked",
-        "-Xfatal-warnings",
+//        "-Xfatal-warnings",
         "-language:implicitConversions"
       )
 

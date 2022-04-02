@@ -10,6 +10,7 @@ import org.scalatest.Assertion
 import scala.collection.immutable.SortedSet
 import vulcan.examples._
 import java.util.UUID
+import scodec.bits.BitVector
 final class RoundtripSpec extends BaseSpec with RoundtripHelpers {
   describe("BigDecimal") {
     it("roundtrip") {
@@ -220,6 +221,9 @@ trait RoundtripHelpers {
       roundtrip(a)
       binaryRoundtrip(a)
       jsonRoundtrip(a)
+      scodecRoundTrip(a)
+      scodecThenJavaRoundTrip(a)
+      javaThenScodecRoundTrip(a)
     }
   }
 
@@ -264,4 +268,71 @@ trait RoundtripHelpers {
       assert(decoded === Right(a))
     }
   }
+
+    def scodecRoundTrip[A](a: A)(
+    implicit codec: Codec[A],
+    eq: Eq[A]
+  ): Assertion = {
+    val binary = toBinaryScodec(a)
+    assert(binary.isRight)
+
+    val decoded = fromBinaryScodec(binary.value)
+    withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+      assert(decoded === Right(a))
+    }
+  }
+
+  def scodecThenJavaRoundTrip[A](a: A)(
+    implicit codec: Codec[A],
+    eq: Eq[A]
+  ): Assertion = {
+    val binary = toBinaryScodec(a)
+    assert(binary.isRight)
+
+    val decoded = codec.schema.flatMap(Codec.fromBinary[A](binary.value, _))
+    withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+      assert(decoded === Right(a))
+    }
+  }
+
+    def javaThenScodecRoundTrip[A](a: A)(
+    implicit codec: Codec[A],
+    eq: Eq[A]
+  ): Assertion = {
+    val binary = Codec.toBinary(a)
+    assert(binary.isRight)
+
+    val decoded = fromBinaryScodec(binary.value)
+    withClue(s"Actual: $decoded, Expected: ${Right(a)}") {
+      assert(decoded === Right(a))
+    }
+  }
+
+  def toBinaryScodec[A](a: A)(implicit codec: Codec[A]): Either[AvroError, Array[Byte]] =
+    codec.schema.flatMap { schema =>
+      codec.encode(a).flatMap { encoded =>
+        AvroError.catchNonFatal {
+          vulcan.binary
+            .forWriterSchema(schema)
+            .encode(encoded)
+            .toEither
+            .map(_.toByteArray)
+            .leftMap(_ => AvroError("encoding error"))
+        }
+      }
+    }
+
+  def fromBinaryScodec[A](bytes: Array[Byte])(
+    implicit codec: Codec[A]
+  ): Either[AvroError, A] =
+    codec.schema.flatMap { schema =>
+      AvroError.catchNonFatal {
+        vulcan.binary
+          .forWriterSchema(schema)
+          .decode(BitVector(bytes))
+          .toEither
+          .map(_.value)
+          .leftMap(_ => AvroError("decoding error"))
+      }
+    }.flatMap(Codec.decode[A](_))
 }
