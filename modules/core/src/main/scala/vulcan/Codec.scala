@@ -87,6 +87,15 @@ sealed abstract class Codec[A] {
       (a, schema) => decode(a, schema).flatMap(f)
     )
 
+  final def imapErrors[B](
+    f: A => Either[AvroError, B]
+  )(g: B => Either[AvroError, A]): Codec.Aux[AvroType, B] =
+    Codec.instance(
+      schema,
+      b => g(b).flatMap(encode),
+      (a, schema) => decode(a, schema).flatMap(f)
+    )
+
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
     * for encoding and decoding, mapping back-and-forth
@@ -227,7 +236,7 @@ object Codec extends CodecCompanionCompat {
   implicit final def chain[A](
     implicit codec: Codec[A]
   ): Codec.Aux[Avro.Array[codec.AvroType], Chain[A]] =
-    Codec.vector[A].imap(Chain.fromSeq)(_.toVector).withTypeName("Chain")
+    Codec.list[A].imap(Chain.fromSeq)(_.toList).withTypeName("Chain")
 
   /**
     * @group General
@@ -680,19 +689,16 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaTime
     */
-  implicit final val localDate: Codec.Aux[Avro.Int, LocalDate] =
-    Codec
-      .instanceForTypes[Avro.Int, LocalDate](
-        "Integer",
-        Right(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType())),
+  implicit lazy val localDate: Codec.Aux[Avro.Int, LocalDate] =
+    Codec.int
+      .withSchema(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType()))
+      .imapErrors(int => LocalDate.ofEpochDay(int.toLong).asRight)(
         localDate =>
           Either.cond(
             localDate.toEpochDay.isValidInt,
             localDate.toEpochDay.toInt,
             AvroError.encodeDateSizeExceeded(localDate)
-          ), {
-          case (int: Avro.Int, _) => LocalDate.ofEpochDay(int.toLong).asRight
-        }
+          )
       )
       .validateLogicalType(LogicalTypes.date)
       .withTypeName("LocalDate")

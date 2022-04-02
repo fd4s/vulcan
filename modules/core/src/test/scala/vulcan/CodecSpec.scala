@@ -1058,27 +1058,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not int") {
-          assertDecodeError[LocalDate](
-            unsafeEncode(LocalDate.now()),
-            unsafeSchema[Long],
-            "Error decoding LocalDate: Got unexpected schema type LONG, expected schema type INT"
-          )
-        }
 
         it("should error if logical type is not date") {
           assertDecodeError[LocalDate](
             unsafeEncode(LocalDate.now()),
             unsafeSchema[Int],
             "Error decoding LocalDate: Got unexpected missing logical type"
-          )
-        }
-
-        it("should error if value is not int") {
-          assertDecodeError[LocalDate](
-            unsafeEncode(123L),
-            unsafeSchema[LocalDate],
-            "Error decoding LocalDate: Got unexpected type java.lang.Long, expected type Integer"
           )
         }
 
