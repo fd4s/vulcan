@@ -2,19 +2,18 @@ package vulcan
 
 import cats.data._
 import cats.implicits._
+
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData
-import org.apache.avro.util.Utf8
 import org.scalacheck.Gen
 import org.scalatest.Assertion
-import vulcan.examples._
+import vulcan.examples.{SecondInSealedTraitCaseClass, _}
 import vulcan.internal.converters.collection._
 
 import scala.util.{Failure, Success, Try}
@@ -212,7 +211,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(Chain(1, 2, 3)),
             unsafeSchema[Int],
-            "Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding Chain: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -220,7 +219,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Chain[Int]](
             unsafeEncode(10),
             unsafeSchema[Chain[Int]],
-            "Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding Chain: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -248,7 +247,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = 'a'
           assertEncodeIs[Char](
             value,
-            Right(new Utf8("a"))
+            Right(Avro.String("a"))
           )
         }
       }
@@ -577,7 +576,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should encode a valid symbol") {
           assertEncodeIs[SealedTraitEnum](
             FirstInSealedTraitEnum,
-            Right(new GenericData.EnumSymbol(unsafeSchema[SealedTraitEnum], "first"))
+            Right(Avro.EnumSymbol(unsafeSchema[SealedTraitEnum], "first"))
           )
         }
       }
@@ -601,7 +600,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should return default value if encoded value is not a schema symbol") {
           assertDecodeIs[SealedTraitEnum](
-            new GenericData.EnumSymbol(
+            Avro.EnumSymbol(
               SchemaBuilder
                 .enumeration("vulcan.examples.SealedTraitEnum")
                 .symbols("symbol"),
@@ -614,7 +613,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should error if encoded value is not a schema symbol and there is no default value") {
           assertDecodeError[SealedTraitEnumNoDefault](
-            new GenericData.EnumSymbol(
+            Avro.EnumSymbol(
               SchemaBuilder
                 .enumeration("vulcan.examples.SealedTraitEnumNoDefault")
                 .symbols("symbol"),
@@ -1120,6 +1119,15 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Right(value)
           )
         }
+
+        it("should error if local date epoch days exceeds maximum integer size") {
+          val value = LocalDate.MAX
+
+          assertEncodeError[LocalDate](
+            value,
+            s"Error encoding LocalDate: Unable to encode date as epoch days of ${value.toEpochDay} exceeds the maximum integer size"
+          )
+        }
       }
     }
 
@@ -1138,7 +1146,9 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = LocalTime.now()
           assertEncodeIs[LocalTime](
             value,
-            Right(java.lang.Integer.valueOf(TimeUnit.NANOSECONDS.toMillis(value.toNanoOfDay()).toInt))
+            Right(
+              java.lang.Integer.valueOf(TimeUnit.NANOSECONDS.toMillis(value.toNanoOfDay()).toInt)
+            )
           )
         }
       }
@@ -1233,7 +1243,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
     }
 
-
     describe("long") {
       describe("schema") {
         it("should be encoded as long") {
@@ -1301,7 +1310,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should encode as java map using encoder for value") {
           assertEncodeIs[Map[String, Int]](
             Map("key" -> 1),
-            Right(Map(new Utf8("key") -> 1).asJava)
+            Right(Map(Avro.String("key") -> 1).asJava)
           )
         }
       }
@@ -1415,7 +1424,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(NonEmptyChain(1, 2, 3)),
             unsafeSchema[Int],
-            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding NonEmptyChain: Error decoding Chain: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -1423,7 +1432,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[NonEmptyChain[Int]](
             unsafeEncode(10),
             unsafeSchema[NonEmptyChain[Int]],
-            "Error decoding NonEmptyChain: Error decoding Chain: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding NonEmptyChain: Error decoding Chain: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -2507,6 +2516,19 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Right(Test(None))
           )
         }
+
+        it("should decode field with aliased name") {
+          case class Aliased(aliasedField: Int)
+          implicit val codec: Codec[Aliased] =
+            Codec.record("CaseClassField", "") { field =>
+              field("aliasedField", _.aliasedField, aliases = Seq("value")).map(Aliased(_))
+            }
+
+          assertDecodeIs[Aliased](
+            unsafeEncode(CaseClassField(3)),
+            Right(Aliased(3))
+          )
+        }
       }
     }
 
@@ -2704,7 +2726,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = "abc"
           assertEncodeIs[String](
             value,
-            Right(new Utf8(value))
+            Right(Avro.String(value))
           )
         }
       }
@@ -2763,7 +2785,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       describe("schema") {
         it("should encode as union") {
           assertSchemaIs[SealedTraitCaseClass] {
-            """[{"type":"record","name":"FirstInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"int"}]},{"type":"record","name":"SecondInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"string"}]},"int"]"""
+            """[{"type":"record","name":"FirstInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"int"}]},{"type":"record","name":"SecondInSealedTraitCaseClass","namespace":"com.example","fields":[{"name":"value","type":"string"}]},{"type":"array","items":"int"}]"""
           }
         }
 
@@ -2853,6 +2875,33 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Right(FirstInSealedTraitCaseClass(0))
           )
         }
+
+        it("should decode using schema with aliased name") {
+
+          implicit val secondCodec: Codec[SecondInSealedTraitCaseClass] =
+            Codec.record(
+              name = "AliasedInSealedTraitCaseClass",
+              namespace = "com.example",
+              aliases = Seq("SecondInSealedTraitCaseClass")
+            ) { field =>
+              field("value", _.value).map(SecondInSealedTraitCaseClass(_))
+            }
+
+          implicit val codec: Codec[SealedTraitCaseClass] = Codec.union(
+            alt =>
+              alt[FirstInSealedTraitCaseClass]
+                |+| alt[SecondInSealedTraitCaseClass]
+                |+| alt[ThirdInSealedTraitCaseClass]
+          )
+
+          assertDecodeIs[SealedTraitCaseClass](
+            unsafeEncode[SealedTraitCaseClass](SecondInSealedTraitCaseClass("foo"))(
+              SealedTraitCaseClass.sealedTraitCaseClassCodec
+            ),
+            Right(SecondInSealedTraitCaseClass("foo")),
+            Some(SealedTraitCaseClass.sealedTraitCaseClassCodec.schema.value)
+          )
+        }
       }
     }
 
@@ -2915,7 +2964,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           val value = UUID.randomUUID()
           assertEncodeIs[UUID](
             value,
-            Right(new Utf8(value.toString()))
+            Right(Avro.String(value.toString()))
           )
         }
       }
@@ -2947,7 +2996,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should error if value is not uuid") {
           assertDecodeError[UUID](
-            new Utf8("not-uuid"),
+            Avro.String("not-uuid"),
             unsafeSchema[UUID],
             "Error decoding UUID: java.lang.IllegalArgumentException: Invalid UUID string: not-uuid"
           )

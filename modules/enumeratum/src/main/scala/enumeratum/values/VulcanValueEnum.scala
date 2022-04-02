@@ -1,16 +1,13 @@
 /*
- * Copyright 2019-2021 OVO Energy Limited
+ * Copyright 2019-2022 OVO Energy Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package enumeratum.values
 
-import org.apache.avro.generic.GenericData
-import org.apache.avro.util.Utf8
-
 import scala.reflect.runtime.universe.WeakTypeTag
-import vulcan.Codec
+import vulcan.{Avro, Codec}
 
 sealed trait VulcanValueEnum[ValueType, EntryType <: ValueEnumEntry[ValueType]] {
   this: ValueEnum[ValueType, EntryType] =>
@@ -23,7 +20,7 @@ trait ByteVulcanEnum[EntryType <: ByteEnumEntry] extends VulcanValueEnum[Byte, E
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[Int, EntryType] =
+  ): Codec.Aux[Avro.Int, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -32,7 +29,7 @@ trait CharVulcanEnum[EntryType <: CharEnumEntry] extends VulcanValueEnum[Char, E
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[Utf8, EntryType] =
+  ): Codec.Aux[Avro.String, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -41,7 +38,7 @@ trait IntVulcanEnum[EntryType <: IntEnumEntry] extends VulcanValueEnum[Int, Entr
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[Int, EntryType] =
+  ): Codec.Aux[Avro.Int, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -50,7 +47,7 @@ trait LongVulcanEnum[EntryType <: LongEnumEntry] extends VulcanValueEnum[Long, E
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[Long, EntryType] =
+  ): Codec.Aux[Avro.Long, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -59,7 +56,7 @@ trait ShortVulcanEnum[EntryType <: ShortEnumEntry] extends VulcanValueEnum[Short
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[Int, EntryType] =
+  ): Codec.Aux[Avro.Int, EntryType] =
     Vulcan.codec(this)
 }
 
@@ -68,6 +65,6 @@ trait StringVulcanEnum[EntryType <: StringEnumEntry] extends VulcanValueEnum[Str
 
   implicit override def vulcanCodec(
     implicit tag: WeakTypeTag[EntryType]
-  ): Codec.Aux[GenericData.EnumSymbol, EntryType] =
+  ): Codec.Aux[Avro.EnumSymbol, EntryType] =
     Vulcan.enumCodec(this)
 }

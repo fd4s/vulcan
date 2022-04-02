@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 OVO Energy Limited
+ * Copyright 2019-2022 OVO Energy Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -11,6 +11,7 @@ import cats.data.NonEmptyList
 import cats.instances.string._
 import org.apache.avro.{Schema, LogicalType}
 import scala.util.control.NonFatal
+import java.time.LocalDate
 
 /**
   * Error which occurred while generating a schema, or
@@ -236,6 +237,13 @@ object AvroError {
     override def toString: String =
       s"AvroError($message)"
   }
+
+  private[vulcan] final def encodeDateSizeExceeded(
+    date: LocalDate
+  ): AvroError =
+    AvroError(
+      s"Unable to encode date as epoch days of ${date.toEpochDay} exceeds the maximum integer size"
+    )
 
   private[vulcan] final def encodeDecimalPrecisionExceeded(
     actualPrecision: Int,

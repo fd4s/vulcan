@@ -9,26 +9,26 @@ package vulcan.generic
 import scala.annotation.StaticAnnotation
 
 /**
-  * Annotation which can be used to include documentation
+  * Annotation which can be used to alter the record name
   * in derived schemas.
   *
   * The annotation can be used in the following situations.<br>
-  * - Annotate a type for enum documentation when using
+  * - Annotate a type for enum name when using
   *   [[deriveEnum]].<br>
-  * - Annotate a type for fixed documentation when using
+  * - Annotate a type for fixed name when using
   *   [[deriveFixed]].<br>
-  * - Annotate a `case class` for record documentation
+  * - Annotate a `case class` for record name
   *   when using `Codec.derive` from the generic module.<br>
   * - Annotate a `case class` parameter for record field
-  *   documentation when using `Codec.derive` from the
+  *   name when using `Codec.derive` from the
   *   generic module.
   */
-final class AvroDoc(final val doc: String) extends StaticAnnotation {
+final class AvroName(final val name: String) extends StaticAnnotation {
   override final def toString: String =
-    s"AvroDoc($doc)"
+    s"AvroName($name)"
 }
 
-private[vulcan] object AvroDoc {
-  final def unapply(avroDoc: AvroDoc): Some[String] =
-    Some(avroDoc.doc)
+private[vulcan] object AvroName {
+  final def unapply(avroName: AvroName): Some[String] =
+    Some(avroName.name)
 }

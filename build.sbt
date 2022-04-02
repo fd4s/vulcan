@@ -1,25 +1,30 @@
-val avroVersion = "1.10.2"
+val avroVersion = "1.11.0"
 
-val catsVersion = "2.6.0"
+val catsVersion = "2.7.0"
 
-val enumeratumVersion = "1.6.1"
+val enumeratumVersion = "1.7.0"
 
-val magnoliaVersion = "0.17.0"
+val magnolia2Version = "0.17.0"
 
-val refinedVersion = "0.9.24"
+val magnolia3Version = "1.1.1"
 
-val shapelessVersion = "2.3.4"
+val refinedVersion = "0.9.27"
 
-val scala212 = "2.12.13"
+val shapelessVersion = "2.3.9"
 
-val scala213 = "2.13.5"
+val shapeless3Version = "3.0.4"
 
-val scala3 = "3.0.0-RC3"
+val scala212 = "2.12.15"
+
+val scala213 = "2.13.8"
+
+val scala3 = "3.0.2"
+val scala3_1 = "3.1.1" // used in generic module as requiried for Magnolia
 
 lazy val vulcan = project
   .in(file("."))
   .settings(
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     noPublishSettings,
     console := (core / Compile / console).value,
@@ -39,13 +44,13 @@ lazy val core = project
         "org.scodec" %% "scodec-core" % "1.11.7",
         "org.scodec" %% "scodec-cats" % "1.1.0-RC2"
       ) ++ {
-        if (isDotty.value) Nil
+        if (scalaVersion.value.startsWith("3")) Nil
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
       }
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
@@ -72,7 +77,7 @@ lazy val enumeratum = project
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings,
     testSettings
   )
@@ -84,16 +89,26 @@ lazy val generic = project
     moduleName := "vulcan-generic",
     name := moduleName.value,
     dependencySettings ++ Seq(
-      libraryDependencies ++= Seq(
-        "com.propensive" %% "magnolia" % magnoliaVersion,
-        "com.chuusai" %% "shapeless" % shapelessVersion,
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-      )
+      libraryDependencies ++= {
+        if (scalaVersion.value.startsWith("2"))
+          Seq(
+            "com.propensive" %% "magnolia" % magnolia2Version,
+            "com.chuusai" %% "shapeless" % shapelessVersion,
+            "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+          )
+        else
+          Seq(
+            "com.softwaremill.magnolia1_3" %% "magnolia" % magnolia3Version,
+            "org.typelevel" %% "shapeless3-deriving" % shapeless3Version
+          )
+      }
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings,
-    scalaSettings,
+    mimaSettings(excludeScala3 = true), // re-include scala 3 after publishing
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3_1
+    ),
     testSettings
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -113,7 +128,7 @@ lazy val refined = project
     // incompatible scala-xml dependencies
     munitSettings,
     publishSettings,
-    mimaSettings,
+    mimaSettings(),
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
@@ -156,11 +171,11 @@ lazy val docs = project
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= {
-    if (isDotty.value) Nil
+    if (scalaVersion.value.startsWith("3")) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3" % Test,
-        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0" % Test,
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
       )
   },
   pomPostProcess := { (node: xml.Node) =>
@@ -179,17 +194,17 @@ lazy val dependencySettings = Seq(
 
 lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.4",
+    "org.typelevel" %% "discipline-scalatest" % "2.1.5",
     "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.30"
+    "org.slf4j" % "slf4j-nop" % "1.7.36"
   ).map(_ % Test)
 )
 
 lazy val munitSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scalameta" %% "munit" % "0.7.25",
-    "org.scalameta" %% "munit-scalacheck" % "0.7.25",
-    "org.slf4j" % "slf4j-nop" % "1.7.30"
+    "org.scalameta" %% "munit" % "0.7.29",
+    "org.scalameta" %% "munit-scalacheck" % "0.7.29",
+    "org.slf4j" % "slf4j-nop" % "1.7.36"
   ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")
 )
@@ -224,47 +239,51 @@ lazy val mdocSettings = Seq(
 lazy val buildInfoSettings = Seq(
   buildInfoPackage := "vulcan.build",
   buildInfoObject := "info",
-  buildInfoKeys := Seq[BuildInfoKey](
-    scalaVersion,
-    scalacOptions,
-    sourceDirectory,
-    ThisBuild / latestVersion,
-    BuildInfoKey.map(ThisBuild / version) {
-      case (_, v) => "latestSnapshotVersion" -> v
-    },
-    BuildInfoKey.map(core / moduleName) {
-      case (k, v) => "core" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(core / crossScalaVersions) {
-      case (k, v) => "core" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(enumeratum / moduleName) {
-      case (k, v) => "enumeratum" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(enumeratum / crossScalaVersions) {
-      case (k, v) => "enumeratum" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(generic / moduleName) {
-      case (k, v) => "generic" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(generic / crossScalaVersions) {
-      case (k, v) => "generic" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(refined / moduleName) {
-      case (k, v) => "refined" ++ k.capitalize -> v
-    },
-    BuildInfoKey.map(refined / crossScalaVersions) {
-      case (k, v) => "refined" ++ k.capitalize -> v
-    },
-    LocalRootProject / organization,
-    core / crossScalaVersions,
-    BuildInfoKey("avroVersion" -> avroVersion),
-    BuildInfoKey("catsVersion" -> catsVersion),
-    BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
-    BuildInfoKey("magnoliaVersion" -> magnoliaVersion),
-    BuildInfoKey("refinedVersion" -> refinedVersion),
-    BuildInfoKey("shapelessVersion" -> shapelessVersion)
-  )
+  buildInfoKeys := {
+    val magnolia: String =
+      if (scalaVersion.value.startsWith("3")) magnolia3Version else magnolia2Version
+    Seq[BuildInfoKey](
+      scalaVersion,
+      scalacOptions,
+      sourceDirectory,
+      ThisBuild / latestVersion,
+      BuildInfoKey.map(ThisBuild / version) {
+        case (_, v) => "latestSnapshotVersion" -> v
+      },
+      BuildInfoKey.map(core / moduleName) {
+        case (k, v) => "core" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(core / crossScalaVersions) {
+        case (k, v) => "core" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(enumeratum / moduleName) {
+        case (k, v) => "enumeratum" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(enumeratum / crossScalaVersions) {
+        case (k, v) => "enumeratum" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(generic / moduleName) {
+        case (k, v) => "generic" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(generic / crossScalaVersions) {
+        case (k, v) => "generic" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(refined / moduleName) {
+        case (k, v) => "refined" ++ k.capitalize -> v
+      },
+      BuildInfoKey.map(refined / crossScalaVersions) {
+        case (k, v) => "refined" ++ k.capitalize -> v
+      },
+      LocalRootProject / organization,
+      core / crossScalaVersions,
+      BuildInfoKey("avroVersion" -> avroVersion),
+      BuildInfoKey("catsVersion" -> catsVersion),
+      BuildInfoKey("enumeratumVersion" -> enumeratumVersion),
+      BuildInfoKey("magnoliaVersion" -> magnolia),
+      BuildInfoKey("refinedVersion" -> refinedVersion),
+      BuildInfoKey("shapelessVersion" -> shapelessVersion)
+    )
+  }
 )
 
 lazy val metadataSettings = Seq(
@@ -296,9 +315,9 @@ lazy val publishSettings =
     )
   )
 
-lazy val mimaSettings = Seq(
+def mimaSettings(excludeScala3: Boolean = false) = Seq(
   mimaPreviousArtifacts := {
-    if (publishArtifact.value && !isDotty.value) {
+    if (publishArtifact.value && !(excludeScala3 && scalaVersion.value.startsWith("3"))) {
       Set(organization.value %% moduleName.value % (ThisBuild / previousStableVersion).value.get)
     } else Set()
   },
@@ -361,15 +380,13 @@ lazy val scalaSettings = Seq(
 
     val scala213ScalacOptions =
       if (scalaVersion.value.startsWith("2.13")) {
-        Seq("-Wconf:msg=Block&src=test/scala/vulcan/generic/.*:silent")
+        Seq("-Wconf:msg=Block&src=test/scala-2/vulcan/generic/.*:silent")
       } else Seq()
 
     val scala3ScalacOptions =
-      if (isDotty.value) {
+      if (scalaVersion.value.startsWith("3")) {
         Seq(
-          "-Ykind-projector",
-          "-source:3.0-migration",
-          "-Xignore-scala2-macros"
+          "-Ykind-projector"
         )
       } else Seq()
 
