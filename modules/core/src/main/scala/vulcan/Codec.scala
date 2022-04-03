@@ -605,7 +605,7 @@ object Codec extends CodecCompanionCompat {
     }
   }
 
-  private[vulcan] final def instanceForTypes[AvroType, A](
+  private def instanceForTypes[AvroType, A](
     expectedValueType: String,
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, AvroType],
