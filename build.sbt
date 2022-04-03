@@ -300,7 +300,10 @@ def mimaSettings(excludeScala3: Boolean = false) = Seq(
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.decode*"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.encode*"),
       ProblemFilters.exclude[MissingClassProblem]("vulcan.Codec$Field$"),
-      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroException.*")
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroException.*"),
+
+      // package-private
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.Codec.instanceForTypes")
     )
     // format: on
   }
