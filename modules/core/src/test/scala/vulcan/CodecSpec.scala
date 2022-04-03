@@ -180,9 +180,13 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should decode bytes as bytes") {
+          val str = "c6e6b318-303c-4ffa-8c0b-c689ddc49e94"
+          val bytes = str.getBytes(StandardCharsets.UTF_8)
+          val bb = StandardCharsets.UTF_8.encode(str)
+
           assertDecodeIs[Array[Byte]](
-            unsafeEncode[Array[Byte]](Array(1)),
-            Right(Array[Byte](1))
+            bb,
+            Right(bytes)
           )
         }
       }
