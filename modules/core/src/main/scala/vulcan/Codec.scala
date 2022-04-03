@@ -287,6 +287,7 @@ object Codec extends CodecCompanionCompat {
         logicalType.addToSchema(SchemaBuilder.builder().bytesType())
       }
     }
+
     Codec
       .instanceForTypes[Avro.Bytes, BigDecimal](
         "ByteBuffer",
@@ -327,7 +328,6 @@ object Codec extends CodecCompanionCompat {
         }
       )
       .withTypeName("BigDecimal")
-
   }
 
   /**
@@ -1084,6 +1084,14 @@ object Codec extends CodecCompanionCompat {
   final def toJson[A: Codec](a: A): Either[AvroError, String] =
     Serializer.toJson(a)
 
+  /**
+    * Returns a new union [[Codec]] for type `A`.
+    *
+    * @group Create
+    */
+  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[Any, A] =
+    UnionCodec(f(AltBuilder.instance))
+      .withTypeName("union")
   private[vulcan] final case class UnionCodec[A](alts: Chain[Alt[A]]) extends Codec[A] {
     type AvroType = Any
     override def encode(a: A): Either[AvroError, AvroType] =
@@ -1168,15 +1176,6 @@ object Codec extends CodecCompanionCompat {
         .map(schemas => Schema.createUnion(schemas.asJava))
     }
   }
-
-  /**
-    * Returns a new union [[Codec]] for type `A`.
-    *
-    * @group Create
-    */
-  final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[Any, A] =
-    UnionCodec(f(AltBuilder.instance))
-      .withTypeName("union")
 
   /**
     * @group General
