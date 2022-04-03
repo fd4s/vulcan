@@ -18,8 +18,7 @@ val scala212 = "2.12.15"
 
 val scala213 = "2.13.8"
 
-val scala3 = "3.0.2"
-val scala3_1 = "3.1.1" // used in generic module as requiried for Magnolia
+val scala3 = "3.1.1"
 
 lazy val vulcan = project
   .in(file("."))
@@ -95,7 +94,7 @@ lazy val generic = project
     publishSettings,
     mimaSettings(excludeScala3 = true), // re-include scala 3 after publishing
     scalaSettings ++ Seq(
-      crossScalaVersions += scala3_1
+      crossScalaVersions += scala3
     ),
     testSettings
   )
