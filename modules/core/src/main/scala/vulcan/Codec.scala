@@ -110,9 +110,9 @@ sealed abstract class Codec[A] {
   private[vulcan] def withTypeName(typeName: String): Codec.Aux[AvroType, A] =
     Codec.WithTypeName(this, typeName)
 
-  private[vulcan] def changeTypeName(typeName: String): Codec.Aux[AvroType, A] = this match { 
+  private[vulcan] def changeTypeName(typeName: String): Codec.Aux[AvroType, A] = this match {
     case c: Codec.WithTypeName[AvroType, A] @unchecked => Codec.WithTypeName(c.codec, typeName)
-    case _ => withTypeName(typeName)
+    case _                                             => withTypeName(typeName)
   }
 
   private[vulcan] def validateLogicalType(expected: LogicalType): Codec.Aux[AvroType, A] =
@@ -132,6 +132,12 @@ sealed abstract class Codec[A] {
       encode(_),
       decode(_, _)
     )
+
+  override final def toString: String =
+    schema match {
+      case Right(schema) => s"Codec(${schema.toString(true)})"
+      case Left(error)   => error.toString
+    }
 }
 
 /**
@@ -177,6 +183,7 @@ object Codec extends CodecCompanionCompat {
     codec: Codec.Aux[AvroType0, A],
     typeName: String
   ) extends Codec[A] {
+    type AvroType = AvroType0
 
     override def schema: Either[AvroError, Schema] = codec.schema
     override def encode(a: A): Either[AvroError, AvroType0] =
@@ -184,8 +191,6 @@ object Codec extends CodecCompanionCompat {
 
     override def decode(value: Any, schema: Schema): Either[AvroError, A] =
       codec.decode(value, schema).leftMap(AvroError.errorDecodingTo(typeName, _))
-
-    type AvroType = AvroType0
   }
 
   /**
@@ -322,6 +327,7 @@ object Codec extends CodecCompanionCompat {
         }
       )
       .withTypeName("BigDecimal")
+
   }
 
   /**
@@ -596,12 +602,6 @@ object Codec extends CodecCompanionCompat {
 
       override final def decode(value: Any, schema: Schema): Either[AvroError, A] =
         _decode(value, schema)
-
-      override final def toString: String =
-        schema match {
-          case Right(schema) => s"Codec(${schema.toString(true)})"
-          case Left(error)   => error.toString
-        }
     }
   }
 
