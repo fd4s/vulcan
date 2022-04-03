@@ -16,6 +16,8 @@ import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import shapeless.ops.coproduct.{Inject, Selector}
 import vulcan.internal.converters.collection._
 import vulcan.internal.tags._
+import cats.data.Chain
+import cats.free.FreeApplicative
 
 package object generic {
   implicit final val cnilCodec: Codec.Aux[Nothing, CNil] =
@@ -112,144 +114,52 @@ package object generic {
   implicit final class MagnoliaCodec private[generic] (
     private val codec: Codec.type
   ) extends AnyVal {
-    final def combine[A](caseClass: CaseClass[Codec, A]): Codec[A] = {
-      val namespace =
-        caseClass.annotations
-          .collectFirst { case AvroNamespace(namespace) => namespace }
-          .getOrElse(caseClass.typeName.owner)
+    final def combine[A](caseClass: CaseClass[Codec, A]): Codec[A] =
+      if (caseClass.isValueClass) {
+        val param = caseClass.parameters.head
+        param.typeclass.imap(value => caseClass.rawConstruct(List(value)))(param.dereference)
+      } else {
 
-      val shortName =
-        caseClass.annotations
-          .collectFirst { case AvroName(namespace) => namespace }
-          .getOrElse(caseClass.typeName.short)
-
-      val typeName =
-        s"$namespace.$shortName"
-
-      val schema =
-        if (caseClass.isValueClass) {
-          caseClass.parameters.head.typeclass.schema
-        } else {
-          AvroError.catchNonFatal {
+        Codec
+          .record[A](
+            name = caseClass.annotations
+              .collectFirst { case AvroName(namespace) => namespace }
+              .getOrElse(caseClass.typeName.short),
+            namespace = caseClass.annotations
+              .collectFirst { case AvroNamespace(namespace) => namespace }
+              .getOrElse(caseClass.typeName.owner),
+            doc = caseClass.annotations.collectFirst {
+              case AvroDoc(doc) => doc
+            }
+          ) { (f: Codec.FieldBuilder[A]) =>
             val nullDefaultBase = caseClass.annotations
               .collectFirst { case AvroNullDefault(enabled) => enabled }
               .getOrElse(false)
 
-            val fields =
-              caseClass.parameters.toList.traverse { param =>
-                param.typeclass.schema.map { schema =>
-                  def nullDefaultField =
-                    param.annotations
-                      .collectFirst {
-                        case AvroNullDefault(nullDefault) => nullDefault
-                      }
-                      .getOrElse(nullDefaultBase)
+            caseClass.parameters.toList
+              .traverse[FreeApplicative[Codec.Field[A, *], *], Any] { param =>
+                def nullDefaultField =
+                  param.annotations
+                    .collectFirst {
+                      case AvroNullDefault(nullDefault) => nullDefault
+                    }
+                    .getOrElse(nullDefaultBase)
 
-                  new Schema.Field(
-                    param.label,
-                    schema,
-                    param.annotations.collectFirst {
-                      case AvroDoc(doc) => doc
-                    }.orNull,
-                    if (schema.isNullable && nullDefaultField) Schema.Field.NULL_DEFAULT_VALUE
-                    else null
-                  )
-                }
+                implicit val codec = param.typeclass
+
+                f(
+                  name = param.label,
+                  access = param.dereference,
+                  doc = param.annotations.collectFirst {
+                    case AvroDoc(doc) => doc
+                  },
+                  default = (if (codec.schema.exists(_.isNullable) && nullDefaultField) Some(None)
+                             else None).asInstanceOf[Option[param.PType]] // TODO: remove cast
+                ).widen
               }
-
-            fields.map { fields =>
-              Schema.createRecord(
-                caseClass.annotations
-                  .collectFirst {
-                    case AvroName(name) => name
-                  }
-                  .getOrElse(
-                    caseClass.typeName.short
-                  ),
-                caseClass.annotations.collectFirst {
-                  case AvroDoc(doc) => doc
-                }.orNull,
-                namespace,
-                false,
-                fields.asJava
-              )
-            }
+              .map(caseClass.rawConstruct(_))
           }
-        }
-      Codec
-        .instance[Any, A](
-          schema,
-          if (caseClass.isValueClass) { a =>
-            val param = caseClass.parameters.head
-            param.typeclass.encode(param.dereference(a))
-          } else
-            (a: A) =>
-              schema.flatMap { schema =>
-                val fields =
-                  caseClass.parameters.toList.traverse { param =>
-                    param.typeclass
-                      .encode(param.dereference(a))
-                      .tupleLeft(param.label)
-                  }
-
-                fields.map { values =>
-                  val record = new GenericData.Record(schema)
-                  values.foreach {
-                    case (label, value) =>
-                      record.put(label, value)
-                  }
-
-                  record
-                }
-              },
-          if (caseClass.isValueClass) { (value, schema) =>
-            caseClass.parameters.head.typeclass
-              .decode(value, schema)
-              .map(decoded => caseClass.rawConstruct(List(decoded)))
-          } else
-            (value, writerSchema) => {
-              writerSchema.getType() match {
-                case Schema.Type.RECORD =>
-                  value match {
-                    case record: IndexedRecord =>
-                      caseClass.parameters.toList
-                        .traverse {
-                          param =>
-                            val field = record.getSchema.getField(param.label)
-                            if (field != null) {
-                              val value = record.get(field.pos)
-                              param.typeclass.decode(value, field.schema())
-                            } else {
-                              schema.flatMap { readerSchema =>
-                                readerSchema.getFields.asScala
-                                  .find(_.name == param.label)
-                                  .filter(_.hasDefaultValue)
-                                  .toRight(AvroError.decodeMissingRecordField(param.label))
-                                  .flatMap(
-                                    readerField => param.typeclass.decode(null, readerField.schema)
-                                  )
-                              }
-                            }
-                        }
-                        .map(caseClass.rawConstruct)
-
-                    case other =>
-                      Left(AvroError.decodeUnexpectedType(other, "IndexedRecord"))
-                  }
-
-                case schemaType =>
-                  Left {
-                    AvroError
-                      .decodeUnexpectedSchemaType(
-                        schemaType,
-                        Schema.Type.RECORD
-                      )
-                  }
-              }
-            }
-        )
-        .withTypeName(typeName)
-    }
+      }
 
     /**
       * Returns a `Codec` instance for the specified type,
@@ -260,68 +170,15 @@ package object generic {
       macro Magnolia.gen[A]
 
     final def dispatch[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[Any, A] = {
-      val typeName = sealedTrait.typeName.full
+
       Codec
-        .instance[Any, A](
-          AvroError.catchNonFatal {
-            sealedTrait.subtypes.toList
-              .traverse(_.typeclass.schema)
-              .map(schemas => Schema.createUnion(schemas.asJava))
-          },
-          a =>
-            sealedTrait.dispatch(a) { subtype =>
-              subtype.typeclass.encode(subtype.cast(a))
-            },
-          (value, schema) => {
-            val schemaTypes =
-              schema.getType() match {
-                case Schema.Type.UNION => schema.getTypes.asScala
-                case _                 => Seq(schema)
-              }
-
-            value match {
-              case container: GenericContainer =>
-                val subtypeName =
-                  container.getSchema.getName
-
-                val subtypeUnionSchema =
-                  schemaTypes
-                    .find(_.getName == subtypeName)
-                    .toRight(AvroError.decodeMissingUnionSchema(subtypeName))
-
-                def subtypeMatching =
-                  sealedTrait.subtypes
-                    .find(_.typeclass.schema.exists(_.getName == subtypeName))
-                    .toRight(AvroError.decodeMissingUnionAlternative(subtypeName))
-
-                subtypeUnionSchema.flatMap { subtypeSchema =>
-                  subtypeMatching.flatMap { subtype =>
-                    subtype.typeclass.decode(container, subtypeSchema)
-                  }
-                }
-
-              case other =>
-                sealedTrait.subtypes.toList
-                  .collectFirstSome { subtype =>
-                    subtype.typeclass.schema
-                      .traverse { subtypeSchema =>
-                        val subtypeName = subtypeSchema.getName
-                        schemaTypes
-                          .find(_.getName == subtypeName)
-                          .flatMap { schema =>
-                            subtype.typeclass
-                              .decode(other, schema)
-                              .toOption
-                          }
-                      }
-                  }
-                  .getOrElse {
-                    Left(AvroError.decodeExhaustedAlternatives(other))
-                  }
+        .union[A](
+          alt =>
+            Chain.fromSeq(sealedTrait.subtypes).flatMap { subtype =>
+              alt(subtype.typeclass, Prism.instance(subtype.cast.lift)(identity))
             }
-          }
         )
-        .withTypeName(typeName)
+        .withTypeName(sealedTrait.typeName.full)
     }
 
     final type Typeclass[A] = Codec[A]
