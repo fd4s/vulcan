@@ -211,7 +211,7 @@ final class GenericDerivationCodecSpec extends CodecBase {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseClass](CaseClassInSealedTrait(0)),
               unsafeSchema[String],
-              "Error decoding vulcan.generic.examples.SealedTraitCaseClass: Missing schema CaseClassInSealedTrait in union"
+              "Error decoding vulcan.generic.examples.SealedTraitCaseClass: Error decoding union: Missing schema CaseClassInSealedTrait in union"
             )
           }
 
@@ -227,7 +227,7 @@ final class GenericDerivationCodecSpec extends CodecBase {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode(123),
               unsafeSchema[SealedTraitCaseClass],
-              "Error decoding vulcan.generic.examples.SealedTraitCaseClass: Exhausted alternatives for type java.lang.Integer"
+              "Error decoding vulcan.generic.examples.SealedTraitCaseClass: Error decoding union: Exhausted alternatives for type java.lang.Integer"
             )
           }
 
@@ -235,7 +235,7 @@ final class GenericDerivationCodecSpec extends CodecBase {
             assertDecodeError[SealedTraitCaseObject](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
               unsafeSchema[SealedTraitCaseClass],
-              "Error decoding vulcan.generic.examples.SealedTraitCaseObject: Missing schema CaseObjectInSealedTrait in union"
+              "Error decoding vulcan.generic.examples.SealedTraitCaseObject: Error decoding union: Missing schema CaseObjectInSealedTrait in union"
             )
           }
 
@@ -243,7 +243,7 @@ final class GenericDerivationCodecSpec extends CodecBase {
             assertDecodeError[SealedTraitCaseClass](
               unsafeEncode[SealedTraitCaseObject](CaseObjectInSealedTrait),
               unsafeSchema[SealedTraitCaseObject],
-              "Error decoding vulcan.generic.examples.SealedTraitCaseClass: Missing alternative CaseObjectInSealedTrait in union"
+              "Error decoding vulcan.generic.examples.SealedTraitCaseClass: Error decoding union: Missing alternative CaseObjectInSealedTrait in union"
             )
           }
 
