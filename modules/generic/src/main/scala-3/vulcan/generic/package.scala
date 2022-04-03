@@ -13,6 +13,7 @@ import shapeless3.deriving._
 import scala.compiletime._
 import scala.reflect.ClassTag
 import scala.deriving.Mirror
+import cats.data.Chain
 import cats.implicits._
 import magnolia1._
 import org.apache.avro.generic._
@@ -160,69 +161,18 @@ package object generic {
     }
 
     final def split[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[Any, A] = {
-      val typeName = sealedTrait.typeInfo.full
       Codec
-        .instance[Any, A](
-          AvroError.catchNonFatal {
-            sealedTrait.subtypes.toList
-              .sortBy(_.typeInfo.full)
-              .traverse(_.typeclass.schema)
-              .map(schemas => Schema.createUnion(schemas.asJava))
-          },
-          a =>
-            sealedTrait.choose(a) { subtype =>
-              subtype.typeclass.encode(subtype.cast(a))
-            },
-          (value, schema) => {
-            val schemaTypes =
-              schema.getType() match {
-                case Schema.Type.UNION => schema.getTypes.asScala
-                case _                 => Seq(schema)
+        .union[A](
+          alt =>
+            Chain.fromSeq(sealedTrait.subtypes.sortBy(_.typeInfo.full))
+              .flatMap { case subtype: SealedTrait.Subtype[Codec, A, s] =>
+                implicit val codec: Codec[s & A] = subtype.typeclass
+                implicit val prism: Prism[A, s & A] =
+                  Prism.identity.imap(subtype.cast.lift, identity)
+                alt[s & A]
               }
-
-            value match {
-              case container: GenericContainer =>
-                val subtypeName =
-                  container.getSchema.getName
-
-                val subtypeUnionSchema =
-                  schemaTypes
-                    .find(_.getName == subtypeName)
-                    .toRight(AvroError.decodeMissingUnionSchema(subtypeName))
-
-                def subtypeMatching =
-                  sealedTrait.subtypes
-                    .find(_.typeclass.schema.exists(_.getName == subtypeName))
-                    .toRight(AvroError.decodeMissingUnionAlternative(subtypeName))
-
-                subtypeUnionSchema.flatMap { subtypeSchema =>
-                  subtypeMatching.flatMap { subtype =>
-                    subtype.typeclass.decode(container, subtypeSchema)
-                  }
-                }
-
-              case other =>
-                sealedTrait.subtypes.toList
-                  .collectFirstSome { subtype =>
-                    subtype.typeclass.schema
-                      .traverse { subtypeSchema =>
-                        val subtypeName = subtypeSchema.getName
-                        schemaTypes
-                          .find(_.getName == subtypeName)
-                          .flatMap { schema =>
-                            subtype.typeclass
-                              .decode(other, schema)
-                              .toOption
-                          }
-                      }
-                  }
-                  .getOrElse {
-                    Left(AvroError.decodeExhaustedAlternatives(other))
-                  }
-            }
-          }
         )
-        .withTypeName(typeName)
+        .changeTypeName(sealedTrait.typeInfo.full)
     }
 
     final type Typeclass[A] = Codec[A]
