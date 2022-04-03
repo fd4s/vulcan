@@ -110,28 +110,24 @@ sealed abstract class Codec[A] {
   private[vulcan] def withTypeName(typeName: String): Codec.Aux[AvroType, A] =
     Codec.WithTypeName(this, typeName)
 
-  private[vulcan] def changeTypeName(typeName: String): Codec.Aux[AvroType, A] = this match {
-    case c: Codec.WithTypeName[AvroType, A] @unchecked => Codec.WithTypeName(c.codec, typeName)
-    case _                                             => withTypeName(typeName)
-  }
-
-  private[vulcan] def validateLogicalType(expected: LogicalType): Codec.Aux[AvroType, A] =
-    Codec.instanceInternal(
-      schema,
-      encode(_),
-      // validate logical type afterwards to preserve existing error behaviour
-      (value, schema) =>
-        decode(value, schema).ensure(AvroError.decodeUnexpectedLogicalType(schema.getLogicalType))(
-          _ => schema.getLogicalType == expected
+  private def withLogicalType(logicalType: LogicalType): Codec.Aux[AvroType, A] = {
+    schema match {
+      case Left(_) => this
+      case Right(schema) =>
+        val schemaCopy = new Schema.Parser().parse(schema.toString) // adding logical type mutates the instance, so we need to copy
+        Codec.instanceInternal(
+          Right(logicalType.addToSchema(schemaCopy)),
+          encode(_),
+          // validate logical type afterwards to preserve existing error behaviour
+          (value, schema) =>
+            decode(value, schema).ensure(
+              AvroError.decodeUnexpectedLogicalType(schema.getLogicalType)
+            )(
+              _ => schema.getLogicalType == logicalType
+            )
         )
-    )
-
-  private[vulcan] def withSchema(schema: Schema): Codec.Aux[AvroType, A] =
-    Codec.instanceInternal(
-      Right(schema),
-      encode(_),
-      decode(_, _)
-    )
+    }
+  }
 
   override final def toString: String =
     schema match {
@@ -650,9 +646,8 @@ object Codec extends CodecCompanionCompat {
     */
   implicit lazy val instant: Codec.Aux[Avro.Long, Instant] =
     Codec.long
-      .withSchema(LogicalTypes.timestampMillis().addToSchema(SchemaBuilder.builder().longType()))
       .imap(Instant.ofEpochMilli)(_.toEpochMilli)
-      .validateLogicalType(LogicalTypes.timestampMillis)
+      .withLogicalType(LogicalTypes.timestampMillis)
       .withTypeName("Instant")
 
   /**
@@ -720,7 +715,6 @@ object Codec extends CodecCompanionCompat {
     */
   implicit lazy val localDate: Codec.Aux[Avro.Int, LocalDate] =
     Codec.int
-      .withSchema(LogicalTypes.date().addToSchema(SchemaBuilder.builder().intType()))
       .imapErrors(int => LocalDate.ofEpochDay(int.toLong).asRight)(
         localDate =>
           Either.cond(
@@ -729,7 +723,7 @@ object Codec extends CodecCompanionCompat {
             AvroError.encodeDateSizeExceeded(localDate)
           )
       )
-      .validateLogicalType(LogicalTypes.date)
+      .withLogicalType(LogicalTypes.date)
       .withTypeName("LocalDate")
 
   /**
@@ -737,12 +731,11 @@ object Codec extends CodecCompanionCompat {
     */
   final val localTimeMillis: Codec.Aux[Avro.Int, LocalTime] =
     Codec.int
-      .withSchema(LogicalTypes.timeMillis().addToSchema(SchemaBuilder.builder().intType()))
       .imap { int =>
         val nanos = TimeUnit.MILLISECONDS.toNanos(int.toLong)
         LocalTime.ofNanoOfDay(nanos)
       }(localTime => TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay).toInt)
-      .validateLogicalType(LogicalTypes.timeMillis)
+      .withLogicalType(LogicalTypes.timeMillis)
       .withTypeName("LocalTime")
 
   /**
@@ -750,12 +743,11 @@ object Codec extends CodecCompanionCompat {
     */
   final val localTimeMicros: Codec.Aux[Avro.Long, LocalTime] =
     Codec.long
-      .withSchema(LogicalTypes.timeMicros.addToSchema(SchemaBuilder.builder().longType()))
       .imap { long =>
         val nanos = TimeUnit.MICROSECONDS.toNanos(long)
         LocalTime.ofNanoOfDay(nanos)
       }(localTime => TimeUnit.NANOSECONDS.toMicros(localTime.toNanoOfDay))
-      .validateLogicalType(LogicalTypes.timeMicros)
+      .withLogicalType(LogicalTypes.timeMicros)
       .withTypeName("LocalTime")
 
   /**
@@ -1203,14 +1195,13 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val uuid: Codec.Aux[Avro.String, UUID] =
     Codec.string
-      .withSchema(LogicalTypes.uuid().addToSchema(SchemaBuilder.builder().stringType()))
       .imapError(
         string =>
           AvroError.catchNonFatal {
             Right(UUID.fromString(string))
           }
       )(_.toString)
-      .validateLogicalType(LogicalTypes.uuid)
+      .withLogicalType(LogicalTypes.uuid)
       .withTypeName("UUID")
 
   /**
