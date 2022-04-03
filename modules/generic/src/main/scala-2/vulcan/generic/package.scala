@@ -115,8 +115,7 @@ package object generic {
               alt(subtype.typeclass, Prism.instance(subtype.cast.lift)(identity))
             }
         )
-        .changeTypeName(sealedTrait.typeName.full)
-
+        .withTypeName(sealedTrait.typeName.full)
     }
 
     final type Typeclass[A] = Codec[A]
