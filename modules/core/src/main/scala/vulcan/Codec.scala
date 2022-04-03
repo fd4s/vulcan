@@ -66,7 +66,7 @@ sealed abstract class Codec[A] {
     * between types `A` and `B`.
     */
   final def imap[B](f: A => B)(g: B => A): Codec.Aux[AvroType, B] =
-    Codec.instance(
+    Codec.instanceInternal(
       schema,
       b => encode(g(b)),
       (a, schema) => decode(a, schema).map(f)
@@ -81,7 +81,7 @@ sealed abstract class Codec[A] {
     * `A` to `B` might be unsuccessful.
     */
   final def imapError[B](f: A => Either[AvroError, B])(g: B => A): Codec.Aux[AvroType, B] =
-    Codec.instance(
+    Codec.instanceInternal(
       schema,
       b => encode(g(b)),
       (a, schema) => decode(a, schema).flatMap(f)
@@ -90,7 +90,7 @@ sealed abstract class Codec[A] {
   final def imapErrors[B](
     f: A => Either[AvroError, B]
   )(g: B => Either[AvroError, A]): Codec.Aux[AvroType, B] =
-    Codec.instance(
+    Codec.instanceInternal(
       schema,
       b => g(b).flatMap(encode),
       (a, schema) => decode(a, schema).flatMap(f)
@@ -116,7 +116,7 @@ sealed abstract class Codec[A] {
   }
 
   private[vulcan] def validateLogicalType(expected: LogicalType): Codec.Aux[AvroType, A] =
-    Codec.instance(
+    Codec.instanceInternal(
       schema,
       encode(_),
       // validate logical type afterwards to preserve existing error behaviour
@@ -127,7 +127,7 @@ sealed abstract class Codec[A] {
     )
 
   private[vulcan] def withSchema(schema: Schema): Codec.Aux[AvroType, A] =
-    Codec.instance(
+    Codec.instanceInternal(
       Right(schema),
       encode(_),
       decode(_, _)
@@ -229,7 +229,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val bytes: Codec.Aux[Avro.Bytes, Array[Byte]] =
     Codec
-      .instance[Avro.Bytes, Array[Byte]](
+      .instanceInternal[Avro.Bytes, Array[Byte]](
         Right(SchemaBuilder.builder().bytesType()),
         ByteBuffer.wrap(_).asRight,
         (value, schema) => {
@@ -344,7 +344,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val double: Codec.Aux[Avro.Double, Double] =
     Codec
-      .instance[Avro.Double, Double](
+      .instanceInternal[Avro.Double, Double](
         Right(SchemaBuilder.builder().doubleType()),
         _.asRight,
         (value, schema) => {
@@ -535,7 +535,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val float: Codec.Aux[Avro.Float, Float] =
     Codec
-      .instance[Avro.Float, Float](
+      .instanceInternal[Avro.Float, Float](
         Right(SchemaBuilder.builder().floatType()),
         _.asRight,
         (value, schema) => {
@@ -582,7 +582,17 @@ object Codec extends CodecCompanionCompat {
     *
     * @group Create
     */
+  @deprecated(
+    "Use existing primitives and combinators. If the functionality you need is not available or not exposed, please open an issue or pull request.",
+    "1.9.0"
+  )
   final def instance[AvroType0, A](
+    schema: Either[AvroError, Schema],
+    encode: A => Either[AvroError, AvroType0],
+    decode: (Any, Schema) => Either[AvroError, A]
+  ): Codec.Aux[AvroType0, A] = instanceInternal(schema, encode, decode)
+
+  private def instanceInternal[AvroType0, A](
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, AvroType0],
     decode: (Any, Schema) => Either[AvroError, A]
@@ -611,7 +621,7 @@ object Codec extends CodecCompanionCompat {
     encode: A => Either[AvroError, AvroType],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
   ): Codec.Aux[AvroType, A] =
-    instance(
+    instanceInternal(
       schema,
       encode(_),
       (value, writerSchema) =>
@@ -750,7 +760,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit lazy val long: Codec.Aux[Avro.Long, Long] =
     Codec
-      .instance[Avro.Long, Long](
+      .instanceInternal[Avro.Long, Long](
         Right(SchemaBuilder.builder().longType()),
         _.asRight,
         (value, schema) => {
@@ -1039,7 +1049,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val string: Codec.Aux[Avro.String, String] =
     Codec
-      .instance[Avro.String, String](
+      .instanceInternal[Avro.String, String](
         Right(SchemaBuilder.builder().stringType()),
         Avro.String(_).asRight,
         (value, schema) => {

@@ -24,6 +24,9 @@ sealed abstract class AvroError {
   def message: String
 
   def throwable: Throwable
+
+  override final def toString: String =
+    s"AvroError($message)"
 }
 
 @deprecated("Do not use - kept for binary compatibility", "1.5.0")
@@ -43,9 +46,6 @@ object AvroDecodingError {
       override final def throwable: Throwable =
         AvroException(message)
 
-      override final def toString: String =
-        s"AvroError($message)"
-
       override final def withDecodingTypeName(_decodingTypeName: String) =
         apply(_decodingTypeName, _message)
     }
@@ -63,8 +63,6 @@ object AvroError {
       override final def throwable: Throwable =
         AvroException(message)
 
-      override final def toString: String =
-        s"AvroError($message)"
     }
   }
 
@@ -94,8 +92,6 @@ object AvroError {
     def throwable: Throwable =
       AvroException(message)
 
-    override def toString: String =
-      s"AvroError($message)"
   }
 
   private[vulcan] final def decodeDecimalPrecisionExceeded(
@@ -234,8 +230,6 @@ object AvroError {
     def throwable: Throwable =
       AvroException(message)
 
-    override def toString: String =
-      s"AvroError($message)"
   }
 
   private[vulcan] final def encodeDateSizeExceeded(

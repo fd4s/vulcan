@@ -1,7 +1,7 @@
 package vulcan.generic
 
 import cats.syntax.all._
-import org.apache.avro.{Schema, SchemaBuilder}
+import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct}
 import vulcan._
 import vulcan.generic.examples._
@@ -56,11 +56,7 @@ final class CoproductCodecSpec extends CodecBase {
             coproductCodec[Int, CNil](
               Codec.int,
               shapeless.Lazy {
-                Codec.instance[Null, CNil](
-                  Right(SchemaBuilder.builder().nullType()),
-                  _ => Left(AvroError("encode")),
-                  (_, _) => Left(AvroError("decode"))
-                )
+                Codec.unit.asInstanceOf[Codec.Aux[Null, CNil]]
               }
             )
           }

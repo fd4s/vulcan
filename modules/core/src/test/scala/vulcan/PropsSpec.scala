@@ -1,8 +1,10 @@
 package vulcan
 
 import cats.syntax.show._
+import scala.annotation.nowarn
 
 final class PropsSpec extends BaseSpec {
+  @nowarn("cat=deprecation") // TODO
   val codecSchemaError: Codec[Int] =
     Codec.instance(
       schema = Left(AvroError("error")),
