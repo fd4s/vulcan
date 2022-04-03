@@ -108,11 +108,12 @@ sealed abstract class Codec[A] {
     imapError(f(_).toEither.leftMap(AvroError.fromThrowable))(g)
 
   private[vulcan] def withTypeName(typeName: String): Codec.Aux[AvroType, A] =
-    Codec.instance(
-      schema,
-      encode(_).leftMap(AvroError.errorEncodingFrom(typeName, _)),
-      decode(_, _).leftMap(AvroError.errorDecodingTo(typeName, _))
-    )
+    Codec.WithTypeName(this, typeName)
+
+  private[vulcan] def changeTypeName(typeName: String): Codec.Aux[AvroType, A] = this match { 
+    case c: Codec.WithTypeName[AvroType, A] @unchecked => Codec.WithTypeName(c.codec, typeName)
+    case _ => withTypeName(typeName)
+  }
 
   private[vulcan] def validateLogicalType(expected: LogicalType): Codec.Aux[AvroType, A] =
     Codec.instance(
@@ -169,6 +170,21 @@ sealed abstract class Codec[A] {
 object Codec extends CodecCompanionCompat {
 
   type Aux[AvroType0, A] = Codec[A] {
+    type AvroType = AvroType0
+  }
+
+  private[vulcan] final case class WithTypeName[AvroType0, A](
+    codec: Codec.Aux[AvroType0, A],
+    typeName: String
+  ) extends Codec[A] {
+
+    override def schema: Either[AvroError, Schema] = codec.schema
+    override def encode(a: A): Either[AvroError, AvroType0] =
+      codec.encode(a).leftMap(AvroError.errorEncodingFrom(typeName, _))
+
+    override def decode(value: Any, schema: Schema): Either[AvroError, A] =
+      codec.decode(value, schema).leftMap(AvroError.errorDecodingTo(typeName, _))
+
     type AvroType = AvroType0
   }
 
@@ -1226,6 +1242,8 @@ object Codec extends CodecCompanionCompat {
     def codec: Codec[B]
 
     def prism: Prism[A, B]
+
+    def imap[A0](f: A0 => Option[A], g: A => A0): Alt[A0] = Alt(codec, prism.imap(f, g))
   }
 
   private[vulcan] object Alt {

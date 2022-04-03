@@ -1,5 +1,6 @@
 package vulcan.generic
 
+import cats.syntax.all._
 import org.apache.avro.{Schema, SchemaBuilder}
 import shapeless.{:+:, CNil, Coproduct}
 import vulcan._
@@ -46,12 +47,12 @@ final class CoproductCodecSpec extends CodecBase {
 
         it("should capture errors on nested unions") {
           assertSchemaError[Int :+: Option[String] :+: CNil] {
-            """org.apache.avro.AvroRuntimeException: Nested union: [["null","string"]]"""
+            """org.apache.avro.AvroRuntimeException: Nested union: ["int",["null","string"]]"""
           }
         }
 
         it("should fail if CNil schema is not union") {
-          val codec: Codec[Int :+: CNil] =
+          val result = Either.catchNonFatal {
             coproductCodec[Int, CNil](
               Codec.int,
               shapeless.Lazy {
@@ -62,10 +63,10 @@ final class CoproductCodecSpec extends CodecBase {
                 )
               }
             )
+          }
 
-          assertSchemaError[Int :+: CNil] {
-            """Unexpected schema type NULL in Coproduct"""
-          }(codec)
+          assert(result.swap.value.isInstanceOf[IllegalArgumentException])
+
         }
       }
 
