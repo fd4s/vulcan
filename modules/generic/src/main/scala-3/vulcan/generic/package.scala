@@ -74,11 +74,8 @@ package object generic {
         .union[A](
           alt =>
             Chain.fromSeq(sealedTrait.subtypes.sortBy(_.typeInfo.full))
-              .flatMap { case subtype: SealedTrait.Subtype[Codec, A, s] =>
-                implicit val codec: Codec[s & A] = subtype.typeclass
-                implicit val prism: Prism[A, s & A] =
-                  Prism.identity.imap(subtype.cast.lift, identity)
-                alt[s & A]
+              .flatMap { subtype =>
+                alt(subtype.typeclass, Prism.instance(subtype.cast.lift)(identity))
               }
         )
         .changeTypeName(sealedTrait.typeInfo.full)

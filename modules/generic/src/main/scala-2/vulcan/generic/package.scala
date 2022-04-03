@@ -32,7 +32,7 @@ package object generic {
           .UnionCodec(
             tailAlts
               .prepend(
-                Codec.Alt(headCodec, Prism.identity.imap[H :+: T](_.select[H], Inl[H, T](_)))
+                Codec.Alt(headCodec, Prism.instance[H :+: T, H](_.select)(Inl(_)))
               )
           )
           .withTypeName(typeName)
@@ -112,10 +112,7 @@ package object generic {
         .union[A](
           alt =>
             Chain.fromSeq(sealedTrait.subtypes).flatMap { subtype =>
-              implicit val codec: Codec[subtype.SType] = subtype.typeclass
-              implicit val prism: Prism[A, subtype.SType] =
-                Prism.identity.imap(subtype.cast.lift, identity)
-              alt[subtype.SType]
+              alt(subtype.typeclass, Prism.instance(subtype.cast.lift)(identity))
             }
         )
         .changeTypeName(sealedTrait.typeName.full)
