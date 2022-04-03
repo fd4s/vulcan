@@ -1736,20 +1736,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assert(caseClassFieldCodec.schema.swap.value.message == "error")
         }
 
-        it("should error if default value cannob be encoded") {
-          case class CaseClassLocalDate(value: LocalDate)
-
-          implicit val caseClassLocalDateCodec: Codec[CaseClassLocalDate] =
-            Codec.record[CaseClassLocalDate]("CaseClassLocalDate", "") { field =>
-              field("value", _.value, default = Some(LocalDate.MAX)).map(CaseClassLocalDate(_))
-            }
-
-          assert {
-            caseClassLocalDateCodec.schema.swap.value.message ==
-              """Error encoding LocalDate: Unable to encode date as epoch days of 365241780471 exceeds the maximum integer size"""
-          }
-        }
-
         it("should support None as default value") {
           case class Test(value: Option[Int])
 
