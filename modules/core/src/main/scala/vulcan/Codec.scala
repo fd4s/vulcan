@@ -223,9 +223,10 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val bytes: Codec.Aux[Avro.Bytes, Array[Byte]] =
-    Codec
-      .withValidSchema[Avro.Bytes, Array[Byte]](
+  implicit final val bytes: Codec.Aux[Avro.Bytes, Array[Byte]] = BytesCodec
+
+  private[vulcan] case object BytesCodec
+      extends Codec.WithValidSchema[Avro.Bytes, Array[Byte]](
         SchemaBuilder.builder().bytesType(),
         ByteBuffer.wrap(_: Array[Byte]).asRight,
         (value, schema) => {
@@ -246,9 +247,8 @@ object Codec extends CodecCompanionCompat {
                 AvroError.decodeUnexpectedSchemaType(schemaType, BYTES)
               }
           }
-        }
+        }.leftMap(AvroError.errorDecodingTo("Array[Byte]", _))
       )
-      .withTypeName("Array[Byte]")
 
   /**
     * @group Cats
@@ -345,9 +345,10 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val double: Codec.Aux[Avro.Double, Double] =
-    Codec
-      .withValidSchema[Avro.Double, Double](
+  implicit final val double: Codec.Aux[Avro.Double, Double] = DoubleCodec
+
+  private[vulcan] case object DoubleCodec
+      extends Codec.WithValidSchema[Avro.Double, Double](
         SchemaBuilder.builder().doubleType(),
         _.asRight,
         (value, schema) => {
@@ -372,9 +373,8 @@ object Codec extends CodecCompanionCompat {
                   .decodeUnexpectedSchemaType(schemaType, DOUBLE)
               }
           }
-        }
+        }.leftMap(AvroError.errorDecodingTo("Double", _))
       )
-      .withTypeName("Double")
 
   /**
     * @group General
@@ -544,9 +544,10 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val float: Codec.Aux[Avro.Float, Float] =
-    Codec
-      .withValidSchema[Avro.Float, Float](
+  implicit final val float: Codec.Aux[Avro.Float, Float] = FloatCodec
+
+  case object FloatCodec
+      extends Codec.WithValidSchema[Avro.Float, Float](
         SchemaBuilder.builder().floatType(),
         _.asRight,
         (value, schema) => {
@@ -565,9 +566,8 @@ object Codec extends CodecCompanionCompat {
                   .decodeUnexpectedSchemaType(schemaType, FLOAT)
               }
           }
-        }
+        }.leftMap(AvroError.errorDecodingTo("Float", _))
       )
-      .withTypeName("Float")
 
   /**
     * Returns the result of decoding the specified
@@ -603,12 +603,6 @@ object Codec extends CodecCompanionCompat {
     decode: (Any, Schema) => Either[AvroError, A]
   ): Codec.Aux[AvroType0, A] = instanceInternal(schema, encode, decode)
 
-  private def withValidSchema[AvroType0, A](
-    schema: Schema,
-    encode: A => Either[AvroError, AvroType0],
-    decode: (Any, Schema) => Either[AvroError, A]
-  ): Codec.Aux[AvroType0, A] = instanceInternal(Right(schema), encode, decode)
-
   private def fail[AvroType0, A](error: AvroError): Codec.Aux[AvroType0, A] =
     instanceInternal(Left(error), _ => Left(error), (_, _) => Left(error))
 
@@ -616,24 +610,27 @@ object Codec extends CodecCompanionCompat {
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, AvroType0],
     decode: (Any, Schema) => Either[AvroError, A]
-  ): Codec.Aux[AvroType0, A] = {
-    val _schema = schema
-    val _encode = encode
-    val _decode = decode
+  ): Codec.Aux[AvroType0, A] = new InstanceInternal(schema, encode, decode) {}
 
-    new Codec[A] {
-      type AvroType = AvroType0
+  private[vulcan] abstract class InstanceInternal[AvroType0, A](
+    val schema: Either[AvroError, Schema],
+    _encode: A => Either[AvroError, AvroType0],
+    _decode: (Any, Schema) => Either[AvroError, A]
+  ) extends Codec[A] {
+    type AvroType = AvroType0
 
-      override final val schema: Either[AvroError, Schema] =
-        _schema
+    override final def encode(a: A): Either[AvroError, AvroType] =
+      _encode(a)
 
-      override final def encode(a: A): Either[AvroError, AvroType] =
-        _encode(a)
-
-      override final def decode(value: Any, schema: Schema): Either[AvroError, A] =
-        _decode(value, schema)
-    }
+    override final def decode(value: Any, schema: Schema): Either[AvroError, A] =
+      _decode(value, schema)
   }
+
+  private[vulcan] abstract class WithValidSchema[AvroType0, A](
+    val validSchema: Schema,
+    _encode: A => Either[AvroError, AvroType0],
+    _decode: (Any, Schema) => Either[AvroError, A]
+  ) extends InstanceInternal(Right(validSchema), _encode, _decode)
 
   private def instanceForTypes[AvroType, A](
     expectedValueType: String,
@@ -641,7 +638,7 @@ object Codec extends CodecCompanionCompat {
     encode: A => Either[AvroError, AvroType],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
   ): Codec.Aux[AvroType, A] =
-    withValidSchema(
+    new WithValidSchema[AvroType, A](
       schema,
       encode(_),
       (value, writerSchema) => {
@@ -658,7 +655,7 @@ object Codec extends CodecCompanionCompat {
               .decodeUnexpectedSchemaType(writerSchema.getType, schemaType)
           }
       }
-    )
+    ) {}
 
   /**
     * @group JavaTime
@@ -776,9 +773,9 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit lazy val long: Codec.Aux[Avro.Long, Long] =
-    Codec
-      .withValidSchema[Avro.Long, Long](
+  implicit lazy val long: Codec.Aux[Avro.Long, Long] = LongCodec
+  case object LongCodec
+      extends Codec.WithValidSchema[Avro.Long, Long](
         SchemaBuilder.builder().longType(),
         _.asRight,
         (value, schema) => {
@@ -798,9 +795,8 @@ object Codec extends CodecCompanionCompat {
                 AvroError.decodeUnexpectedSchemaType(schemaType, LONG)
               }
           }
-        }
+        }.leftMap(AvroError.errorDecodingTo("Long", _))
       )
-      .withTypeName("Long")
 
   /**
     * @group Collection
@@ -1072,9 +1068,10 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val string: Codec.Aux[Avro.String, String] =
-    Codec
-      .withValidSchema[Avro.String, String](
+  implicit final val string: Codec.Aux[Avro.String, String] = StringCodec
+
+  private[vulcan] case object StringCodec
+      extends Codec.WithValidSchema[Avro.String, String](
         SchemaBuilder.builder().stringType(),
         Avro.String(_).asRight,
         (value, schema) => {
@@ -1097,9 +1094,8 @@ object Codec extends CodecCompanionCompat {
                 AvroError.decodeUnexpectedSchemaType(schemaType, STRING)
               }
           }
-        }
+        }.leftMap(AvroError.errorDecodingTo("String", _))
       )
-      .withTypeName("String")
 
   /**
     * Returns the result of encoding the specified
