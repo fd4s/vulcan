@@ -19,6 +19,7 @@ import java.util.{Arrays, UUID}
 import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBuilder}
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._
+import vulcan.Avro.Bytes
 import vulcan.internal.{Deserializer, Serializer}
 
 import scala.annotation.implicitNotFound
@@ -146,6 +147,12 @@ object Codec extends CodecCompanionCompat {
     type AvroType = AvroType0
   }
 
+  private[vulcan] sealed trait WithValidSchema[AvroType0, A] extends Codec[A] {
+    type AvroType = AvroType0
+    def validSchema: Schema
+    override final val schema: Either[AvroError, Schema] = Right(validSchema)
+  }
+
   private[vulcan] final case class ImapErrors[AvroType0, A, B](
     codec: Codec.Aux[AvroType0, A],
     f: A => Either[AvroError, B],
@@ -210,14 +217,14 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val boolean: Codec.Aux[Avro.Boolean, Boolean] =
-    Codec
-      .instanceForTypes[Avro.Boolean, Boolean](
+  implicit final val boolean: Codec.Aux[Avro.Boolean, Boolean] = BooleanCodec
+  case object BooleanCodec
+      extends Codec.InstanceForTypes[Avro.Boolean, Boolean](
         "Boolean",
         SchemaBuilder.builder().booleanType(),
-        _.asRight, { case (boolean: Boolean, _) => Right(boolean) }
+        _.asRight, { case (boolean: Boolean, _) => Right(boolean) },
+        Some("Boolean")
       )
-      .withTypeName("Boolean")
 
   /**
     * @group General
@@ -290,7 +297,6 @@ object Codec extends CodecCompanionCompat {
     precision: Int,
     scale: Int
   ): Codec.Aux[Avro.Bytes, BigDecimal] = {
-    val conversion = new Conversions.DecimalConversion()
     val logicalType = LogicalTypes.decimal(precision, scale)
     val schema = AvroError.catchNonFatal {
       Right {
@@ -298,49 +304,69 @@ object Codec extends CodecCompanionCompat {
       }
     }
 
-    schema.fold(
-      fail,
-      schema =>
-        new Codec.InstanceForTypes[Avro.Bytes, BigDecimal](
-          "ByteBuffer",
-          schema,
-          bigDecimal =>
-            if (bigDecimal.scale == scale) {
-              if (bigDecimal.precision <= precision) {
-                Right(conversion.toBytes(bigDecimal.underlying(), schema, logicalType))
-              } else {
-                Left {
-                  AvroError
-                    .encodeDecimalPrecisionExceeded(
-                      bigDecimal.precision,
-                      precision
-                    )
-                }
-              }
-            } else
-              Left(AvroError.encodeDecimalScalesMismatch(bigDecimal.scale, scale)), {
-            case (bytes: Avro.Bytes, schema) =>
-              schema.getLogicalType match {
-                case decimal: LogicalTypes.Decimal =>
-                  val bigDecimal = BigDecimal(conversion.fromBytes(bytes, schema, decimal))
-                  if (bigDecimal.precision <= decimal.getPrecision) {
-                    Right(bigDecimal)
-                  } else
-                    Left {
-                      AvroError
-                        .decodeDecimalPrecisionExceeded(
-                          bigDecimal.precision,
-                          decimal.getPrecision
-                        )
-                    }
-                case logicalType =>
-                  Left(AvroError.decodeUnexpectedLogicalType(logicalType))
-              }
+    schema.fold(fail, schema => DecimalCodec(precision, scale, schema))
+  }
 
-          },
-          Some("BigDecimal")
-        ) {}
-    )
+  private[vulcan] final case class DecimalCodec(
+    precision: Int,
+    scale: Int,
+    override val validSchema: Schema
+  ) extends Codec.WithValidSchema[Avro.Bytes, BigDecimal] {
+    require(validSchema.getLogicalType match {
+      case dec: LogicalTypes.Decimal => dec.getPrecision == precision && dec.getScale == scale
+      case _                         => false
+    })
+
+    private val conversion = new Conversions.DecimalConversion()
+
+    override def encode(bigDecimal: BigDecimal): Either[AvroError, Bytes] = {
+      if (bigDecimal.scale == scale) {
+        if (bigDecimal.precision <= precision) {
+          Right(
+            conversion.toBytes(bigDecimal.underlying(), validSchema, validSchema.getLogicalType)
+          )
+        } else {
+          Left {
+            AvroError
+              .encodeDecimalPrecisionExceeded(
+                bigDecimal.precision,
+                precision
+              )
+          }
+        }
+      } else
+        Left(AvroError.encodeDecimalScalesMismatch(bigDecimal.scale, scale))
+    }.leftMap(AvroError.errorEncodingFrom("BigDecimal", _))
+
+    override def decode(value: Any, writerSchema: Schema): Either[AvroError, BigDecimal] = {
+      if (writerSchema.getType == Schema.Type.BYTES) {
+        value match {
+          case bytes: Avro.Bytes =>
+            writerSchema.getLogicalType match {
+              case decimal: LogicalTypes.Decimal =>
+                val conversion = new Conversions.DecimalConversion()
+                val bigDecimal = BigDecimal(conversion.fromBytes(bytes, writerSchema, decimal))
+                if (bigDecimal.precision <= decimal.getPrecision) {
+                  Right(bigDecimal)
+                } else
+                  Left {
+                    AvroError
+                      .decodeDecimalPrecisionExceeded(
+                        bigDecimal.precision,
+                        decimal.getPrecision
+                      )
+                  }
+              case logicalType =>
+                Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+            }
+          case _ => Left(AvroError.decodeUnexpectedType(value, "ByteBuffer"))
+        }
+      } else
+        Left {
+          AvroError
+            .decodeUnexpectedSchemaType(writerSchema.getType, Schema.Type.BYTES)
+        }
+    }.leftMap(err => AvroError.errorDecodingTo("BigDecimal", err))
   }
 
   /**
@@ -638,32 +664,35 @@ object Codec extends CodecCompanionCompat {
     schema: Schema,
     encode: A => Either[AvroError, AvroType],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
-  ): Codec.Aux[AvroType, A] = new InstanceForTypes(expectedValueType, schema, encode, decode) {}
+  ): Codec.Aux[AvroType, A] =
+    new InstanceForTypes[AvroType, A](expectedValueType, schema, encode, decode) {}
 
   private[vulcan] sealed abstract class InstanceForTypes[AvroType, A](
     expectedValueType: String,
-    schema: Schema,
+    val validSchema: Schema,
     _encode: A => Either[AvroError, AvroType],
     _decode: PartialFunction[(Any, Schema), Either[AvroError, A]],
     decodingTypeName: Option[String] = None
-  ) extends InstanceInternal[AvroType, A](
-        Right(schema),
-        _encode(_).leftMap(err => decodingTypeName.fold(err)(AvroError.errorEncodingFrom(_, err))),
-        (value, writerSchema) => {
-          val schemaType = schema.getType
-          if (writerSchema.getType == schemaType)
-            _decode
-              .lift((value, writerSchema))
-              .getOrElse(
-                Left(AvroError.decodeUnexpectedType(value, expectedValueType))
-              )
-          else
-            Left {
-              AvroError
-                .decodeUnexpectedSchemaType(writerSchema.getType, schemaType)
-            }
-        }.leftMap(err => decodingTypeName.fold(err)(AvroError.errorDecodingTo(_, err)))
-      )
+  ) extends WithValidSchema[AvroType, A] {
+
+    override def encode(value: A): Either[AvroError, AvroType] =
+      _encode(value).leftMap(err => decodingTypeName.fold(err)(AvroError.errorEncodingFrom(_, err)))
+
+    override def decode(value: Any, writerSchema: Schema): Either[AvroError, A] = {
+      val schemaType = validSchema.getType
+      if (writerSchema.getType == schemaType)
+        _decode
+          .lift((value, writerSchema))
+          .getOrElse(
+            Left(AvroError.decodeUnexpectedType(value, expectedValueType))
+          )
+      else
+        Left {
+          AvroError
+            .decodeUnexpectedSchemaType(writerSchema.getType, schemaType)
+        }
+    }.leftMap(err => decodingTypeName.fold(err)(AvroError.errorDecodingTo(_, err)))
+  }
 
   /**
     * @group JavaTime
