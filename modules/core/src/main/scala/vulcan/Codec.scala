@@ -29,6 +29,16 @@ import vulcan.internal.syntax._
 import vulcan.internal.schema.adaptForSchema
 
 import scala.util.Try
+//
+//object CodecInterpreter {
+//  def encode[A](codec: Codec[A]): A => Either[AvroError, Any] = codec match {
+//    case Codec.IntCodec                                      => (_: Int).asRight
+//    case Codec.ImapErrors(codec, _, g)                       => g(_).flatMap(codec.encode)
+//    case c: Codec.WithTypeName[codec.AvroType, A] @unchecked => c.encode(_)
+//    case internal: Codec.InstanceInternal[_, _]              => ???
+//    case Codec.UnionCodec(alts)                              => ???
+//  }
+//}
 
 /**
   * Provides a schema, along with encoding and decoding functions
@@ -61,12 +71,15 @@ sealed abstract class Codec[A] {
   /** Attempts to decode the specified value using the provided schema. */
   def decode(value: Any, schema: Schema): Either[AvroError, A]
 
+  private[vulcan] def validate: Either[AvroError, Codec.WithValidSchema[AvroType, A]] =
+    schema.map(Codec.Validated[AvroType, A](this, _))
+
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
     * for encoding and decoding, mapping back-and-forth
     * between types `A` and `B`.
     */
-  final def imap[B](f: A => B)(g: B => A): Codec.Aux[AvroType, B] =
+  def imap[B](f: A => B)(g: B => A): Codec.Aux[AvroType, B] =
     imapErrors(f(_).asRight)(g(_).asRight)
 
   /**
@@ -77,12 +90,13 @@ sealed abstract class Codec[A] {
     * Similar to [[Codec#imap]], except the mapping from
     * `A` to `B` might be unsuccessful.
     */
-  final def imapError[B](f: A => Either[AvroError, B])(g: B => A): Codec.Aux[AvroType, B] =
+  def imapError[B](f: A => Either[AvroError, B])(g: B => A): Codec.Aux[AvroType, B] =
     imapErrors(f)(g(_).asRight)
 
-  final def imapErrors[B](
+  def imapErrors[B](
     f: A => Either[AvroError, B]
-  )(g: B => Either[AvroError, A]): Codec.Aux[AvroType, B] = Codec.ImapErrors(this, f, g)
+  )(g: B => Either[AvroError, A]): Codec.Aux[AvroType, B] =
+    validate.fold[Codec.Aux[AvroType, B]](Codec.Fail(_), Codec.ImapErrors(_, f, g))
 
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
@@ -95,11 +109,12 @@ sealed abstract class Codec[A] {
   final def imapTry[B](f: A => Try[B])(g: B => A): Codec.Aux[AvroType, B] =
     imapError(f(_).toEither.leftMap(AvroError.fromThrowable))(g)
 
-  private[vulcan] def withTypeName(typeName: String): Codec.Aux[AvroType, A] =
-    Codec.WithTypeName(this, typeName)
+  private[Codec] def withLogicalType(logicalType: LogicalType): Codec.Aux[AvroType, A] =
+    validate.fold[Codec.Aux[AvroType, A]](Codec.fail, Codec.WithLogicalType(_, logicalType))
 
-  private def withLogicalType(logicalType: LogicalType): Codec.Aux[AvroType, A] =
-    Codec.WithLogicalType(this, logicalType)
+  private[vulcan] def withTypeName(typeName: String): Codec.Aux[AvroType, A] = {
+    validate.fold[Codec.Aux[AvroType, A]](Codec.Fail(_), Codec.WithTypeName(_, typeName))
+  }
 
   override final def toString: String =
     schema match {
@@ -151,16 +166,31 @@ object Codec extends CodecCompanionCompat {
     type AvroType = AvroType0
     def validSchema: Schema
     override final val schema: Either[AvroError, Schema] = Right(validSchema)
+
+    override final def imap[B](f: A => B)(g: B => A): WithValidSchema[AvroType0, B] =
+      ImapErrors[AvroType0, A, B](this, f(_).asRight, g(_).asRight)
+
+    override final def imapErrors[B](f: A => Either[AvroError, B])(
+      g: B => Either[AvroError, A]
+    ): WithValidSchema[AvroType0, B] = ImapErrors(this, f, g)
+  }
+
+  private[vulcan] final case class Validated[AvroType, A](
+    codec: Codec.Aux[AvroType, A],
+    override val validSchema: Schema
+  ) extends WithValidSchema[AvroType, A] {
+    override def encode(a: A): Either[AvroError, AvroType] = codec.encode(a)
+
+    override def decode(value: Any, schema: Schema): Either[AvroError, A] =
+      codec.decode(value, schema)
   }
 
   private[vulcan] final case class ImapErrors[AvroType0, A, B](
-    codec: Codec.Aux[AvroType0, A],
+    codec: Codec.WithValidSchema[AvroType0, A],
     f: A => Either[AvroError, B],
     g: B => Either[AvroError, A]
-  ) extends Codec[B] {
-    type AvroType = AvroType0
-
-    override def schema: Either[AvroError, Schema] = codec.schema
+  ) extends Codec.WithValidSchema[AvroType0, B] {
+    override def validSchema: Schema = codec.validSchema
 
     override def encode(b: B): Either[AvroError, AvroType0] = g(b).flatMap(codec.encode)
 
@@ -169,7 +199,7 @@ object Codec extends CodecCompanionCompat {
   }
 
   private[vulcan] final case class WithLogicalType[AvroType, A](
-    codec: Codec.Aux[AvroType, A],
+    codec: Codec.WithValidSchema[AvroType, A],
     logicalType: LogicalType
   ) extends Codec.InstanceInternal[AvroType, A](
         codec.schema.flatMap(
@@ -194,7 +224,7 @@ object Codec extends CodecCompanionCompat {
       )
 
   private[vulcan] final case class WithTypeName[AvroType0, A](
-    codec: Codec.Aux[AvroType0, A],
+    codec: Codec.WithValidSchema[AvroType0, A],
     typeName: String
   ) extends Codec[A] {
     type AvroType = AvroType0
@@ -642,8 +672,15 @@ object Codec extends CodecCompanionCompat {
   private def fail[AvroType0, A](error: AvroError): Codec.Aux[AvroType0, A] =
     Fail(error)
 
-  private[vulcan] final case class Fail[AvroType, A](error: AvroError)
-      extends InstanceInternal[AvroType, A](Left(error), _ => Left(error), (_, _) => Left(error))
+  private[vulcan] final case class Fail[AvroType0, A](error: AvroError) extends Codec[A] {
+    override type AvroType = AvroType0
+
+    override def schema: Either[AvroError, Schema] = Left(error)
+
+    override def encode(a: A): Either[AvroError, AvroType0] = Left(error)
+
+    override def decode(value: Any, schema: Schema): Either[AvroError, A] = Left(error)
+  }
 
   private[vulcan] abstract class InstanceInternal[AvroType0, A](
     val schema: Either[AvroError, Schema],
@@ -698,7 +735,7 @@ object Codec extends CodecCompanionCompat {
     * @group JavaTime
     */
   implicit lazy val instant: Codec.Aux[Avro.Long, Instant] =
-    Codec.long
+    LongCodec
       .imap(Instant.ofEpochMilli)(_.toEpochMilli)
       .withLogicalType(LogicalTypes.timestampMillis)
       .withTypeName("Instant")
@@ -812,29 +849,30 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit lazy val long: Codec.Aux[Avro.Long, Long] = LongCodec
-  case object LongCodec
-      extends Codec.InstanceInternal[Avro.Long, Long](
-        Right(SchemaBuilder.builder().longType()),
-        _.asRight,
-        (value, schema) => {
-          schema.getType match {
-            case LONG | INT =>
-              value match {
-                case long: Avro.Long =>
-                  Right(long)
-                case int: Avro.Int =>
-                  Right(int.toLong)
-                case other =>
-                  Left(AvroError.decodeUnexpectedType(other, "Long"))
-              }
+  case object LongCodec extends Codec.WithValidSchema[Avro.Long, Long] {
+    override def validSchema: Schema = SchemaBuilder.builder().longType()
 
-            case schemaType =>
-              Left {
-                AvroError.decodeUnexpectedSchemaType(schemaType, LONG)
-              }
+    override def encode(a: Long): Either[AvroError, Long] = a.asRight
+
+    override def decode(value: Any, schema: Schema): Either[AvroError, Long] = {
+      schema.getType match {
+        case LONG | INT =>
+          value match {
+            case long: Avro.Long =>
+              Right(long)
+            case int: Avro.Int =>
+              Right(int.toLong)
+            case other =>
+              Left(AvroError.decodeUnexpectedType(other, "Long"))
           }
-        }.leftMap(AvroError.errorDecodingTo("Long", _))
-      )
+
+        case schemaType =>
+          Left {
+            AvroError.decodeUnexpectedSchemaType(schemaType, LONG)
+          }
+      }
+    }.leftMap(AvroError.errorDecodingTo("Long", _))
+  }
 
   /**
     * @group Collection
@@ -1161,6 +1199,7 @@ object Codec extends CodecCompanionCompat {
   final def union[A](f: AltBuilder[A] => Chain[Alt[A]]): Codec.Aux[Any, A] =
     UnionCodec(f(AltBuilder.instance))
       .withTypeName("union")
+
   private[vulcan] final case class UnionCodec[A](alts: Chain[Alt[A]]) extends Codec[A] {
     type AvroType = Any
     override def encode(a: A): Either[AvroError, AvroType] =
