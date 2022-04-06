@@ -301,46 +301,45 @@ object Codec extends CodecCompanionCompat {
     schema.fold(
       fail,
       schema =>
-        Codec
-          .instanceForTypes[Avro.Bytes, BigDecimal](
-            "ByteBuffer",
-            schema,
-            bigDecimal =>
-              if (bigDecimal.scale == scale) {
-                if (bigDecimal.precision <= precision) {
-                  Right(conversion.toBytes(bigDecimal.underlying(), schema, logicalType))
-                } else {
-                  Left {
-                    AvroError
-                      .encodeDecimalPrecisionExceeded(
-                        bigDecimal.precision,
-                        precision
-                      )
-                  }
+        new Codec.InstanceForTypes[Avro.Bytes, BigDecimal](
+          "ByteBuffer",
+          schema,
+          bigDecimal =>
+            if (bigDecimal.scale == scale) {
+              if (bigDecimal.precision <= precision) {
+                Right(conversion.toBytes(bigDecimal.underlying(), schema, logicalType))
+              } else {
+                Left {
+                  AvroError
+                    .encodeDecimalPrecisionExceeded(
+                      bigDecimal.precision,
+                      precision
+                    )
                 }
-              } else
-                Left(AvroError.encodeDecimalScalesMismatch(bigDecimal.scale, scale)), {
-              case (bytes: Avro.Bytes, schema) =>
-                schema.getLogicalType match {
-                  case decimal: LogicalTypes.Decimal =>
-                    val bigDecimal = BigDecimal(conversion.fromBytes(bytes, schema, decimal))
-                    if (bigDecimal.precision <= decimal.getPrecision) {
-                      Right(bigDecimal)
-                    } else
-                      Left {
-                        AvroError
-                          .decodeDecimalPrecisionExceeded(
-                            bigDecimal.precision,
-                            decimal.getPrecision
-                          )
-                      }
-                  case logicalType =>
-                    Left(AvroError.decodeUnexpectedLogicalType(logicalType))
-                }
+              }
+            } else
+              Left(AvroError.encodeDecimalScalesMismatch(bigDecimal.scale, scale)), {
+            case (bytes: Avro.Bytes, schema) =>
+              schema.getLogicalType match {
+                case decimal: LogicalTypes.Decimal =>
+                  val bigDecimal = BigDecimal(conversion.fromBytes(bytes, schema, decimal))
+                  if (bigDecimal.precision <= decimal.getPrecision) {
+                    Right(bigDecimal)
+                  } else
+                    Left {
+                      AvroError
+                        .decodeDecimalPrecisionExceeded(
+                          bigDecimal.precision,
+                          decimal.getPrecision
+                        )
+                    }
+                case logicalType =>
+                  Left(AvroError.decodeUnexpectedLogicalType(logicalType))
+              }
 
-            }
-          )
-          .withTypeName("BigDecimal")
+          },
+          Some("BigDecimal")
+        ) {}
     )
   }
 
