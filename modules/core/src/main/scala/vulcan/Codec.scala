@@ -81,20 +81,11 @@ sealed abstract class Codec[A] {
     * `A` to `B` might be unsuccessful.
     */
   final def imapError[B](f: A => Either[AvroError, B])(g: B => A): Codec.Aux[AvroType, B] =
-    Codec.instanceInternal(
-      schema,
-      b => encode(g(b)),
-      (a, schema) => decode(a, schema).flatMap(f)
-    )
+    imapErrors(f)(g(_).asRight)
 
   final def imapErrors[B](
     f: A => Either[AvroError, B]
-  )(g: B => Either[AvroError, A]): Codec.Aux[AvroType, B] =
-    Codec.instanceInternal(
-      schema,
-      b => g(b).flatMap(encode),
-      (a, schema) => decode(a, schema).flatMap(f)
-    )
+  )(g: B => Either[AvroError, A]): Codec.Aux[AvroType, B] = Codec.ImapErrors(this, f, g)
 
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
@@ -173,6 +164,21 @@ object Codec extends CodecCompanionCompat {
 
   type Aux[AvroType0, A] = Codec[A] {
     type AvroType = AvroType0
+  }
+
+  private[vulcan] final case class ImapErrors[AvroType0, A, B](
+    codec: Codec.Aux[AvroType0, A],
+    f: A => Either[AvroError, B],
+    g: B => Either[AvroError, A]
+  ) extends Codec[B] {
+    type AvroType = AvroType0
+
+    override def schema: Either[AvroError, Schema] = codec.schema
+
+    override def encode(b: B): Either[AvroError, AvroType0] = g(b).flatMap(codec.encode)
+
+    override def decode(value: Any, schema: Schema): Either[AvroError, B] =
+      codec.decode(value, schema).flatMap(f)
   }
 
   private[vulcan] final case class WithTypeName[AvroType0, A](
