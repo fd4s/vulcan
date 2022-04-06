@@ -225,9 +225,9 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val bytes: Codec.Aux[Avro.Bytes, Array[Byte]] =
     Codec
-      .instance[Avro.Bytes, Array[Byte]](
+      .withValidSchema[Avro.Bytes, Array[Byte]](
         SchemaBuilder.builder().bytesType(),
-        ByteBuffer.wrap(_).asRight,
+        ByteBuffer.wrap(_: Array[Byte]).asRight,
         (value, schema) => {
           schema.getType match {
             case BYTES | STRING =>
@@ -347,7 +347,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val double: Codec.Aux[Avro.Double, Double] =
     Codec
-      .instance[Avro.Double, Double](
+      .withValidSchema[Avro.Double, Double](
         SchemaBuilder.builder().doubleType(),
         _.asRight,
         (value, schema) => {
@@ -546,7 +546,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val float: Codec.Aux[Avro.Float, Float] =
     Codec
-      .instance[Avro.Float, Float](
+      .withValidSchema[Avro.Float, Float](
         SchemaBuilder.builder().floatType(),
         _.asRight,
         (value, schema) => {
@@ -603,7 +603,7 @@ object Codec extends CodecCompanionCompat {
     decode: (Any, Schema) => Either[AvroError, A]
   ): Codec.Aux[AvroType0, A] = instanceInternal(schema, encode, decode)
 
-  private def instance[AvroType0, A](
+  private def withValidSchema[AvroType0, A](
     schema: Schema,
     encode: A => Either[AvroError, AvroType0],
     decode: (Any, Schema) => Either[AvroError, A]
@@ -641,7 +641,7 @@ object Codec extends CodecCompanionCompat {
     encode: A => Either[AvroError, AvroType],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
   ): Codec.Aux[AvroType, A] =
-    instance(
+    withValidSchema(
       schema,
       encode(_),
       (value, writerSchema) => {
@@ -778,7 +778,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit lazy val long: Codec.Aux[Avro.Long, Long] =
     Codec
-      .instance[Avro.Long, Long](
+      .withValidSchema[Avro.Long, Long](
         SchemaBuilder.builder().longType(),
         _.asRight,
         (value, schema) => {
@@ -1074,7 +1074,7 @@ object Codec extends CodecCompanionCompat {
     */
   implicit final val string: Codec.Aux[Avro.String, String] =
     Codec
-      .instance[Avro.String, String](
+      .withValidSchema[Avro.String, String](
         SchemaBuilder.builder().stringType(),
         Avro.String(_).asRight,
         (value, schema) => {
