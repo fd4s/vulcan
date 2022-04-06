@@ -257,21 +257,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not string") {
-          assertDecodeError[Char](
-            unsafeEncode('a'),
-            unsafeSchema[Int],
-            "Error decoding Char: Got unexpected schema type INT, expected schema type STRING"
-          )
-        }
-
-        it("should error if value is not utf8") {
-          assertDecodeError[Char](
-            unsafeEncode(10),
-            unsafeSchema[String],
-            "Error decoding Char: Got unexpected type java.lang.Integer, expected type Utf8"
-          )
-        }
 
         it("should error if utf8 value is empty") {
           assertDecodeError[Char](
@@ -832,13 +817,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not long") {
-          assertDecodeError[Instant](
-            unsafeEncode(Instant.now()),
-            unsafeSchema[Int],
-            "Error decoding Instant: Got unexpected schema type INT, expected schema type LONG"
-          )
-        }
 
         it("should error if logical type is missing") {
           assertDecodeError[Instant](
@@ -856,14 +834,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               }
             },
             "Error decoding Instant: Got unexpected logical type timestamp-micros"
-          )
-        }
-
-        it("should error if value is not long") {
-          assertDecodeError[Instant](
-            unsafeEncode(123),
-            unsafeSchema[Instant],
-            "Error decoding Instant: Got unexpected type java.lang.Integer, expected type Long"
           )
         }
 
@@ -1092,27 +1062,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not int") {
-          assertDecodeError[LocalDate](
-            unsafeEncode(LocalDate.now()),
-            unsafeSchema[Long],
-            "Error decoding LocalDate: Got unexpected schema type LONG, expected schema type INT"
-          )
-        }
 
         it("should error if logical type is not date") {
           assertDecodeError[LocalDate](
             unsafeEncode(LocalDate.now()),
             unsafeSchema[Int],
             "Error decoding LocalDate: Got unexpected missing logical type"
-          )
-        }
-
-        it("should error if value is not int") {
-          assertDecodeError[LocalDate](
-            unsafeEncode(123L),
-            unsafeSchema[LocalDate],
-            "Error decoding LocalDate: Got unexpected type java.lang.Long, expected type Integer"
           )
         }
 
@@ -1158,27 +1113,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not int") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(LocalTime.now()),
-            unsafeSchema[Long],
-            "Error decoding LocalTime: Got unexpected schema type LONG, expected schema type INT"
-          )
-        }
 
         it("should error if logical type is not time-millis") {
           assertDecodeError[LocalTime](
             unsafeEncode(LocalTime.now()),
             unsafeSchema[Int],
             "Error decoding LocalTime: Got unexpected missing logical type"
-          )
-        }
-
-        it("should error if value is not int") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(123L),
-            unsafeSchema[LocalTime],
-            "Error decoding LocalTime: Got unexpected type java.lang.Long, expected type Integer"
           )
         }
 
@@ -1213,13 +1153,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not int") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(LocalTime.now()),
-            unsafeSchema[Int],
-            "Error decoding LocalTime: Got unexpected schema type INT, expected schema type LONG"
-          )
-        }
 
         it("should error if logical type is not time-micros") {
           assertDecodeError[LocalTime](
@@ -1229,15 +1162,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           )
         }
 
-        it("should error if value is not long") {
-          assertDecodeError[LocalTime](
-            unsafeEncode(123),
-            unsafeSchema[LocalTime],
-            "Error decoding LocalTime: Got unexpected type java.lang.Integer, expected type Long"
-          )
-        }
-
-        it("should decode int as local time-micros") {
+        it("should decode long as local time-micros") {
           val value = LocalTime.now()
           assertDecodeIs[LocalTime](
             unsafeEncode(value),
@@ -1633,42 +1558,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("encode") {
-        it("should support null as first schema type in union") {
-          implicit val codec: Codec[Option[Int]] =
-            Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .nullType()
-                  .and()
-                  .intType()
-                  .endUnion()
-              },
-              Codec.option[Int].encode,
-              Codec.option[Int].decode
-            )
-
-          assertEncodeIs[Option[Int]](
-            Some(1),
-            Right(unsafeEncode(1))
-          )
-        }
-
-        it("should support null as second schema type in union") {
-          implicit val codec: Codec[Option[Int]] =
-            Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .intType()
-                  .and()
-                  .nullType()
-                  .endUnion()
-              },
-              Codec.option[Int].encode,
-              Codec.option[Int].decode
-            )
-
+        it("should encode Some") {
           assertEncodeIs[Option[Int]](
             Some(1),
             Right(unsafeEncode(1))
@@ -1725,44 +1615,33 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         }
 
         it("should support null as first schema type in union") {
-          implicit val codec: Codec[Option[Int]] =
-            Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .nullType()
-                  .and()
-                  .intType()
-                  .endUnion()
-              },
-              Codec.option[Int].encode,
-              Codec.option[Int].decode
-            )
 
           assertDecodeIs[Option[Int]](
             unsafeEncode(Option(1)),
-            Right(Some(1))
+            Right(Some(1)),
+            Some(
+              SchemaBuilder
+                .unionOf()
+                .nullType()
+                .and()
+                .intType()
+                .endUnion()
+            )
           )
         }
 
         it("should support null as second schema type in union") {
-          implicit val codec: Codec[Option[Int]] =
-            Codec.instance(
-              Right {
-                SchemaBuilder
-                  .unionOf()
-                  .intType()
-                  .and()
-                  .nullType()
-                  .endUnion()
-              },
-              Codec.option[Int].encode,
-              Codec.option[Int].decode
-            )
-
           assertDecodeIs[Option[Int]](
             unsafeEncode(Option(1)),
-            Right(Some(1))
+            Right(Some(1)),
+            Some(
+              SchemaBuilder
+                .unionOf()
+                .intType()
+                .and()
+                .nullType()
+                .endUnion()
+            )
           )
         }
 
@@ -1851,11 +1730,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should error if default value can't be encoded") {
           implicit val intCodec: Codec[Int] =
-            Codec.instance(
-              Codec.int.schema,
-              _ => Left(AvroError("error")),
-              (_, _) => Left(AvroError("error"))
-            )
+            Codec.int.imapErrors(_ => Left(AvroError("error")))(_ => Left(AvroError("error")))
 
           implicit val caseClassFieldCodec: Codec[CaseClassField] =
             Codec.record[CaseClassField]("CaseClassField", "") { field =>
@@ -1863,25 +1738,6 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             }
 
           assert(caseClassFieldCodec.schema.swap.value.message == "error")
-        }
-
-        it("should error if default value is not valid for field") {
-          implicit val intCodec: Codec[Int] =
-            Codec.instance(
-              Codec.int.schema,
-              _ => Right("invalid"),
-              (_, _) => Left(AvroError("error"))
-            )
-
-          implicit val caseClassFieldCodec: Codec[CaseClassField] =
-            Codec.record[CaseClassField]("CaseClassField", "") { field =>
-              field("value", _.value, default = Some(10)).map(CaseClassField(_))
-            }
-
-          assert {
-            caseClassFieldCodec.schema.swap.value.message ==
-              """org.apache.avro.AvroTypeException: Invalid default for field value: "invalid" not a "int""""
-          }
         }
 
         it("should support None as default value") {
@@ -2590,13 +2446,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
       it("should show the error if schema is unavailable") {
         assert {
-          Codec
-            .instance(
-              Left(AvroError("error")),
-              Codec.int.encode,
-              Codec.int.decode
-            )
-            .show == "AvroError(error)"
+          Codec[Option[Option[Int]]].show == """AvroError(org.apache.avro.AvroRuntimeException: Nested union: ["null",["null","int"]])"""
         }
       }
 
@@ -2631,7 +2481,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Set[Int]](
             unsafeEncode(Set(1, 2, 3)),
             unsafeSchema[Int],
-            "Error decoding Set: Error decoding List: Got unexpected schema type INT, expected schema type ARRAY"
+            "Error decoding Set: Got unexpected schema type INT, expected schema type ARRAY"
           )
         }
 
@@ -2639,7 +2489,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Set[Int]](
             unsafeEncode(10),
             unsafeSchema[Set[Int]],
-            "Error decoding Set: Error decoding List: Got unexpected type java.lang.Integer, expected type Collection"
+            "Error decoding Set: Got unexpected type java.lang.Integer, expected type Collection"
           )
         }
 
@@ -2974,27 +2824,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
 
       describe("decode") {
-        it("should error if schema is not string") {
-          assertDecodeError[UUID](
-            unsafeEncode(UUID.randomUUID()),
-            unsafeSchema[Int],
-            "Error decoding UUID: Got unexpected schema type INT, expected schema type STRING"
-          )
-        }
 
         it("should error if logical type is not uuid") {
           assertDecodeError[UUID](
             unsafeEncode(UUID.randomUUID()),
             unsafeSchema[String],
             "Error decoding UUID: Got unexpected missing logical type"
-          )
-        }
-
-        it("should error if value is not utf8") {
-          assertDecodeError[UUID](
-            10,
-            unsafeSchema[UUID],
-            "Error decoding UUID: Got unexpected type java.lang.Integer, expected type Utf8"
           )
         }
 

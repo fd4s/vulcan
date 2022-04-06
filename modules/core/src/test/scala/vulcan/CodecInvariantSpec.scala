@@ -7,6 +7,7 @@ import java.nio.charset.{Charset, StandardCharsets}
 import org.apache.avro.Schema
 import org.scalacheck.{Arbitrary, Gen}
 import scala.util.Try
+import scala.annotation.nowarn
 
 final class CodecInvariantSpec extends CatsSuite with EitherValues {
   val schemaGen: Gen[Either[AvroError, Schema]] =
@@ -24,6 +25,7 @@ final class CodecInvariantSpec extends CatsSuite with EitherValues {
       StandardCharsets.UTF_16
     )
 
+  @nowarn("cat=deprecation") // TODO
   implicit val codecStringArbitrary: Arbitrary[Codec[String]] =
     Arbitrary {
       schemaGen.flatMap { schema =>

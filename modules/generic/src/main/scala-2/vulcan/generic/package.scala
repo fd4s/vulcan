@@ -10,100 +10,37 @@ import scala.language.experimental.macros
 import scala.reflect.runtime.universe.WeakTypeTag
 import cats.implicits._
 import magnolia._
-import org.apache.avro.generic._
-import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
 import shapeless.ops.coproduct.{Inject, Selector}
-import vulcan.internal.converters.collection._
 import vulcan.internal.tags._
 import cats.data.Chain
 import cats.free.FreeApplicative
 
 package object generic {
   implicit final val cnilCodec: Codec.Aux[Nothing, CNil] =
-    Codec
-      .instance[Nothing, CNil](
-        Right(Schema.createUnion()),
-        cnil => Left(AvroError.encodeExhaustedAlternatives(cnil)),
-        (value, _) => Left(AvroError.decodeExhaustedAlternatives(value))
-      )
-      .withTypeName("Coproduct")
+    Codec.UnionCodec(Chain.empty).asInstanceOf[Codec.Aux[Nothing, CNil]].withTypeName("Coproduct")
 
   implicit final def coproductCodec[H, T <: Coproduct](
     implicit headCodec: Codec[H],
     tailCodec: Lazy[Codec[T]]
   ): Codec[H :+: T] =
-    Codec
-      .instance[Any, H :+: T](
-        AvroError.catchNonFatal {
-          headCodec.schema.flatMap { first =>
-            tailCodec.value.schema.flatMap { rest =>
-              rest.getType() match {
-                case Schema.Type.UNION =>
-                  val schemas = first :: rest.getTypes().asScala.toList
-                  Right(Schema.createUnion(schemas.asJava))
-
-                case schemaType =>
-                  Left(AvroError(s"Unexpected schema type $schemaType in Coproduct"))
-              }
-            }
-          }
-        },
-        _.eliminate(
-          headCodec.encode(_),
-          tailCodec.value.encode(_)
-        ),
-        (value, schema) => {
-          val schemaTypes =
-            schema.getType() match {
-              case Schema.Type.UNION => schema.getTypes.asScala
-              case _                 => Seq(schema)
-            }
-
-          value match {
-            case container: GenericContainer =>
-              headCodec.schema.flatMap { headSchema =>
-                val name = container.getSchema.getName
-                if (headSchema.getName == name) {
-                  val subschema =
-                    schemaTypes
-                      .find(_.getName == name)
-                      .toRight(AvroError.decodeMissingUnionSchema(name))
-
-                  subschema
-                    .flatMap(headCodec.decode(container, _))
-                    .map(Inl(_))
-                } else {
-                  tailCodec.value
-                    .decode(container, schema)
-                    .map(Inr(_))
-                }
-              }
-
-            case other =>
-              headCodec.schema
-                .traverse { headSchema =>
-                  val headName = headSchema.getName
-                  schemaTypes
-                    .find(_.getName == headName)
-                    .flatMap { schema =>
-                      headCodec
-                        .decode(other, schema)
-                        .map(Inl(_))
-                        .toOption
-                    }
-                }
-                .getOrElse {
-                  tailCodec.value
-                    .decode(other, schema)
-                    .map(Inr(_))
-                }
-          }
-        }.leftMap {
-          case e @ AvroError.ErrorDecodingType("Coproduct", _) => e
-          case other                                           => AvroError.ErrorDecodingType("Coproduct", other)
-        }
-      )
+    tailCodec.value match {
+      case Codec.WithTypeName(u: Codec.UnionCodec[T], typeName) =>
+        val tailAlts: Chain[Codec.Alt[H :+: T]] =
+          u.alts.map(_.imap[H :+: T](_.eliminate(_ => None, Some(_)), Inr(_)))
+        Codec
+          .UnionCodec(
+            tailAlts
+              .prepend(
+                Codec.Alt(headCodec, Prism.instance[H :+: T, H](_.select)(Inl(_)))
+              )
+          )
+          .withTypeName(typeName)
+      case other =>
+        throw new IllegalArgumentException(
+          s"cannot derive coproduct codec from non-union ${other.getClass()}"
+        )
+    }
 
   implicit final def coproductPrism[C <: Coproduct, A](
     implicit inject: Inject[C, A],

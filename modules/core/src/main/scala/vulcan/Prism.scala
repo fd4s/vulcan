@@ -15,13 +15,18 @@ import scala.reflect.ClassTag
 @implicitNotFound(
   "could not find implicit Prism[${S}, ${A}]; ensure ${A} is a subtype of ${S} or manually define an instance"
 )
-sealed abstract class Prism[S, A] {
+sealed abstract class Prism[S, A] { self =>
 
   /** Attempts to select a coproduct part. */
   def getOption: S => Option[A]
 
   /** Creates a coproduct from a coproduct part. */
   def reverseGet: A => S
+
+  def imap[S0](f: S0 => Option[S], g: S => S0): Prism[S0, A] = new Prism[S0, A] {
+    override def getOption: S0 => Option[A] = f(_).flatMap(self.getOption)
+    override def reverseGet: A => S0 = a => g(self.reverseGet(a))
+  }
 }
 
 object Prism extends PrismLowPriority {

@@ -18,8 +18,7 @@ val scala212 = "2.12.15"
 
 val scala213 = "2.13.8"
 
-val scala3 = "3.0.2"
-val scala3_1 = "3.1.1" // used in generic module as requiried for Magnolia
+val scala3 = "3.1.1"
 
 lazy val vulcan = project
   .in(file("."))
@@ -95,7 +94,7 @@ lazy val generic = project
     publishSettings,
     mimaSettings(excludeScala3 = true), // re-include scala 3 after publishing
     scalaSettings ++ Seq(
-      crossScalaVersions += scala3_1
+      crossScalaVersions += scala3
     ),
     testSettings
   )
@@ -300,7 +299,10 @@ def mimaSettings(excludeScala3: Boolean = false) = Seq(
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.decode*"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroError.encode*"),
       ProblemFilters.exclude[MissingClassProblem]("vulcan.Codec$Field$"),
-      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroException.*")
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.AvroException.*"),
+
+      // package-private
+      ProblemFilters.exclude[DirectMissingMethodProblem]("vulcan.Codec.instanceForTypes")
     )
     // format: on
   }
