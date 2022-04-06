@@ -66,11 +66,7 @@ sealed abstract class Codec[A] {
     * between types `A` and `B`.
     */
   final def imap[B](f: A => B)(g: B => A): Codec.Aux[AvroType, B] =
-    Codec.instanceInternal(
-      schema,
-      b => encode(g(b)),
-      (a, schema) => decode(a, schema).map(f)
-    )
+    imapErrors(f(_).asRight)(g(_).asRight)
 
   /**
     * Returns a new [[Codec]] which uses this [[Codec]]
@@ -101,24 +97,8 @@ sealed abstract class Codec[A] {
   private[vulcan] def withTypeName(typeName: String): Codec.Aux[AvroType, A] =
     Codec.WithTypeName(this, typeName)
 
-  private def withLogicalType(logicalType: LogicalType): Codec.Aux[AvroType, A] = {
-    schema match {
-      case Left(_) => this
-      case Right(schema) =>
-        val schemaCopy = new Schema.Parser().parse(schema.toString) // adding logical type mutates the instance, so we need to copy
-        Codec.instanceInternal(
-          AvroError.catchNonFatal(Right(logicalType.addToSchema(schemaCopy))),
-          encode(_),
-          // validate logical type afterwards to preserve existing error behaviour
-          (value, schema) =>
-            decode(value, schema).ensure(
-              AvroError.decodeUnexpectedLogicalType(schema.getLogicalType)
-            )(
-              _ => schema.getLogicalType == logicalType
-            )
-        )
-    }
-  }
+  private def withLogicalType(logicalType: LogicalType): Codec.Aux[AvroType, A] =
+    Codec.WithLogicalType(this, logicalType)
 
   override final def toString: String =
     schema match {
@@ -180,6 +160,31 @@ object Codec extends CodecCompanionCompat {
     override def decode(value: Any, schema: Schema): Either[AvroError, B] =
       codec.decode(value, schema).flatMap(f)
   }
+
+  private[vulcan] final case class WithLogicalType[AvroType, A](
+    codec: Codec.Aux[AvroType, A],
+    logicalType: LogicalType
+  ) extends Codec.InstanceInternal[AvroType, A](
+        codec.schema.flatMap(
+          schema =>
+            AvroError.catchNonFatal {
+              Right {
+                val schemaCopy = new Schema.Parser().parse(schema.toString) // adding logical type mutates the instance, so we need to copy
+                logicalType.addToSchema(schemaCopy)
+              }
+            }
+        ),
+        codec.encode(_),
+        // validate logical type afterwards to preserve existing error behaviour
+        (value, schema) =>
+          codec
+            .decode(value, schema)
+            .ensure(
+              AvroError.decodeUnexpectedLogicalType(schema.getLogicalType)
+            )(
+              _ => schema.getLogicalType == logicalType
+            )
+      )
 
   private[vulcan] final case class WithTypeName[AvroType0, A](
     codec: Codec.Aux[AvroType0, A],
@@ -607,16 +612,13 @@ object Codec extends CodecCompanionCompat {
     schema: Either[AvroError, Schema],
     encode: A => Either[AvroError, AvroType0],
     decode: (Any, Schema) => Either[AvroError, A]
-  ): Codec.Aux[AvroType0, A] = instanceInternal(schema, encode, decode)
+  ): Codec.Aux[AvroType0, A] = new InstanceInternal(schema, encode, decode) {}
 
   private def fail[AvroType0, A](error: AvroError): Codec.Aux[AvroType0, A] =
-    instanceInternal(Left(error), _ => Left(error), (_, _) => Left(error))
+    Fail(error)
 
-  private def instanceInternal[AvroType0, A](
-    schema: Either[AvroError, Schema],
-    encode: A => Either[AvroError, AvroType0],
-    decode: (Any, Schema) => Either[AvroError, A]
-  ): Codec.Aux[AvroType0, A] = new InstanceInternal(schema, encode, decode) {}
+  private[vulcan] final case class Fail[AvroType, A](error: AvroError)
+      extends InstanceInternal[AvroType, A](Left(error), _ => Left(error), (_, _) => Left(error))
 
   private[vulcan] abstract class InstanceInternal[AvroType0, A](
     val schema: Either[AvroError, Schema],
@@ -637,25 +639,32 @@ object Codec extends CodecCompanionCompat {
     schema: Schema,
     encode: A => Either[AvroError, AvroType],
     decode: PartialFunction[(Any, Schema), Either[AvroError, A]]
-  ): Codec.Aux[AvroType, A] =
-    new InstanceInternal[AvroType, A](
-      Right(schema),
-      encode(_),
-      (value, writerSchema) => {
-        val schemaType = schema.getType
-        if (writerSchema.getType == schemaType)
-          decode
-            .lift((value, writerSchema))
-            .getOrElse(
-              Left(AvroError.decodeUnexpectedType(value, expectedValueType))
-            )
-        else
-          Left {
-            AvroError
-              .decodeUnexpectedSchemaType(writerSchema.getType, schemaType)
-          }
-      }
-    ) {}
+  ): Codec.Aux[AvroType, A] = new InstanceForTypes(expectedValueType, schema, encode, decode) {}
+
+  private[vulcan] sealed abstract class InstanceForTypes[AvroType, A](
+    expectedValueType: String,
+    schema: Schema,
+    _encode: A => Either[AvroError, AvroType],
+    _decode: PartialFunction[(Any, Schema), Either[AvroError, A]],
+    decodingTypeName: Option[String] = None
+  ) extends InstanceInternal[AvroType, A](
+        Right(schema),
+        _encode(_).leftMap(err => decodingTypeName.fold(err)(AvroError.errorEncodingFrom(_, err))),
+        (value, writerSchema) => {
+          val schemaType = schema.getType
+          if (writerSchema.getType == schemaType)
+            _decode
+              .lift((value, writerSchema))
+              .getOrElse(
+                Left(AvroError.decodeUnexpectedType(value, expectedValueType))
+              )
+          else
+            Left {
+              AvroError
+                .decodeUnexpectedSchemaType(writerSchema.getType, schemaType)
+            }
+        }.leftMap(err => decodingTypeName.fold(err)(AvroError.errorDecodingTo(_, err)))
+      )
 
   /**
     * @group JavaTime
@@ -669,14 +678,15 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val int: Codec.Aux[Avro.Int, Int] =
-    Codec
-      .instanceForTypes[Avro.Int, Int](
+  implicit final val int: Codec.Aux[Avro.Int, Int] = IntCodec
+
+  private[vulcan] case object IntCodec
+      extends Codec.InstanceForTypes[Avro.Int, Int](
         "Int",
         SchemaBuilder.builder().intType(),
-        _.asRight, { case (integer: Int, _) => Right(integer) }
+        _.asRight, { case (integer: Int, _) => Right(integer) },
+        Some("Int")
       )
-      .withTypeName("Int")
 
   /**
     * @group General
