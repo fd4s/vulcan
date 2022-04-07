@@ -2916,7 +2916,7 @@ trait CodecSpecHelpers {
     encoded: Either[AvroError, Any]
   )(implicit codec: Codec[A]): Assertion =
     assert {
-      val encode = codec.encode(a).value
+      val encode = CodecInterpreter.encode(codec)(a).value
       encode === encoded.value
     }
 
