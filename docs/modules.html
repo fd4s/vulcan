@@ -77,13 +77,16 @@
 }
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Suit</span>]
-<span class="hljs-comment">// res1: Codec[Suit] = Codec({</span>
+<span class="hljs-comment">// res1: Codec[Suit] = WithTypeName(</span>
+<span class="hljs-comment">//   codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Suit",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
 <span class="hljs-comment">//   "doc" : "The different card suits",</span>
 <span class="hljs-comment">//   "symbols" : [ "clubs", "diamonds", "hearts", "spades" ]</span>
-<span class="hljs-comment">// })</span>
+<span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//   typeName = "com.example.Suit"</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <p>Annotations like <code>@AvroDoc</code> can be used to customize the derivation.</p>
 <p>For <code>ValueEnum</code>s, also mix in the matching <code>VulcanValueEnum</code> to derive a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> instance.</p>
@@ -102,13 +105,16 @@
 }
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Color</span>]
-<span class="hljs-comment">// res2: Codec.Aux[vulcan.Avro.EnumSymbol, Color] = Codec({</span>
+<span class="hljs-comment">// res2: Codec.Aux[vulcan.Avro.EnumSymbol, Color] = WithTypeName(</span>
+<span class="hljs-comment">//   codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Color",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
 <span class="hljs-comment">//   "doc" : "The available colors",</span>
 <span class="hljs-comment">//   "symbols" : [ "red", "green", "blue" ]</span>
-<span class="hljs-comment">// })</span>
+<span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//   typeName = "com.example.Color"</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <p>For <code>StringVulcanEnum</code>, the enumeration is encoded as an Avro enumeration. For the other <code>VulcanValueEnum</code>s (<code>ByteVulcanEnum</code>, <code>CharVulcanEnum</code>, <code>IntVulcanEnum</code>, <code>LongVulcanEnum</code>, and <code>ShortVulcanEnum</code>), the encoding relies on the encoding of the enumeration's value type (<code>Byte</code>, <code>Char</code>, <code>Int</code>, <code>Long</code>, and <code>Short</code>).</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> enumeratum.values.{<span class="hljs-type">IntEnum</span>, <span class="hljs-type">IntEnumEntry</span>, <span class="hljs-type">IntVulcanEnum</span>}
@@ -140,7 +146,8 @@
 <span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span>(<span class="hljs-params">firstName: <span class="hljs-type">String</span>, lastName: <span class="hljs-type">String</span>, age: <span class="hljs-type">Option</span>[<span class="hljs-type">Int</span>]</span>)</span>
 
 <span class="hljs-type">Codec</span>.derive[<span class="hljs-type">Person</span>]
-<span class="hljs-comment">// res4: Codec[Person] = Codec({</span>
+<span class="hljs-comment">// res4: Codec[Person] = WithTypeName(</span>
+<span class="hljs-comment">//   codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "record",</span>
 <span class="hljs-comment">//   "name" : "Person",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -155,7 +162,9 @@
 <span class="hljs-comment">//     "name" : "age",</span>
 <span class="hljs-comment">//     "type" : [ "null", "int" ]</span>
 <span class="hljs-comment">//   } ]</span>
-<span class="hljs-comment">// })</span>
+<span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//   typeName = "com.example.Person"</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <p>While <code>case class</code>es correspond to Avro records, <code>sealed trait</code>s correspond to unions.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">trait</span> <span class="hljs-title">FirstOrSecond</span></span>
@@ -167,29 +176,32 @@
 <span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Second</span>(<span class="hljs-params">value: <span class="hljs-type">String</span></span>) <span class="hljs-keyword">extends</span> <span class="hljs-title">FirstOrSecond</span></span>
 
 <span class="hljs-type">Codec</span>.derive[<span class="hljs-type">FirstOrSecond</span>]
-<span class="hljs-comment">// res5: Codec.Aux[Any, FirstOrSecond] = Codec([ {</span>
-<span class="hljs-comment">//   "type" : "record",</span>
-<span class="hljs-comment">//   "name" : "First",</span>
-<span class="hljs-comment">//   "namespace" : "com.example",</span>
-<span class="hljs-comment">//   "fields" : [ {</span>
-<span class="hljs-comment">//     "name" : "value",</span>
-<span class="hljs-comment">//     "type" : "int"</span>
-<span class="hljs-comment">//   } ]</span>
-<span class="hljs-comment">// }, {</span>
-<span class="hljs-comment">//   "type" : "record",</span>
-<span class="hljs-comment">//   "name" : "Second",</span>
-<span class="hljs-comment">//   "namespace" : "com.example",</span>
-<span class="hljs-comment">//   "fields" : [ {</span>
-<span class="hljs-comment">//     "name" : "value",</span>
-<span class="hljs-comment">//     "type" : "string"</span>
-<span class="hljs-comment">//   } ]</span>
-<span class="hljs-comment">// } ])</span>
+<span class="hljs-comment">// res5: Codec.Aux[Any, FirstOrSecond] = WithTypeName(</span>
+<span class="hljs-comment">//   codec = WithTypeName(</span>
+<span class="hljs-comment">//     codec = UnionCodec(</span>
+<span class="hljs-comment">//       alts = Append(</span>
+<span class="hljs-comment">//         leftNE = Singleton(a = vulcan.Codec$Alt$$anon$6@e2e858b),</span>
+<span class="hljs-comment">//         rightNE = Singleton(a = vulcan.Codec$Alt$$anon$6@512384a9)</span>
+<span class="hljs-comment">//       )</span>
+<span class="hljs-comment">//     ),</span>
+<span class="hljs-comment">//     typeName = "union"</span>
+<span class="hljs-comment">//   ),</span>
+<span class="hljs-comment">//   typeName = "repl.MdocSession.App0.FirstOrSecond"</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <p><a href="https://github.com/milessabin/shapeless">Shapeless</a> <code>Coproduct</code>s are also supported and correspond to Avro unions.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> shapeless.{:+:, <span class="hljs-type">CNil</span>}
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Int</span> :+: <span class="hljs-type">String</span> :+: <span class="hljs-type">CNil</span>]
-<span class="hljs-comment">// res6: Codec[Int :+: String :+: CNil] = Codec([ "int", "string" ])</span>
+<span class="hljs-comment">// res6: Codec[Int :+: String :+: CNil] = WithTypeName(</span>
+<span class="hljs-comment">//   codec = UnionCodec(</span>
+<span class="hljs-comment">//     alts = Append(</span>
+<span class="hljs-comment">//       leftNE = Singleton(a = vulcan.Codec$Alt$$anon$6@26d3a016),</span>
+<span class="hljs-comment">//       rightNE = Singleton(a = vulcan.Codec$Alt$$anon$6@3d30f427)</span>
+<span class="hljs-comment">//     )</span>
+<span class="hljs-comment">//   ),</span>
+<span class="hljs-comment">//   typeName = "Coproduct"</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <p><code>deriveEnum</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for enumeration types. Annotations like <code>@AvroDoc</code> can be used to customize the derivation.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">AvroError</span>
@@ -216,13 +228,16 @@ deriveEnum[<span class="hljs-type">Fruit</span>](
     <span class="hljs-keyword">case</span> other    =&gt; <span class="hljs-type">Left</span>(<span class="hljs-type">AvroError</span>(<span class="hljs-string">s"<span class="hljs-subst">$other</span> is not a Fruit"</span>))
   }
 )
-<span class="hljs-comment">// res7: Codec.Aux[vulcan.Avro.EnumSymbol, Fruit] = Codec({</span>
+<span class="hljs-comment">// res7: Codec.Aux[vulcan.Avro.EnumSymbol, Fruit] = WithTypeName(</span>
+<span class="hljs-comment">//   codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Fruit",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
 <span class="hljs-comment">//   "doc" : "A selection of different fruits",</span>
 <span class="hljs-comment">//   "symbols" : [ "apple", "banana", "cherry" ]</span>
-<span class="hljs-comment">// })</span>
+<span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//   typeName = "com.example.Fruit"</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <p><code>deriveFixed</code> can be used to partly derive <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for fixed types. Annotations like <code>@AvroDoc</code> can be used to customize the derivation.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">AvroError</span>
@@ -240,12 +255,15 @@ deriveFixed[<span class="hljs-type">Pence</span>](
   encode = pence =&gt; <span class="hljs-type">Array</span>[<span class="hljs-type">Byte</span>](pence.value),
   decode = bytes =&gt; <span class="hljs-type">Pence</span>(bytes.head)
 )
-<span class="hljs-comment">// res8: Codec.Aux[vulcan.Avro.Fixed, Pence] = Codec({</span>
+<span class="hljs-comment">// res8: Codec.Aux[vulcan.Avro.Fixed, Pence] = WithTypeName(</span>
+<span class="hljs-comment">//   codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "fixed",</span>
 <span class="hljs-comment">//   "name" : "Pence",</span>
 <span class="hljs-comment">//   "namespace" : "repl.MdocSession.App0",</span>
 <span class="hljs-comment">//   "size" : 1</span>
-<span class="hljs-comment">// })</span>
+<span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//   typeName = "repl.MdocSession.App0.Pence"</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="refined"></a><a href="#refined" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Refined</h2>
 <p>The <code>vulcan-refined</code> module provides <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>s for <a href="https://github.com/fthomas/refined">refined</a> refinement types.</p>
