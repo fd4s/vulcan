@@ -1,5 +1,8 @@
 package vulcan.generic.examples
 
+import cats.Eq
+import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary.arbitrary
 import vulcan.Codec
 import vulcan.generic._
 
@@ -18,4 +21,13 @@ object CaseClassTypeParameterField {
 
   implicit val withInnerIntCodec: Codec[CaseClassTypeParameterField[CaseClassInner[Int]]] =
     Codec.derive
+
+  implicit val caseClassTypeParameterFieldArbitrary: Arbitrary[CaseClassTypeParameterField[Int]] =
+    Arbitrary(for {
+      s <- arbitrary[String]
+      i <- arbitrary[Int]
+    } yield CaseClassTypeParameterField(s, i))
+
+  implicit val caseClassTypeParameterFieldEq: Eq[CaseClassTypeParameterField[Int]] =
+    Eq.fromUniversalEquals
 }
