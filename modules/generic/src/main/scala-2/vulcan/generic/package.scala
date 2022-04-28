@@ -61,7 +61,7 @@ package object generic {
           .record[A](
             name = caseClass.annotations
               .collectFirst { case AvroName(namespace) => namespace }
-              .getOrElse(caseClass.typeName.short),
+              .getOrElse(extractName(caseClass.typeName)),
             namespace = caseClass.annotations
               .collectFirst { case AvroNamespace(namespace) => namespace }
               .getOrElse(caseClass.typeName.owner),
@@ -97,6 +97,10 @@ package object generic {
               .map(caseClass.rawConstruct(_))
           }
       }
+
+    private def extractName(typeName: TypeName): String =
+      if (typeName.typeArguments.isEmpty) typeName.short
+      else typeName.short + "__" + typeName.typeArguments.map(extractName).mkString("_")
 
     /**
       * Returns a `Codec` instance for the specified type,
