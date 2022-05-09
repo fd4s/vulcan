@@ -28,12 +28,16 @@ package object generic {
   ) extends Derivation[Codec] {
     inline def derive[A](using Mirror.Of[A]): Codec[A] = derived[A]
 
-    final def join[A](caseClass: CaseClass[Codec, A]): Codec[A] = 
+    final def join[A](caseClass: CaseClass[Codec, A]): Codec[A] = {
+      def recursiveShortNames(typeInfo: TypeInfo): Seq[String] = {
+        typeInfo.short +: typeInfo.typeParams.toSeq.flatMap(recursiveShortNames)
+      }
+
       Codec
           .record[A](
             name = caseClass.annotations
               .collectFirst { case AvroName(namespace) => namespace }
-              .getOrElse(caseClass.typeInfo.short),
+              .getOrElse(recursiveShortNames(caseClass.typeInfo).mkString("__")),
             namespace = caseClass.annotations
               .collectFirst { case AvroNamespace(namespace) => namespace }
               .getOrElse(caseClass.typeInfo.owner),
@@ -68,6 +72,7 @@ package object generic {
               }
               .map(caseClass.rawConstruct(_))
           }
+    }
 
     final def split[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[Any, A] = {
       Codec

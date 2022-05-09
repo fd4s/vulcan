@@ -56,12 +56,15 @@ package object generic {
         val param = caseClass.parameters.head
         param.typeclass.imap(value => caseClass.rawConstruct(List(value)))(param.dereference)
       } else {
+        def recursiveShortNames(typeName: TypeName): Seq[String] = {
+          typeName.short +: typeName.typeArguments.flatMap(recursiveShortNames)
+        }
 
         Codec
           .record[A](
             name = caseClass.annotations
               .collectFirst { case AvroName(namespace) => namespace }
-              .getOrElse(caseClass.typeName.short),
+              .getOrElse(recursiveShortNames(caseClass.typeName).mkString("__")),
             namespace = caseClass.annotations
               .collectFirst { case AvroNamespace(namespace) => namespace }
               .getOrElse(caseClass.typeName.owner),

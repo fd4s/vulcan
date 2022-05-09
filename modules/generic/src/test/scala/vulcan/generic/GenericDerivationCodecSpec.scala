@@ -69,6 +69,18 @@ final class GenericDerivationCodecSpec extends CodecBase {
             }
           }
 
+          it("should append types classes in record name") {
+            assertSchemaIs[CaseClassTypeClass[String]] {
+              """{"type":"record","name":"CaseClassTypeClass__String","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"]}]}"""
+            }
+          }
+
+          it("should ignore type class names with annotation for record name") {
+            assertSchemaIs[CaseClassTypeClassAvroName[String]] {
+              """{"type":"record","name":"CaseClassOtherName","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"]}]}"""
+            }
+          }
+
         }
 
         describe("encode") {
