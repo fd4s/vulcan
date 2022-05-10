@@ -10,6 +10,8 @@ final case class CaseClassTypeParameterField[T](s: String, value: T)
 final case class CaseClassInner[T](inner: T)
 
 object CaseClassTypeParameterField {
+  implicit val configuration: Configuration = avro4s.avro4sGenericConfiguration
+
   implicit val intCodec: Codec[CaseClassTypeParameterField[Int]] =
     Codec.derive
 
