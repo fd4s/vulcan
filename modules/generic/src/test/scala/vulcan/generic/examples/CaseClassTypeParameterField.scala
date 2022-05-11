@@ -7,7 +7,7 @@ import vulcan.Codec
 import vulcan.generic._
 
 final case class CaseClassTypeParameterField[T](s: String, value: T)
-final case class CaseClassInner[T](inner: T)
+final case class CaseClassInner[T, S](inner1: T, inner2: S)
 
 object CaseClassTypeParameterField {
   implicit val configuration: Configuration = avro4s.avro4sGenericConfiguration
@@ -18,10 +18,10 @@ object CaseClassTypeParameterField {
   implicit val longCodec: Codec[CaseClassTypeParameterField[Long]] =
     Codec.derive
 
-  implicit val innerIntCodec: Codec[CaseClassInner[Int]] =
+  implicit val innerIntCodec: Codec[CaseClassInner[Int, Long]] =
     Codec.derive
 
-  implicit val withInnerIntCodec: Codec[CaseClassTypeParameterField[CaseClassInner[Int]]] =
+  implicit val withInnerIntCodec: Codec[CaseClassTypeParameterField[CaseClassInner[Int, Long]]] =
     Codec.derive
 
   implicit val caseClassTypeParameterFieldArbitrary: Arbitrary[CaseClassTypeParameterField[Int]] =

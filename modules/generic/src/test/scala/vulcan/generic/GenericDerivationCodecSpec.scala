@@ -82,8 +82,8 @@ final class GenericDerivationCodecSpec extends CodecBase {
           }
 
           it("should support case classes with nested generic case classes and include the types in the schema name") {
-            assertSchemaIs[CaseClassTypeParameterField[CaseClassInner[Int]]] {
-              """{"type":"record","name":"CaseClassTypeParameterField__CaseClassInner__Int","namespace":"vulcan.generic.examples","fields":[{"name":"s","type":"string"},{"name":"value","type":{"type":"record","name":"CaseClassInner__Int","fields":[{"name":"inner","type":"int"}]}}]}"""
+            assertSchemaIs[CaseClassTypeParameterField[CaseClassInner[Int, Long]]] {
+              """{"type":"record","name":"CaseClassTypeParameterField__CaseClassInner__Int_Long","namespace":"vulcan.generic.examples","fields":[{"name":"s","type":"string"},{"name":"value","type":{"type":"record","name":"CaseClassInner__Int_Long","fields":[{"name":"inner1","type":"int"},{"name":"inner2","type":"long"}]}}]}"""
             }
           }
 
