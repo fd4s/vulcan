@@ -912,9 +912,36 @@ object Codec extends CodecCompanionCompat {
     * @group General
     */
   implicit final def option[A](implicit codec: Codec[A]): Codec[Option[A]] =
-    Codec
-      .union[Option[A]](alt => alt[None.type] |+| alt[Some[A]])
+    OptionCodec(codec)
       .withTypeName("Option")
+  private[vulcan] final case class OptionCodec[A](codec: Codec[A]) extends Codec[Option[A]] {
+    type AvroType = Any
+    override def encode(a: Option[A]): Either[AvroError, Option[A]] = {
+      a match {
+        case Some(value) =>
+          // TODO: don't use asInstanceOf
+          // TODO: return `Left(AvroError.encodeExhaustedAlternatives(a))` when `value`
+          // is not of the correct type
+          codec.encode(value).asInstanceOf[Either[AvroError, Option[A]]]
+        case None => Codec.none.encode(None)
+      }
+    }
+
+    override def decode(value: Any, schema: Schema): Either[AvroError, Option[A]] = {
+      if (value == null) {
+        Right(None)
+      } else {
+        codec.schema.flatMap(codec.decode(value, _).map(Some.apply))
+      }
+    }
+
+    val schema = AvroError.catchNonFatal {
+     codec.schema.map { schema =>
+       val schemaTypes = if (schema.isUnion) schema.getTypes.asScala.toList else List(schema)
+       Schema.createUnion((Schema.create(Schema.Type.NULL) :: schemaTypes).asJava)
+     }
+   }
+  }
 
   /**
     * Returns a new record [[Codec]] for type `A`.

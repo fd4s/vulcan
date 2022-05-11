@@ -69,6 +69,14 @@ final class GenericDerivationCodecSpec extends CodecBase {
             }
           }
 
+          it(
+            "should support optional field of a sum type"
+          ) {
+            assertSchemaIs[CaseClassOptionOfSumType] {
+              """{"type":"record","name":"CaseClassOptionOfSumType","namespace":"vulcan.generic.examples","fields":[{"name":"field1","type":["null",{"type":"record","name":"FirstInSealedTraitCaseClassCustom","fields":[{"name":"value","type":"int"}]},"string"]}]}""".stripMargin
+            }
+          }
+
         }
 
         describe("encode") {
