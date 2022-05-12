@@ -916,31 +916,29 @@ object Codec extends CodecCompanionCompat {
       .withTypeName("Option")
   private[vulcan] final case class OptionCodec[A](codec: Codec[A]) extends Codec[Option[A]] {
     type AvroType = Any
-    override def encode(a: Option[A]): Either[AvroError, Option[A]] = {
+    override def encode(a: Option[A]): Either[AvroError, Any] = {
       a match {
-        case Some(value) =>
-          // TODO: don't use asInstanceOf
-          // TODO: return `Left(AvroError.encodeExhaustedAlternatives(a))` when `value`
-          // is not of the correct type
-          codec.encode(value).asInstanceOf[Either[AvroError, Option[A]]]
-        case None => Codec.none.encode(None)
+        case Some(value) => codec.encode(value)
+        case None        => Codec.none.encode(None)
       }
     }
 
     override def decode(value: Any, schema: Schema): Either[AvroError, Option[A]] = {
       if (value == null) {
         Right(None)
-      } else {
+      } else if (schema.isUnion) {
         codec.schema.flatMap(codec.decode(value, _).map(Some.apply))
+      } else {
+        codec.decode(value, schema).map(Some.apply)
       }
     }
 
     val schema = AvroError.catchNonFatal {
-     codec.schema.map { schema =>
-       val schemaTypes = if (schema.isUnion) schema.getTypes.asScala.toList else List(schema)
-       Schema.createUnion((Schema.create(Schema.Type.NULL) :: schemaTypes).asJava)
-     }
-   }
+      codec.schema.map { schema =>
+        val schemaTypes = if (schema.isUnion) schema.getTypes.asScala.toList else List(schema)
+        Schema.createUnion((Schema.create(Schema.Type.NULL) :: schemaTypes).asJava)
+      }
+    }
   }
 
   /**
