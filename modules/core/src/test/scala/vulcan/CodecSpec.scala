@@ -1552,7 +1552,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
         it("should capture errors on nested unions") {
           assertSchemaError[Option[Option[Int]]] {
-            """org.apache.avro.AvroRuntimeException: Nested union: ["null",["null","int"]]"""
+            """org.apache.avro.AvroRuntimeException: Duplicate in union:null"""
           }
         }
       }
@@ -1578,7 +1578,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
           assertDecodeError[Option[Int]](
             unsafeEncode(Option(1)),
             unsafeSchema[String],
-            "Error decoding Option: Error decoding union: Exhausted alternatives for type java.lang.Integer"
+            "Error decoding Option: Error decoding Int: Got unexpected schema type STRING, expected schema type INT"
           )
         }
 
@@ -2446,7 +2446,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
       it("should show the error if schema is unavailable") {
         assert {
-          Codec[Option[Option[Int]]].show == """AvroError(org.apache.avro.AvroRuntimeException: Nested union: ["null",["null","int"]])"""
+          Codec[Option[Option[Int]]].show == """AvroError(org.apache.avro.AvroRuntimeException: Duplicate in union:null)"""
         }
       }
 
