@@ -12,7 +12,7 @@ val refinedVersion = "0.9.27"
 
 val shapelessVersion = "2.3.9"
 
-val shapeless3Version = "3.0.4"
+val shapeless3Version = "3.1.0"
 
 val scala212 = "2.12.15"
 
