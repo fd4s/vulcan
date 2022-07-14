@@ -197,7 +197,7 @@ object Codec extends CodecCompanionCompat {
     override def schema: Either[AvroError, Schema] =
       AvroError.catchNonFatal {
         Right {
-          val schemaCopy = new Schema.Parser().parse(schema.toString) // adding logical type mutates the instance, so we need to copy
+          val schemaCopy = new Schema.Parser().parse(codec.validSchema.toString) // adding logical type mutates the instance, so we need to copy
           logicalType.addToSchema(schemaCopy)
         }
       }
