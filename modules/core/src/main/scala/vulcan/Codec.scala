@@ -409,7 +409,6 @@ object Codec extends CodecCompanionCompat {
     override def encode(a: Double): Either[AvroError, Double] = a.asRight
 
     override def decode(value: Any, schema: Schema): Either[AvroError, Double] = {
-      println(schema)
       schema.getType match {
         case DOUBLE | FLOAT | INT | LONG =>
           value match {
