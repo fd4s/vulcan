@@ -619,6 +619,20 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Right(FirstInSealedTraitEnum)
           )
         }
+
+        it("should decode a valid symbol with a different namespace") {
+          assertDecodeIs[SealedTraitEnum](
+            Avro.EnumSymbol(
+              SchemaBuilder
+                .enumeration("SealedTraitEnum")
+                .namespace("vulcan.examples.alt") // The namespace is different
+                .symbols("first", "second"),
+              "second"
+            ),
+            Right(SecondInSealedTraitEnum),
+            Some(unsafeSchema[SealedTraitEnum])
+          )
+        }
       }
     }
 

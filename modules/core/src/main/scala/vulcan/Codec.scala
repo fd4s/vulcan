@@ -782,7 +782,7 @@ object Codec extends CodecCompanionCompat {
 
   import java.{util => ju}
 
-  def collection[A](
+  private def collection[A](
     implicit codec: Codec[A]
   ): Codec.Aux[Avro.Array[codec.AvroType], ju.Collection[A]] =
     codec.schema.fold(
