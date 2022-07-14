@@ -142,7 +142,7 @@ lazy val dependencySettings = Seq(
     if (scalaVersion.value.startsWith("3")) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.0" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
       )
   },
