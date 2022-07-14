@@ -155,7 +155,7 @@ object Codec extends CodecCompanionCompat {
   private[vulcan] sealed trait WithValidSchema[AvroType0, A] extends Codec[A] {
     type AvroType = AvroType0
     def validSchema: Schema
-    override final val schema: Either[AvroError, Schema] = Right(validSchema)
+    override def schema: Either[AvroError, Schema] = Right(validSchema)
 
     override final def imap[B](f: A => B)(g: B => A): WithValidSchema[AvroType0, B] =
       ImapErrors[AvroType0, A, B](this, f(_).asRight, g(_).asRight)
@@ -401,7 +401,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val double: Codec.Aux[Avro.Double, Double] = DoubleCodec
+  implicit lazy val double: Codec.Aux[Avro.Double, Double] = DoubleCodec
 
   private[vulcan] case object DoubleCodec extends Codec.WithValidSchema[Avro.Double, Double] {
     override val validSchema: Schema = SchemaBuilder.builder().doubleType()
@@ -409,6 +409,7 @@ object Codec extends CodecCompanionCompat {
     override def encode(a: Double): Either[AvroError, Double] = a.asRight
 
     override def decode(value: Any, schema: Schema): Either[AvroError, Double] = {
+      println(schema)
       schema.getType match {
         case DOUBLE | FLOAT | INT | LONG =>
           value match {
@@ -601,7 +602,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val float: Codec.Aux[Avro.Float, Float] = FloatCodec
+  implicit lazy val float: Codec.Aux[Avro.Float, Float] = FloatCodec
 
   case object FloatCodec extends Codec.WithValidSchema[Avro.Float, Float] {
     override def validSchema: Schema = SchemaBuilder.builder().floatType()
@@ -735,7 +736,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val int: Codec.Aux[Avro.Int, Int] = IntCodec
+  implicit lazy val int: Codec.Aux[Avro.Int, Int] = IntCodec
 
   private[vulcan] case object IntCodec
       extends Codec.InstanceForTypes[Avro.Int, Int](
@@ -911,7 +912,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val none: Codec.Aux[Avro.Null, None.type] =
+  implicit lazy val none: Codec.Aux[Avro.Null, None.type] =
     `null`
       .imap(_ => None)(_ => null)
       .withTypeName("None")
@@ -1118,7 +1119,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val short: Codec.Aux[Avro.Int, Short] = {
+  implicit lazy val short: Codec.Aux[Avro.Int, Short] = {
     Codec.int
       .imapError { integer =>
         if (integer.isValidShort) Right(integer.toShort)
@@ -1136,7 +1137,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val string: Codec.Aux[Avro.String, String] = StringCodec
+  implicit lazy val string: Codec.Aux[Avro.String, String] = StringCodec
 
   private[vulcan] case object StringCodec extends Codec.WithValidSchema[Avro.String, String] {
     override def validSchema: Schema = SchemaBuilder.builder().stringType()
@@ -1281,7 +1282,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group General
     */
-  implicit final val unit: Codec.Aux[Avro.Null, Unit] =
+  implicit lazy val unit: Codec.Aux[Avro.Null, Unit] =
     `null`
       .imap(_ => ())(_ => null)
       .withTypeName("Unit")
@@ -1289,7 +1290,7 @@ object Codec extends CodecCompanionCompat {
   /**
     * @group JavaUtil
     */
-  implicit final val uuid: Codec.Aux[Avro.String, UUID] =
+  implicit lazy val uuid: Codec.Aux[Avro.String, UUID] =
     Codec.string
       .imapError(
         string =>
