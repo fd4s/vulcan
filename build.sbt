@@ -8,7 +8,7 @@ val magnolia2Version = "0.17.0"
 
 val magnolia3Version = "1.1.4"
 
-val refinedVersion = "0.9.29"
+val refinedVersion = "0.10.1"
 
 val shapelessVersion = "2.3.9"
 
