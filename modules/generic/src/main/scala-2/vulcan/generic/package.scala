@@ -25,7 +25,7 @@ package object generic {
     tailCodec: Lazy[Codec[T]]
   ): Codec[H :+: T] =
     tailCodec.value match {
-      case Codec.WithTypeName(u: Codec.UnionCodec[T], typeName) =>
+      case Codec.WithTypeName(Codec.Validated(u: Codec.UnionCodec[T], _), typeName) =>
         val tailAlts: Chain[Codec.Alt[H :+: T]] =
           u.alts.map(_.imap[H :+: T](_.eliminate(_ => None, Some(_)), Inr(_)))
         Codec
@@ -36,6 +36,7 @@ package object generic {
               )
           )
           .withTypeName(typeName)
+      case Codec.Fail(error) => Codec.Fail(error)
       case other =>
         throw new IllegalArgumentException(
           s"cannot derive coproduct codec from non-union ${other.getClass()}"

@@ -1,24 +1,24 @@
 val avroVersion = "1.11.0"
 
-val catsVersion = "2.7.0"
+val catsVersion = "2.8.0"
 
 val enumeratumVersion = "1.7.0"
 
 val magnolia2Version = "0.17.0"
 
-val magnolia3Version = "1.1.2"
+val magnolia3Version = "1.1.4"
 
-val refinedVersion = "0.9.27"
+val refinedVersion = "0.9.29"
 
 val shapelessVersion = "2.3.9"
 
-val shapeless3Version = "3.0.4"
+val shapeless3Version = "3.1.0"
 
-val scala212 = "2.12.15"
+val scala212 = "2.12.16"
 
 val scala213 = "2.13.8"
 
-val scala3 = "3.1.2"
+val scala3 = "3.1.3"
 
 lazy val vulcan = project
   .in(file("."))
@@ -142,7 +142,7 @@ lazy val dependencySettings = Seq(
     if (scalaVersion.value.startsWith("3")) Nil
     else
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.0" % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
       )
   },
@@ -162,7 +162,7 @@ lazy val dependencySettings = Seq(
 
 lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.1.5",
+    "org.typelevel" %% "discipline-scalatest" % "2.2.0",
     "org.typelevel" %% "cats-testkit" % catsVersion,
     "org.slf4j" % "slf4j-nop" % "1.7.36"
   ).map(_ % Test)
