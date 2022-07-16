@@ -60,31 +60,28 @@
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Instant</span>]]
 <span class="hljs-comment">// res1: Codec[Option[Instant]] = WithTypeName(</span>
-<span class="hljs-comment">//   codec = WithTypeName(</span>
-<span class="hljs-comment">//     codec = UnionCodec(</span>
-<span class="hljs-comment">//       alts = Append(</span>
-<span class="hljs-comment">//         leftNE = Singleton(a = vulcan.Codec$Alt$$anon$6@3d45b7df),</span>
-<span class="hljs-comment">//         rightNE = Singleton(a = vulcan.Codec$Alt$$anon$6@b9a249f)</span>
-<span class="hljs-comment">//       )</span>
+<span class="hljs-comment">//   codec = Validated(</span>
+<span class="hljs-comment">//     codec = WithTypeName(</span>
+<span class="hljs-comment">//       codec = Validated(</span>
+<span class="hljs-comment">//         codec = UnionCodec(</span>
+<span class="hljs-comment">//           alts = Append(</span>
+<span class="hljs-comment">//             leftNE = Singleton(a = vulcan.Codec$Alt$$anon$6@6a9a4fb),</span>
+<span class="hljs-comment">//             rightNE = Singleton(a = vulcan.Codec$Alt$$anon$6@1a4a7c60)</span>
+<span class="hljs-comment">//           )</span>
+<span class="hljs-comment">//         ),</span>
+<span class="hljs-comment">//         validSchema = ["null",{"type":"long","logicalType":"timestamp-millis"}]</span>
+<span class="hljs-comment">//       ),</span>
+<span class="hljs-comment">//       typeName = "union"</span>
 <span class="hljs-comment">//     ),</span>
-<span class="hljs-comment">//     typeName = "union"</span>
+<span class="hljs-comment">//     validSchema = ["null",{"type":"long","logicalType":"timestamp-millis"}]</span>
 <span class="hljs-comment">//   ),</span>
 <span class="hljs-comment">//   typeName = "Option"</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
 <p>In some cases, it's not possible to generate Avro schemas. This is why <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> <code>schema</code>s are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. For example, Avro doesn't support nested unions, so what would happen when we try to ask for a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> for <code>Option[Option[Instant]]</code>?</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Option</span>[<span class="hljs-type">Instant</span>]]]
-<span class="hljs-comment">// res2: Codec[Option[Option[Instant]]] = WithTypeName(</span>
-<span class="hljs-comment">//   codec = WithTypeName(</span>
-<span class="hljs-comment">//     codec = UnionCodec(</span>
-<span class="hljs-comment">//       alts = Append(</span>
-<span class="hljs-comment">//         leftNE = Singleton(a = vulcan.Codec$Alt$$anon$6@41b65673),</span>
-<span class="hljs-comment">//         rightNE = Singleton(a = vulcan.Codec$Alt$$anon$6@562a2883)</span>
-<span class="hljs-comment">//       )</span>
-<span class="hljs-comment">//     ),</span>
-<span class="hljs-comment">//     typeName = "union"</span>
-<span class="hljs-comment">//   ),</span>
-<span class="hljs-comment">//   typeName = "Option"</span>
+<span class="hljs-comment">// res2: Codec[Option[Option[Instant]]] = Fail(</span>
+<span class="hljs-comment">//   error = AvroError(org.apache.avro.AvroRuntimeException: Nested union: ["null",["null",{"type":"long","logicalType":"timestamp-millis"}]])</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
 <p>Encoding and decoding with a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> might also be unsuccessful, so results are wrapped in <code>Either</code> with error type <a href="/vulcan/api/vulcan/AvroError.html"><code>AvroError</code></a>. Encoding accepts a value to be encoded according to the schema defined by the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a>, and decoding accepts a value and a schema to decode the value against. For example, what happens if we try to decode <code>Int</code>s using a <code>Boolean</code> schema?</p>
@@ -103,10 +100,27 @@
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">final</span> <span class="hljs-keyword">case</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InstallationTime</span>(<span class="hljs-params">value: <span class="hljs-type">Instant</span></span>)</span>
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">Instant</span>].imap(<span class="hljs-type">InstallationTime</span>(_))(_.value)
-<span class="hljs-comment">// res4: Codec.Aux[Codec.instant.AvroType, InstallationTime] = Codec({</span>
-<span class="hljs-comment">//   "type" : "long",</span>
-<span class="hljs-comment">//   "logicalType" : "timestamp-millis"</span>
-<span class="hljs-comment">// })</span>
+<span class="hljs-comment">// res4: Codec.Aux[Codec.instant.AvroType, InstallationTime] = ImapErrors(</span>
+<span class="hljs-comment">//   codec = WithTypeName(</span>
+<span class="hljs-comment">//     codec = Validated(</span>
+<span class="hljs-comment">//       codec = WithLogicalType(</span>
+<span class="hljs-comment">//         codec = Validated(</span>
+<span class="hljs-comment">//           codec = ImapErrors(</span>
+<span class="hljs-comment">//             codec = Codec("long"),</span>
+<span class="hljs-comment">//             f = vulcan.Codec$WithValidSchema$$Lambda$14608/2067392109@4f61b4ec,</span>
+<span class="hljs-comment">//             g = vulcan.Codec$WithValidSchema$$Lambda$14609/1240520822@128c04b2</span>
+<span class="hljs-comment">//           ),</span>
+<span class="hljs-comment">//           validSchema = "long"</span>
+<span class="hljs-comment">//         ),</span>
+<span class="hljs-comment">//         logicalType = org.apache.avro.LogicalTypes$TimestampMillis@d15b21</span>
+<span class="hljs-comment">//       ),</span>
+<span class="hljs-comment">//       validSchema = {"type":"long","logicalType":"timestamp-millis"}</span>
+<span class="hljs-comment">//     ),</span>
+<span class="hljs-comment">//     typeName = "Instant"</span>
+<span class="hljs-comment">//   ),</span>
+<span class="hljs-comment">//   f = vulcan.Codec$WithValidSchema$$Lambda$14608/2067392109@1f5f6c50,</span>
+<span class="hljs-comment">//   g = vulcan.Codec$WithValidSchema$$Lambda$14609/1240520822@5d5b7d83</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <p>When we have a newtype where we ensure values are valid, we can use <code>imapError</code> instead.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> vulcan.<span class="hljs-type">AvroError</span>
@@ -121,20 +135,20 @@
 }
 
 <span class="hljs-type">Codec</span>[<span class="hljs-type">String</span>].imapError(<span class="hljs-type">SerialNumber</span>(_))(_.value)
-<span class="hljs-comment">// res5: Codec.Aux[Codec.string.AvroType, SerialNumber] = Codec("string")</span>
+<span class="hljs-comment">// res5: Codec.Aux[Codec.string.AvroType, SerialNumber] = ImapErrors(</span>
+<span class="hljs-comment">//   codec = Codec("string"),</span>
+<span class="hljs-comment">//   f = &lt;function1&gt;,</span>
+<span class="hljs-comment">//   g = vulcan.Codec$$Lambda$14652/523425283@2f005b0e</span>
+<span class="hljs-comment">// )</span>
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="decimals"></a><a href="#decimals" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Decimals</h2>
 <p>Avro decimals closely correspond to <code>BigDecimal</code>s with a fixed precision and scale.</p>
 <p><code>Codec.decimal</code> can be used to create a <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> for <code>BigDecimal</code> given the precision and scale. When encoding, the <a href="/vulcan/api/vulcan/Codec.html"><code>Codec</code></a> checks the precision and scale of the <code>BigDecimal</code> to make sure it matches the precision and scale defined in the schema. When decoding, we check the precision is not exceeded.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Codec</span>.decimal(precision = <span class="hljs-number">10</span>, scale = <span class="hljs-number">2</span>)
-<span class="hljs-comment">// res6: Codec.Aux[vulcan.Avro.Bytes, BigDecimal] = WithTypeName(</span>
-<span class="hljs-comment">//   codec = Codec({</span>
-<span class="hljs-comment">//   "type" : "bytes",</span>
-<span class="hljs-comment">//   "logicalType" : "decimal",</span>
-<span class="hljs-comment">//   "precision" : 10,</span>
-<span class="hljs-comment">//   "scale" : 2</span>
-<span class="hljs-comment">// }),</span>
-<span class="hljs-comment">//   typeName = "BigDecimal"</span>
+<span class="hljs-comment">// res6: Codec.Aux[vulcan.Avro.Bytes, BigDecimal] = DecimalCodec(</span>
+<span class="hljs-comment">//   precision = 10,</span>
+<span class="hljs-comment">//   scale = 2,</span>
+<span class="hljs-comment">//   validSchema = {"type":"bytes","logicalType":"decimal","precision":10,"scale":2}</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="enumerations"></a><a href="#enumerations" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Enumerations</h2>
@@ -164,7 +178,8 @@
   <span class="hljs-keyword">default</span> = <span class="hljs-type">Some</span>(<span class="hljs-type">Banana</span>)
 )
 <span class="hljs-comment">// res7: Codec.Aux[vulcan.Avro.EnumSymbol, Fruit] = WithTypeName(</span>
-<span class="hljs-comment">//   codec = Codec({</span>
+<span class="hljs-comment">//   codec = Validated(</span>
+<span class="hljs-comment">//     codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "enum",</span>
 <span class="hljs-comment">//   "name" : "Fruit",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -172,6 +187,8 @@
 <span class="hljs-comment">//   "symbols" : [ "apple", "banana", "cherry" ],</span>
 <span class="hljs-comment">//   "default" : "banana"</span>
 <span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//     validSchema = {"type":"enum","name":"Fruit","namespace":"com.example","doc":"A selection of different fruits","symbols":["apple","banana","cherry"],"default":"banana"}</span>
+<span class="hljs-comment">//   ),</span>
 <span class="hljs-comment">//   typeName = "com.example.Fruit"</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
@@ -196,13 +213,16 @@
   doc = <span class="hljs-type">Some</span>(<span class="hljs-string">"Amount of pence as a single byte"</span>)
 )
 <span class="hljs-comment">// res8: Codec.Aux[vulcan.Avro.Fixed, Pence] = WithTypeName(</span>
-<span class="hljs-comment">//   codec = Codec({</span>
+<span class="hljs-comment">//   codec = Validated(</span>
+<span class="hljs-comment">//     codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "fixed",</span>
 <span class="hljs-comment">//   "name" : "Pence",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
 <span class="hljs-comment">//   "doc" : "Amount of pence as a single byte",</span>
 <span class="hljs-comment">//   "size" : 1</span>
 <span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//     validSchema = {"type":"fixed","name":"Pence","namespace":"com.example","doc":"Amount of pence as a single byte","size":1}</span>
+<span class="hljs-comment">//   ),</span>
 <span class="hljs-comment">//   typeName = "com.example.Pence"</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
@@ -226,7 +246,8 @@
   ).mapN(<span class="hljs-type">Person</span>(_, _, _))
 }
 <span class="hljs-comment">// res9: Codec.Aux[vulcan.Avro.Record, Person] = WithTypeName(</span>
-<span class="hljs-comment">//   codec = Codec({</span>
+<span class="hljs-comment">//   codec = Validated(</span>
+<span class="hljs-comment">//     codec = Codec({</span>
 <span class="hljs-comment">//   "type" : "record",</span>
 <span class="hljs-comment">//   "name" : "Person",</span>
 <span class="hljs-comment">//   "namespace" : "com.example",</span>
@@ -247,6 +268,8 @@
 <span class="hljs-comment">//     "default" : null</span>
 <span class="hljs-comment">//   } ]</span>
 <span class="hljs-comment">// }),</span>
+<span class="hljs-comment">//     validSchema = {"type":"record","name":"Person","namespace":"com.example","doc":"Person with a full name and optional age","fields":[{"name":"fullName","type":"string"},{"name":"firstName","type":"string"},{"name":"lastName","type":"string","doc":"the last name"},{"name":"age","type":["null","int"],"default":null}]}</span>
+<span class="hljs-comment">//   ),</span>
 <span class="hljs-comment">//   typeName = "com.example.Person"</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
@@ -272,11 +295,14 @@
   alt[<span class="hljs-type">First</span>] |+| alt[<span class="hljs-type">Second</span>]
 }
 <span class="hljs-comment">// res10: Codec.Aux[Any, FirstOrSecond] = WithTypeName(</span>
-<span class="hljs-comment">//   codec = UnionCodec(</span>
-<span class="hljs-comment">//     alts = Append(</span>
-<span class="hljs-comment">//       leftNE = Singleton(a = vulcan.Codec$Alt$$anon$6@66a848d3),</span>
-<span class="hljs-comment">//       rightNE = Singleton(a = vulcan.Codec$Alt$$anon$6@738d3be6)</span>
-<span class="hljs-comment">//     )</span>
+<span class="hljs-comment">//   codec = Validated(</span>
+<span class="hljs-comment">//     codec = UnionCodec(</span>
+<span class="hljs-comment">//       alts = Append(</span>
+<span class="hljs-comment">//         leftNE = Singleton(a = vulcan.Codec$Alt$$anon$6@40c4a38f),</span>
+<span class="hljs-comment">//         rightNE = Singleton(a = vulcan.Codec$Alt$$anon$6@57eb6138)</span>
+<span class="hljs-comment">//       )</span>
+<span class="hljs-comment">//     ),</span>
+<span class="hljs-comment">//     validSchema = ["int","string"]</span>
 <span class="hljs-comment">//   ),</span>
 <span class="hljs-comment">//   typeName = "union"</span>
 <span class="hljs-comment">// )</span>
