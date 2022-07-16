@@ -47,7 +47,7 @@ final class CoproductCodecSpec extends CodecBase {
 
         it("should capture errors on nested unions") {
           assertSchemaError[Int :+: Option[String] :+: CNil] {
-            """org.apache.avro.AvroRuntimeException: Nested union: ["int",["null","string"]]"""
+            """org.apache.avro.AvroRuntimeException: Nested union: [["null","string"]]"""
           }
         }
 
