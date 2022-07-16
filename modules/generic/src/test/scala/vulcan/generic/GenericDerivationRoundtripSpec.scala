@@ -5,7 +5,7 @@ import cats.implicits._
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter}
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
-import org.scalacheck.{Arbitrary}
+import org.scalacheck.Arbitrary
 import org.scalatest.Assertion
 import vulcan._
 import vulcan.generic.examples._
@@ -20,6 +20,7 @@ final class GenericDerivationRoundtripSpec extends BaseSpec {
     it("CaseClassAvroNullDefault") { roundtrip[CaseClassAvroNullDefault] }
     it("CaseClassFieldAvroNullDefault") { roundtrip[CaseClassFieldAvroNullDefault] }
     it("CaseClassAndFieldAvroNullDefault") { roundtrip[CaseClassAndFieldAvroNullDefault] }
+    it("CaseClassTypeParameterField") { roundtrip[CaseClassTypeParameterField[Int]] }
   }
 
   def roundtrip[A](

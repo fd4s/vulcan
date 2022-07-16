@@ -52,7 +52,12 @@ package object generic {
   implicit final class MagnoliaCodec private[generic] (
     private val codec: Codec.type
   ) extends AnyVal {
-    final def combine[A](caseClass: CaseClass[Codec, A]): Codec[A] =
+    final def combine[A](caseClass: CaseClass[Codec, A])(implicit config: Configuration = Configuration.default): Codec[A] = {
+      def extractName(typeName: TypeName, genSep: String, typeSep: String): String = {
+        if (typeName.typeArguments.isEmpty) typeName.short
+        else typeName.short + genSep + typeName.typeArguments.map(extractName(_, genSep, typeSep)).mkString(typeSep)
+      }
+
       if (caseClass.isValueClass) {
         val param = caseClass.parameters.head
         param.typeclass.imap(value => caseClass.rawConstruct(List(value)))(param.dereference)
@@ -62,7 +67,10 @@ package object generic {
           .record[A](
             name = caseClass.annotations
               .collectFirst { case AvroName(namespace) => namespace }
-              .getOrElse(caseClass.typeName.short),
+              .getOrElse(config.typeSeparators match {
+                case Some((genSep, typeSep)) => extractName(caseClass.typeName, genSep, typeSep)
+                case None => caseClass.typeName.short
+              }),
             namespace = caseClass.annotations
               .collectFirst { case AvroNamespace(namespace) => namespace }
               .getOrElse(caseClass.typeName.owner),
@@ -98,6 +106,7 @@ package object generic {
               .map(caseClass.rawConstruct(_))
           }
       }
+    }
 
     /**
       * Returns a `Codec` instance for the specified type,

@@ -69,6 +69,24 @@ final class GenericDerivationCodecSpec extends CodecBase {
             }
           }
 
+          it("should support generic case classes and include the type name in the schema name (Int)") {
+            assertSchemaIs[CaseClassTypeParameterField[Int]] {
+              """{"type":"record","name":"CaseClassTypeParameterField__Int","namespace":"vulcan.generic.examples","fields":[{"name":"s","type":"string"},{"name":"value","type":"int"}]}"""
+            }
+          }
+
+          it("should support generic case classes and include the type name in the schema name (Long)") {
+            assertSchemaIs[CaseClassTypeParameterField[Long]] {
+              """{"type":"record","name":"CaseClassTypeParameterField__Long","namespace":"vulcan.generic.examples","fields":[{"name":"s","type":"string"},{"name":"value","type":"long"}]}"""
+            }
+          }
+
+          it("should support case classes with nested generic case classes and include the types in the schema name") {
+            assertSchemaIs[CaseClassTypeParameterField[CaseClassInner[Int, Long]]] {
+              """{"type":"record","name":"CaseClassTypeParameterField__CaseClassInner__Int_Long","namespace":"vulcan.generic.examples","fields":[{"name":"s","type":"string"},{"name":"value","type":{"type":"record","name":"CaseClassInner__Int_Long","fields":[{"name":"inner1","type":"int"},{"name":"inner2","type":"long"}]}}]}"""
+            }
+          }
+
         }
 
         describe("encode") {

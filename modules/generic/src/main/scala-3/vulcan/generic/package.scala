@@ -33,7 +33,7 @@ package object generic {
           .record[A](
             name = caseClass.annotations
               .collectFirst { case AvroName(namespace) => namespace }
-              .getOrElse(caseClass.typeInfo.short),
+              .getOrElse(extractName(caseClass.typeInfo)),
             namespace = caseClass.annotations
               .collectFirst { case AvroNamespace(namespace) => namespace }
               .getOrElse(caseClass.typeInfo.owner),
@@ -68,6 +68,10 @@ package object generic {
               }
               .map(caseClass.rawConstruct(_))
           }
+
+    private def extractName(typeInfo: TypeInfo): String =
+      if (typeInfo.typeParams.isEmpty) typeInfo.short
+      else typeInfo.short + "__" + typeInfo.typeParams.map(extractName).mkString("_")
 
     final def split[A](sealedTrait: SealedTrait[Codec, A]): Codec.Aux[Any, A] = {
       Codec
