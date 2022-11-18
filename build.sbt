@@ -1,26 +1,20 @@
-val avroVersion = "1.11.0"
-
-val catsVersion = "2.8.0"
-
+val avroVersion = "1.11.1"
+val catsVersion = "2.9.0"
+val disciplineScalaTestVersion = "2.2.0"
 val enumeratumVersion = "1.7.0"
-
 val jacksonVersion = "2.14.0"
-
 val magnolia2Version = "0.17.0"
-
-val magnolia3Version = "1.1.4"
-
-val refinedVersion = "0.9.29"
-
-val shapelessVersion = "2.3.9"
-
+val magnolia3Version = "1.1.5"
+val munitVersion = "0.7.29"
+val refinedVersion = "0.10.1"
+val scalaCollectionCompatVersion = "2.8.1"
 val shapeless3Version = "3.1.0"
+val shapelessVersion = "2.3.10"
+val slf4jNopVersion = "2.0.3"
 
-val scala212 = "2.12.16"
-
-val scala213 = "2.13.8"
-
-val scala3 = "3.1.3"
+val scala212 = "2.12.17"
+val scala213 = "2.13.10"
+val scala3 = "3.2.1"
 
 lazy val vulcan = project
   .in(file("."))
@@ -144,11 +138,12 @@ lazy val docs = project
 lazy val dependencySettings = Seq(
   libraryDependencies ++= {
     if (scalaVersion.value.startsWith("3")) Nil
-    else
+    else {
       Seq(
-        "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.0" % Test,
+        "org.scala-lang.modules" %% "scala-collection-compat" % scalaCollectionCompatVersion % Test,
         compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
       )
+    }
   },
   pomPostProcess := { (node: xml.Node) =>
     new xml.transform.RuleTransformer(new xml.transform.RewriteRule {
@@ -166,17 +161,17 @@ lazy val dependencySettings = Seq(
 
 lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %% "discipline-scalatest" % "2.2.0",
+    "org.typelevel" %% "discipline-scalatest" % disciplineScalaTestVersion,
     "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.36"
+    "org.slf4j" % "slf4j-nop" % slf4jNopVersion
   ).map(_ % Test)
 )
 
 lazy val munitSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scalameta" %% "munit" % "0.7.29",
-    "org.scalameta" %% "munit-scalacheck" % "0.7.29",
-    "org.slf4j" % "slf4j-nop" % "1.7.36"
+    "org.scalameta" %% "munit" % munitVersion,
+    "org.scalameta" %% "munit-scalacheck" % munitVersion,
+    "org.slf4j" % "slf4j-nop" % slf4jNopVersion
   ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")
 )
