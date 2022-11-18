@@ -164,7 +164,7 @@ lazy val scalatestSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "discipline-scalatest" % "2.2.0",
     "org.typelevel" %% "cats-testkit" % catsVersion,
-    "org.slf4j" % "slf4j-nop" % "1.7.36"
+    "org.slf4j" % "slf4j-nop" % "2.0.4"
   ).map(_ % Test)
 )
 
@@ -172,7 +172,7 @@ lazy val munitSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "munit" % "0.7.29",
     "org.scalameta" %% "munit-scalacheck" % "0.7.29",
-    "org.slf4j" % "slf4j-nop" % "1.7.36"
+    "org.slf4j" % "slf4j-nop" % "2.0.4"
   ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")
 )
