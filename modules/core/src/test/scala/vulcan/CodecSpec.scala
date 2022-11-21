@@ -866,10 +866,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
     }
 
     describe("imapError") {
-      sealed abstract class PosInt(val value: Int) {
-        override def equals(any: Any): Boolean =
-          any.isInstanceOf[PosInt] && any.asInstanceOf[PosInt].value == value
-      }
+      case class PosInt(value: Int)
 
       object PosInt {
         def apply(value: Int): Either[AvroError, PosInt] =
@@ -916,10 +913,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
     }
 
     describe("imapTry") {
-      sealed abstract class PosInt(val value: Int) {
-        override def equals(any: Any): Boolean =
-          any.isInstanceOf[PosInt] && any.asInstanceOf[PosInt].value == value
-      }
+      case class PosInt(value: Int)
 
       object PosInt {
         def apply(value: Int): Try[PosInt] =
