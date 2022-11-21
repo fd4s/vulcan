@@ -4,6 +4,8 @@ val catsVersion = "2.8.0"
 
 val enumeratumVersion = "1.7.0"
 
+val jacksonVersion = "2.14.0"
+
 val magnolia2Version = "0.17.0"
 
 val magnolia3Version = "1.1.4"
@@ -38,6 +40,8 @@ lazy val core = project
     name := moduleName.value,
     dependencySettings ++ Seq(
       libraryDependencies ++= Seq(
+        "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
+        "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
         "org.apache.avro" % "avro" % avroVersion,
         "org.typelevel" %% "cats-free" % catsVersion
       ) ++ {
