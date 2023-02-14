@@ -37,7 +37,7 @@ final class GenericDerivationCodecSpec extends CodecBase {
 
           it("should support annotation for record name") {
             assertSchemaIs[CaseClassAvroName] {
-              """{"type":"record","name":"CaseClassOtherName","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"]}]}"""
+              """{"type":"record","name":"CaseClassOtherName","namespace":"vulcan.generic.examples","fields":[{"name":"otherValue","type":["null","string"]}]}"""
             }
           }
 
