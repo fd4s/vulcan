@@ -2698,10 +2698,12 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             Some(unsafeSchema[FirstInSealedTraitCaseClass])
           )
         }
-        // TODO: Fix this test!
+
         it("should decode if schema is union with records of the same name") {
           assertDecodeIs[SealedTraitCaseClassSharedName](
-            unsafeEncode[SealedTraitCaseClassSharedName](Second.SharedNameSealedTraitCaseClass("hello")),
+            unsafeEncode[SealedTraitCaseClassSharedName](
+              Second.SharedNameSealedTraitCaseClass("hello")
+            ),
             Right(Second.SharedNameSealedTraitCaseClass("hello")),
             Some(unsafeSchema[Second.SharedNameSealedTraitCaseClass])
           )
