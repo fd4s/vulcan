@@ -448,11 +448,11 @@ addCommandsAlias(
   "validate",
   List(
     "+clean",
-    "+test",
-    "+mimaReportBinaryIssues",
     "+scalafmtCheck",
     "scalafmtSbtCheck",
     "+headerCheck",
+    "+test",
+    "+mimaReportBinaryIssues",
     "+doc",
     "docs/run"
   )
