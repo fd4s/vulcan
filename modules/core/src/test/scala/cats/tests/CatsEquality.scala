@@ -1,3 +1,9 @@
+/*
+ * Copyright 2019-2023 OVO Energy Limited
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // https://github.com/typelevel/cats/blob/382a92392d76650cf51a5c51694abfd601d6c8d5/tests/src/test/scala/cats/tests/CatsEquality.scala
 
 package cats
