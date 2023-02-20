@@ -1262,7 +1262,6 @@ object Codec extends CodecCompanionCompat {
             .orElse(
               alts
                 .find(_.codec.schema.exists { schema =>
-
                   schema.getType match {
                     case RECORD | FIXED | ENUM =>
                       schema.getName == altName || schema.getAliases.asScala
