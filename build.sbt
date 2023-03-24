@@ -1,20 +1,20 @@
 val avroVersion = "1.11.1"
 val catsVersion = "2.9.0"
 val disciplineScalaTestVersion = "2.2.0"
-val enumeratumVersion = "1.7.0"
+val enumeratumVersion = "1.7.2"
 val jacksonVersion = "2.14.1"
 val magnolia2Version = "0.17.0"
-val magnolia3Version = "1.2.5"
+val magnolia3Version = "1.2.7"
 val munitVersion = "0.7.29"
-val refinedVersion = "0.10.1"
+val refinedVersion = "0.10.3"
 val scalaCollectionCompatVersion = "2.9.0"
-val shapeless3Version = "3.1.0"
+val shapeless3Version = "3.3.0"
 val shapelessVersion = "2.3.10"
-val slf4jNopVersion = "2.0.6"
+val slf4jNopVersion = "2.0.7"
 
 val scala212 = "2.12.17"
 val scala213 = "2.13.10"
-val scala3 = "3.2.1"
+val scala3 = "3.2.2"
 
 lazy val vulcan = project
   .in(file("."))
@@ -448,11 +448,11 @@ addCommandsAlias(
   "validate",
   List(
     "+clean",
-    "+test",
-    "+mimaReportBinaryIssues",
     "+scalafmtCheck",
     "scalafmtSbtCheck",
     "+headerCheck",
+    "+test",
+    "+mimaReportBinaryIssues",
     "+doc",
     "docs/run"
   )

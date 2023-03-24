@@ -1,3 +1,9 @@
+/*
+ * Copyright 2019-2023 OVO Energy Limited
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package vulcan
 
 import cats.data._
@@ -2696,6 +2702,16 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             unsafeEncode[SealedTraitCaseClass](FirstInSealedTraitCaseClass(0)),
             Right(FirstInSealedTraitCaseClass(0)),
             Some(unsafeSchema[FirstInSealedTraitCaseClass])
+          )
+        }
+
+        it("should decode if schema is union with records of the same name") {
+          assertDecodeIs[SealedTraitCaseClassSharedName](
+            unsafeEncode[SealedTraitCaseClassSharedName](
+              Second.SharedNameSealedTraitCaseClass("hello")
+            ),
+            Right(Second.SharedNameSealedTraitCaseClass("hello")),
+            Some(unsafeSchema[Second.SharedNameSealedTraitCaseClass])
           )
         }
 
