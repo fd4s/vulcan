@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 OVO Energy Limited
+ * Copyright 2019-2023 OVO Energy Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -1237,12 +1237,16 @@ object Codec extends CodecCompanionCompat {
         }
 
       def decodeNamedContainerType(container: GenericContainer) = {
+        val altFullName =
+          container.getSchema.getFullName
+
         val altName =
           container.getSchema.getName
 
         val altWriterSchema =
           schemaTypes
-            .find(_.getName == altName)
+            .find(_.getFullName == altFullName)
+            .orElse(schemaTypes.find(_.getName == altName))
             .toRight(AvroError.decodeMissingUnionSchema(altName))
 
         def altMatching =
@@ -1250,11 +1254,22 @@ object Codec extends CodecCompanionCompat {
             .find(_.codec.schema.exists { schema =>
               schema.getType match {
                 case RECORD | FIXED | ENUM =>
-                  schema.getName == altName || schema.getAliases.asScala
-                    .exists(alias => alias == altName || alias.endsWith(s".$altName"))
+                  schema.getFullName == altFullName || schema.getAliases.asScala
+                    .exists(alias => alias == altFullName)
                 case _ => false
               }
             })
+            .orElse(
+              alts
+                .find(_.codec.schema.exists { schema =>
+                  schema.getType match {
+                    case RECORD | FIXED | ENUM =>
+                      schema.getName == altName || schema.getAliases.asScala
+                        .exists(alias => alias == altName || alias.endsWith(s".$altName"))
+                    case _ => false
+                  }
+                })
+            )
             .toRight(AvroError.decodeMissingUnionAlternative(altName))
 
         altWriterSchema.flatMap { altSchema =>
