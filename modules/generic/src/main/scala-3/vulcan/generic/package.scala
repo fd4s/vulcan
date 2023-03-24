@@ -54,10 +54,16 @@ package object generic {
                     }
                     .getOrElse(nullDefaultBase)
 
+                def renamedField =
+                  param.annotations
+                    .collectFirst {
+                      case AvroName(newName) => newName
+                    }
+
                 implicit val codec = param.typeclass
 
                 f(
-                  name = param.label,
+                  name = renamedField.getOrElse(param.label),
                   access = param.deref,
                   doc = param.annotations.collectFirst {
                     case AvroDoc(doc) => doc
