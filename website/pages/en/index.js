@@ -94,7 +94,8 @@ class Index extends React.Component {
       </Container>
     );
 
-    const index = `[![GitHub Actions](https://img.shields.io/github/workflow/status/fd4s/vulcan/ci)](https://github.com/fd4s/vulcan/actions) [![Gitter](https://img.shields.io/gitter/room/fd4s/vulcan.svg?colorB=36bc97)](https://gitter.im/fd4s/vulcan) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/fd4s/vulcan)
+    const index =
+      `[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/fd4s/vulcan/ci.yml?branch=master)](https://github.com/fd4s/vulcan/actions) [![Discord](https://img.shields.io/discord/632277896739946517?color=5865f2)](https://discord.gg/XF3CXcMzqD) [![Version](https://img.shields.io/badge/version-v${latestVersionBadge}-orange.svg)](https://index.scala-lang.org/fd4s/vulcan)
 
 Functional Avro encodings for Scala using the official Apache Avro library.<br>
 Project is under active development. Feedback and contributions welcome.
