@@ -12,6 +12,7 @@ import org.apache.avro.generic.GenericData
 import org.apache.avro.{Conversions, LogicalTypes, Schema, SchemaBuilder}
 import org.scalacheck.Gen
 import org.scalatest.Assertion
+import vulcan.Codec.InstantMicros
 import vulcan.examples._
 import vulcan.internal.converters.collection._
 
@@ -876,7 +877,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should be encoded as long with logical type timestamp-micros") {
           assertSchemaIs[InstantMicros] {
             """{"type":"long","logicalType":"timestamp-micros"}"""
-          }(vulcan.Codec.instantMicros)
+          }
         }
       }
 
@@ -886,28 +887,32 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
           assertEncodeIs[InstantMicros](
             value,
-            Right(NANOSECONDS.toMicros(SECONDS.toNanos(value.getEpochSecond) + value.getNano))
+            Right(NANOSECONDS.toMicros(SECONDS.toNanos(value.self.getEpochSecond) + value.self.getNano))
           )
         }
       }
 
       describe("decode") {
         it("should error if logical type is missing") {
+          val value = InstantMicros.now()
+
           assertDecodeError[InstantMicros](
-            unsafeEncode(InstantMicros.now()),
+            unsafeEncode(value),
             unsafeSchema[Long],
-            "Error decoding Instant: Got unexpected missing logical type"
+            "Error decoding InstantMicros: Got unexpected missing logical type"
           )
         }
 
         it("should error if logical type is not timestamp-micros") {
+          val value = InstantMicros.now()
+
           assertDecodeError[InstantMicros](
-            unsafeEncode(InstantMicros.now()), {
+            unsafeEncode(value), {
               LogicalTypes.timestampMillis().addToSchema {
                 SchemaBuilder.builder().longType()
               }
             },
-            "Error decoding Instant: Got unexpected logical type timestamp-millis"
+            "Error decoding InstantMicros: Got unexpected logical type timestamp-millis"
           )
         }
 

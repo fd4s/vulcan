@@ -731,10 +731,7 @@ object Codec extends CodecCompanionCompat {
       .withLogicalType(LogicalTypes.timestampMillis)
       .withTypeName("Instant")
 
-  class InstantMicros(val self: Instant) extends AnyVal {
-    def getEpochSecond: Long = self.getEpochSecond
-    def getNano: Int = self.getNano
-  }
+  case class InstantMicros(self: Instant)
   object InstantMicros {
     def ofEpochSecond(epochSecond: Long, nanoAdjustment: Long): InstantMicros =
       new InstantMicros(Instant.ofEpochSecond(epochSecond, nanoAdjustment))
@@ -742,7 +739,7 @@ object Codec extends CodecCompanionCompat {
     def now(): InstantMicros = new InstantMicros(Instant.now())
   }
 
-  implicit lazy val instantMicros: Codec.Aux[Avro.Long, InstantMicros] = {
+  implicit lazy val instantMicros: Codec.Aux[Avro.Long, InstantMicros] =
     LongCodec
       .imap { microsSinceEpoch =>
         InstantMicros.ofEpochSecond(
@@ -756,18 +753,18 @@ object Codec extends CodecCompanionCompat {
       }
       .withLogicalType(LogicalTypes.timestampMicros)
       .withTypeName("InstantMicros")
-  }
 
-  implicit lazy val localTimestampMillis: Codec.Aux[Avro.Long, LocalDateTime] = LongCodec
-    .imap { millisSinceEpoch =>
-      {
-        LocalDateTime.ofInstant(Instant.ofEpochMilli(millisSinceEpoch), ZoneId.of("UTC"))
+  implicit lazy val localTimestampMillis: Codec.Aux[Avro.Long, LocalDateTime] =
+    LongCodec
+      .imap { millisSinceEpoch =>
+        {
+          LocalDateTime.ofInstant(Instant.ofEpochMilli(millisSinceEpoch), ZoneId.of("UTC"))
+        }
+      } { localDateTime =>
+        localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli
       }
-    } { localDateTime =>
-      localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli
-    }
-    .withLogicalType(LogicalTypes.localTimestampMillis)
-    .withTypeName("LocalDateTime")
+      .withLogicalType(LogicalTypes.localTimestampMillis)
+      .withTypeName("LocalDateTime")
 
   /**
     * @group General
