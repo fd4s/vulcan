@@ -874,7 +874,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
     describe("instant micros") {
       describe("schema") {
         it("should be encoded as long with logical type timestamp-micros") {
-          assertSchemaIs[Instant] {
+          assertSchemaIs[InstantMicros] {
             """{"type":"long","logicalType":"timestamp-micros"}"""
           }(vulcan.Codec.instantMicros)
         }
@@ -882,42 +882,42 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
       describe("encode") {
         it("should encode as long") {
-          val value = Instant.now()
+          val value: InstantMicros = InstantMicros.now()
 
-          assertEncodeIs[Instant](
+          assertEncodeIs[InstantMicros](
             value,
             Right(NANOSECONDS.toMicros(SECONDS.toNanos(value.getEpochSecond) + value.getNano))
-          )(vulcan.Codec.instantMicros)
+          )
         }
       }
 
       describe("decode") {
         it("should error if logical type is missing") {
-          assertDecodeError[Instant](
-            unsafeEncode(Instant.now()),
+          assertDecodeError[InstantMicros](
+            unsafeEncode(InstantMicros.now()),
             unsafeSchema[Long],
             "Error decoding Instant: Got unexpected missing logical type"
-          )(vulcan.Codec.instantMicros)
+          )
         }
 
         it("should error if logical type is not timestamp-micros") {
-          assertDecodeError[Instant](
-            unsafeEncode(Instant.now()), {
+          assertDecodeError[InstantMicros](
+            unsafeEncode(InstantMicros.now()), {
               LogicalTypes.timestampMillis().addToSchema {
                 SchemaBuilder.builder().longType()
               }
             },
             "Error decoding Instant: Got unexpected logical type timestamp-millis"
-          )(vulcan.Codec.instantMicros)
+          )
         }
 
         it("should decode as Instant") {
-          val value = Instant.now()
+          val value = InstantMicros.now()
 
-          assertDecodeIs[Instant](
-            unsafeEncode(value)(vulcan.Codec.instantMicros),
+          assertDecodeIs[InstantMicros](
+            unsafeEncode(value),
             Right(value)
-          )(vulcan.Codec.instantMicros)
+          )
         }
       }
     }
@@ -935,7 +935,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should encode as long") {
           val value = {
             val instant = Instant.now()
-            LocalDateTime.ofInstant(instant.minusNanos(instant.getNano().toLong), ZoneId.of("UTC"))
+            LocalDateTime.ofInstant(instant.minusNanos(instant.getNano.toLong), ZoneId.of("UTC"))
           }
 
           assertEncodeIs[LocalDateTime](
@@ -949,7 +949,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should error if logical type is missing") {
           val value = {
             val instant = Instant.now()
-            LocalDateTime.ofInstant(instant.minusNanos(instant.getNano().toLong), ZoneId.of("UTC"))
+            LocalDateTime.ofInstant(instant.minusNanos(instant.getNano.toLong), ZoneId.of("UTC"))
           }
 
           assertDecodeError[LocalDateTime](
@@ -962,7 +962,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
         it("should error if logical type is not local-timestamp-millis") {
           val value = {
             val instant = Instant.now()
-            LocalDateTime.ofInstant(instant.minusNanos(instant.getNano().toLong), ZoneId.of("UTC"))
+            LocalDateTime.ofInstant(instant.minusNanos(instant.getNano.toLong), ZoneId.of("UTC"))
           }
 
           assertDecodeError[LocalDateTime](

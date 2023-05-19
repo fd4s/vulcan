@@ -731,32 +731,43 @@ object Codec extends CodecCompanionCompat {
       .withLogicalType(LogicalTypes.timestampMillis)
       .withTypeName("Instant")
 
-  lazy val instantMicros: Codec.Aux[Avro.Long, Instant] =
+  class InstantMicros(val self: Instant) extends AnyVal {
+    def getEpochSecond: Long = self.getEpochSecond
+    def getNano: Int = self.getNano
+  }
+  object InstantMicros {
+    def ofEpochSecond(epochSecond: Long, nanoAdjustment: Long): InstantMicros =
+      new InstantMicros(Instant.ofEpochSecond(epochSecond, nanoAdjustment))
+
+    def now(): InstantMicros = new InstantMicros(Instant.now())
+  }
+
+  implicit lazy val instantMicros: Codec.Aux[Avro.Long, InstantMicros] = {
     LongCodec
       .imap { microsSinceEpoch =>
-        Instant.ofEpochSecond(
+        InstantMicros.ofEpochSecond(
           MICROSECONDS.toSeconds(microsSinceEpoch),
           MICROSECONDS.toNanos(Math.floorMod(microsSinceEpoch, SECONDS.toMicros(1)))
         )
-      } { instant =>
-        NANOSECONDS.toMicros(SECONDS.toNanos(instant.getEpochSecond) + instant.getNano)
+      } { instantMicros =>
+        NANOSECONDS.toMicros(
+          SECONDS.toNanos(instantMicros.self.getEpochSecond) + instantMicros.self.getNano
+        )
       }
       .withLogicalType(LogicalTypes.timestampMicros)
-      .withTypeName("Instant")
+      .withTypeName("InstantMicros")
+  }
 
-  implicit lazy val localTimestampMillis: Codec.Aux[Avro.Long, LocalDateTime] =
-    LongCodec
-      .imap { millisSinceEpoch =>
-        {
-          val x = LocalDateTime.ofInstant(Instant.ofEpochMilli(millisSinceEpoch), ZoneId.of("UTC"))
-          println(s"millis: $millisSinceEpoch\nx: $x")
-          x
-        }
-      } { localDateTime =>
-        localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli
+  implicit lazy val localTimestampMillis: Codec.Aux[Avro.Long, LocalDateTime] = LongCodec
+    .imap { millisSinceEpoch =>
+      {
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(millisSinceEpoch), ZoneId.of("UTC"))
       }
-      .withLogicalType(LogicalTypes.localTimestampMillis)
-      .withTypeName("LocalDateTime")
+    } { localDateTime =>
+      localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli
+    }
+    .withLogicalType(LogicalTypes.localTimestampMillis)
+    .withTypeName("LocalDateTime")
 
   /**
     * @group General
