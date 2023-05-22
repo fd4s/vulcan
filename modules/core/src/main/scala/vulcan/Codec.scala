@@ -757,9 +757,7 @@ object Codec extends CodecCompanionCompat {
   implicit lazy val localTimestampMillis: Codec.Aux[Avro.Long, LocalDateTime] =
     LongCodec
       .imap { millisSinceEpoch =>
-        {
-          LocalDateTime.ofInstant(Instant.ofEpochMilli(millisSinceEpoch), ZoneId.of("UTC"))
-        }
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(millisSinceEpoch), ZoneId.of("UTC"))
       } { localDateTime =>
         localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli
       }
