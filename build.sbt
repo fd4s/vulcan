@@ -1,5 +1,5 @@
 val avroVersion = "1.11.1"
-val catsVersion = "2.9.0"
+val catsVersion = "2.10.0"
 val disciplineScalaTestVersion = "2.2.0"
 val enumeratumVersion = "1.7.2"
 val jacksonVersion = "2.14.2"
