@@ -11,6 +11,8 @@ val scalaCollectionCompatVersion = "2.9.0"
 val shapeless3Version = "3.3.0"
 val shapelessVersion = "2.3.10"
 val slf4jNopVersion = "2.0.7"
+val sbtJmhVersion = "0.3.7"
+val jmhVersion = "1.32"
 
 val scala212 = "2.12.17"
 val scala213 = "2.13.10"
@@ -134,6 +136,27 @@ lazy val docs = project
   )
   .dependsOn(core, enumeratum, generic, refined)
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin, MdocPlugin, ScalaUnidocPlugin)
+
+lazy val benchmarks = project
+  .in(file("benchmarks"))
+  .dependsOn(core, generic)
+  .enablePlugins(JmhPlugin)
+  .settings(
+    Test / fork := true,
+    publishArtifact := false,
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
+    dependencySettings ++ Seq(
+      libraryDependencies ++= Seq(
+        "pl.project13.scala" % "sbt-jmh-extras" % sbtJmhVersion,
+        "org.openjdk.jmh" % "jmh-core" % jmhVersion,
+        "org.openjdk.jmh" % "jmh-generator-asm" % jmhVersion,
+        "org.openjdk.jmh" % "jmh-generator-bytecode" % jmhVersion,
+        "org.openjdk.jmh" % "jmh-generator-reflection" % jmhVersion
+      )
+    )
+  )
 
 lazy val dependencySettings = Seq(
   libraryDependencies ++= {
