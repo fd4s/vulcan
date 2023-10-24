@@ -1556,6 +1556,77 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
       }
     }
 
+    describe("nonEmptyMap") {
+      describe("schema") {
+        it("should be encoded as map") {
+          assertSchemaIs[NonEmptyMap[String, Int]] {
+            """{"type":"map","values":"int"}"""
+          }
+        }
+      }
+
+      describe("encode") {
+        it("should encode as java map using encoder for value") {
+          assertEncodeIs[NonEmptyMap[String, Int]](
+            NonEmptyMap.of("key1" -> 1, "key2" -> 2, "key3" -> 3),
+            Right(
+              Map(Avro.String("key1") -> 1, Avro.String("key2") -> 2, Avro.String("key3") -> 3).asJava
+            )
+          )
+        }
+      }
+
+      describe("decode") {
+        it("should error if schema is not map") {
+          assertDecodeError[NonEmptyMap[String, Int]](
+            unsafeEncode[NonEmptyMap[String, Int]](NonEmptyMap.one("key", 1)),
+            SchemaBuilder.builder().intType(),
+            "Error decoding NonEmptyMap: Error decoding Map: Got unexpected schema type INT, expected schema type MAP"
+          )
+        }
+
+        it("should error if value is not java.util.Map") {
+          assertDecodeError[NonEmptyMap[String, Int]](
+            123,
+            unsafeSchema[NonEmptyMap[String, Int]],
+            "Error decoding NonEmptyMap: Error decoding Map: Got unexpected type java.lang.Integer, expected type java.util.Map"
+          )
+        }
+
+        it("should error if keys are not strings") {
+          assertDecodeError[NonEmptyMap[String, Int]](
+            NonEmptyMap.one(1, 2).toSortedMap.asJava,
+            unsafeSchema[NonEmptyMap[String, Int]],
+            "Error decoding NonEmptyMap: Error decoding Map: Got unexpected map key with type java.lang.Integer, expected Utf8"
+          )
+        }
+
+        it("should error if any keys are null") {
+          assertDecodeError[NonEmptyMap[String, Int]](
+            Map((null, 2)).asJava,
+            unsafeSchema[NonEmptyMap[String, Int]],
+            "Error decoding NonEmptyMap: Error decoding Map: Got unexpected map key with type null, expected Utf8"
+          )
+        }
+
+        it("should error on empty collection") {
+          assertDecodeError[NonEmptyMap[String, Int]](
+            unsafeEncode(Map.empty[String, Int]),
+            unsafeSchema[NonEmptyMap[String, Int]],
+            "Error decoding NonEmptyMap: Got unexpected empty collection"
+          )
+        }
+
+        it("should decode to map using decoder for value") {
+          val value = NonEmptyMap.of("key1" -> 1, "key2" -> 2, "key3" -> 3)
+          assertDecodeIs[NonEmptyMap[String, Int]](
+            unsafeEncode[NonEmptyMap[String, Int]](value),
+            Right(value)
+          )
+        }
+      }
+    }
+
     describe("option") {
       describe("schema") {
         it("should be encoded as union") {
