@@ -1,20 +1,20 @@
 val avroVersion = "1.11.3"
-val catsVersion = "2.9.0"
+val catsVersion = "2.10.0"
 val disciplineScalaTestVersion = "2.2.0"
-val enumeratumVersion = "1.7.2"
-val jacksonVersion = "2.14.2"
+val enumeratumVersion = "1.7.3"
+val jacksonVersion = "2.16.1"
 val magnolia2Version = "0.17.0"
-val magnolia3Version = "1.3.0"
+val magnolia3Version = "1.3.4"
 val munitVersion = "0.7.29"
-val refinedVersion = "0.10.3"
-val scalaCollectionCompatVersion = "2.9.0"
+val refinedVersion = "0.11.0"
+val scalaCollectionCompatVersion = "2.11.0"
 val shapeless3Version = "3.3.0"
 val shapelessVersion = "2.3.10"
-val slf4jNopVersion = "2.0.9"
+val slf4jNopVersion = "2.0.10"
 
 val scala212 = "2.12.18"
-val scala213 = "2.13.10"
-val scala3 = "3.2.2"
+val scala213 = "2.13.12"
+val scala3 = "3.3.1"
 
 lazy val vulcan = project
   .in(file("."))
@@ -336,7 +336,8 @@ lazy val scalaSettings = Seq(
           "-Ywarn-dead-code",
           "-Ywarn-numeric-widen",
           "-Ywarn-value-discard",
-          "-Ywarn-unused"
+          "-Ywarn-unused",
+          "-Wconf:cat=unused-nowarn:s"
         )
       } else Seq()
 
