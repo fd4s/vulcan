@@ -89,6 +89,13 @@ package object generic {
                       case AvroName(newName) => newName
                     }
 
+                def defaultValue =
+                  param.annotations
+                    .collectFirst {
+                      case AvroFieldDefault(None)    => Some(None)
+                      case AvroFieldDefault(default) => default
+                    }
+
                 implicit val codec = param.typeclass
 
                 f(
@@ -97,8 +104,9 @@ package object generic {
                   doc = param.annotations.collectFirst {
                     case AvroDoc(doc) => doc
                   },
-                  default = (if (codec.schema.exists(_.isNullable) && nullDefaultField) Some(None)
-                             else None).asInstanceOf[Option[param.PType]] // TODO: remove cast
+                  default =
+                    (if (codec.schema.exists(_.isNullable) && nullDefaultField) Some(None)
+                     else defaultValue).asInstanceOf[Option[param.PType]] // TODO: remove cast
                 ).widen
               }
               .map(caseClass.rawConstruct(_))
