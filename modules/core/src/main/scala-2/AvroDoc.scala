@@ -6,7 +6,7 @@
 
 package vulcan
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, nowarn}
 
 /**
   * Annotation which can be used to include documentation
@@ -30,6 +30,7 @@ final class AvroDoc(final val doc: String) extends StaticAnnotation {
 }
 
 private[vulcan] object AvroDoc {
+  @nowarn("cat=deprecation")
   final def unapply(avroDoc: AvroDoc): Some[String] =
     Some(avroDoc.doc)
 }
