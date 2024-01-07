@@ -7,7 +7,7 @@
 package vulcan
 
 import cats.{Invariant, Show, ~>}
-import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyVector}
+import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptyMap, NonEmptySet, NonEmptyVector}
 import cats.free.FreeApplicative
 import cats.implicits._
 
@@ -23,7 +23,7 @@ import vulcan.Avro.Bytes
 import vulcan.internal.{Deserializer, Serializer}
 
 import scala.annotation.implicitNotFound
-import scala.collection.immutable.SortedSet
+import scala.collection.immutable.{SortedMap, SortedSet}
 import vulcan.internal.converters.collection._
 import vulcan.internal.syntax._
 import vulcan.internal.schema.adaptForSchema
@@ -971,6 +971,22 @@ object Codec extends CodecCompanionCompat {
         NonEmptyVector.fromVector(_).toRight(AvroError.decodeEmptyCollection)
       )(_.toVector)
       .withTypeName("NonEmptyVector")
+
+  /**
+    * @group Cats
+    */
+  implicit final def nonEmptyMap[A](
+    implicit codec: Codec[A]
+  ): Codec.Aux[Avro.Map[codec.AvroType], NonEmptyMap[String, A]] =
+    Codec
+      .map[A]
+      .imapError(
+        map =>
+          NonEmptyMap
+            .fromMap(SortedMap.apply(map.toList: _*))
+            .toRight(AvroError.decodeEmptyCollection)
+      )(_.toSortedMap)
+      .withTypeName("NonEmptyMap")
 
   /**
     * @group General
