@@ -1049,8 +1049,7 @@ object Codec extends CodecCompanionCompat {
                   new Schema.Field(
                     field.name,
                     schema,
-                    field.doc.orNull,
-                    {
+                    field.doc.orNull, {
                       default.map { default =>
                         if (default == null) Schema.Field.NULL_DEFAULT_VALUE
                         else adaptForSchema(default)
