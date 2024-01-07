@@ -664,7 +664,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               .swap
               .value
               .message ==
-              "java.lang.IllegalArgumentException: Invalid fixed size: -1"
+              "org.apache.avro.AvroRuntimeException: Malformed data. Length is negative: -1"
           }
         }
       }
