@@ -983,7 +983,7 @@ object Codec extends CodecCompanionCompat {
       .imapError(
         map =>
           NonEmptyMap
-            .fromMap(SortedMap.from(map))
+            .fromMap(SortedMap.apply(map.toList: _*))
             .toRight(AvroError.decodeEmptyCollection)
       )(_.toSortedMap)
       .withTypeName("NonEmptyMap")
