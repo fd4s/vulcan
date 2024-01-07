@@ -1050,10 +1050,12 @@ object Codec extends CodecCompanionCompat {
                     field.name,
                     schema,
                     field.doc.orNull,
-                    default.map {
-                      case null  => Schema.Field.NULL_DEFAULT_VALUE
-                      case other => adaptForSchema(other)
-                    }.orNull,
+                    {
+                      default.map { default =>
+                        if (default == null) Schema.Field.NULL_DEFAULT_VALUE
+                        else adaptForSchema(default)
+                      }.orNull
+                    },
                     field.order.getOrElse(Schema.Field.Order.ASCENDING)
                   )
 

@@ -14,7 +14,7 @@ val slf4jNopVersion = "2.0.10"
 
 val scala212 = "2.12.18"
 val scala213 = "2.13.12"
-val scala3 = "3.2.2"
+val scala3 = "3.3.1"
 
 lazy val vulcan = project
   .in(file("."))
@@ -325,8 +325,7 @@ lazy val scalaSettings = Seq(
         "-feature",
         "-unchecked",
         "-Xfatal-warnings",
-        "-language:implicitConversions",
-        "-Wconf:cat=unused-nowarn:s"
+        "-language:implicitConversions"
       )
 
     val scala2ScalacOptions =
@@ -337,7 +336,8 @@ lazy val scalaSettings = Seq(
           "-Ywarn-dead-code",
           "-Ywarn-numeric-widen",
           "-Ywarn-value-discard",
-          "-Ywarn-unused"
+          "-Ywarn-unused",
+          "-Wconf:cat=unused-nowarn:s"
         )
       } else Seq()
 
