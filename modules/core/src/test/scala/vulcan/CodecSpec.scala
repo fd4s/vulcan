@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 OVO Energy Limited
+ * Copyright 2019-2024 OVO Energy Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -664,7 +664,7 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
               .swap
               .value
               .message ==
-              "java.lang.IllegalArgumentException: Invalid fixed size: -1"
+              "org.apache.avro.AvroRuntimeException: Malformed data. Length is negative: -1"
           }
         }
       }
