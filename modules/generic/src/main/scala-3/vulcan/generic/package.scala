@@ -68,8 +68,11 @@ package object generic {
                   doc = param.annotations.collectFirst {
                     case AvroDoc(doc) => doc
                   },
-                  default = param.default.orElse(if (codec.schema.exists(_.isNullable) && nullDefaultField) Some(None.asInstanceOf[param.PType])  // TODO: remove cast
-                             else None)
+                  default = param.default.orElse(
+                    Option.when(codec.schema.exists(_.isNullable) && nullDefaultField)(
+                      None.asInstanceOf[param.PType]  // TODO: remove cast
+                    )
+                  )
                 ).widen
               }
               .map(caseClass.rawConstruct(_))
