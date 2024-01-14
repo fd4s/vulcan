@@ -98,9 +98,9 @@ package object generic {
                     case AvroDoc(doc) => doc
                   },
                   default = param.default.orElse(
-                    (if (codec.schema.exists(_.isNullable) && nullDefaultField)
-                       Some(None.asInstanceOf[param.PType]) // TODO: remove cast
-                     else None)
+                    if (codec.schema.exists(_.isNullable) && nullDefaultField)
+                      Some(None.asInstanceOf[param.PType]) // TODO: remove cast
+                    else None
                   )
                 ).widen
               }
