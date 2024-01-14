@@ -94,7 +94,8 @@ lazy val generic = project
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
-    scalacOptions += "-Yretain-trees",
+    // magnolia requires compilation with the -Yretain-trees flag to support case class field default values on Scala 3
+    Test / scalacOptions ++= (if (CrossVersion.partialVersion(scalaVersion.value).exists(_._1 == 3)) Seq("-Yretain-trees") else Nil),
     testSettings
   )
   .dependsOn(core % "compile->compile;test->test")
