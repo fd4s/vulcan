@@ -94,6 +94,7 @@ lazy val generic = project
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
+    scalacOptions += "-Yretain-trees",
     testSettings
   )
   .dependsOn(core % "compile->compile;test->test")
