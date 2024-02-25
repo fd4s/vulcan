@@ -141,7 +141,7 @@ lazy val dependencySettings = Seq(
     else {
       Seq(
         "org.scala-lang.modules" %% "scala-collection-compat" % scalaCollectionCompatVersion % Test,
-        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.3").cross(CrossVersion.full))
       )
     }
   },
