@@ -999,7 +999,7 @@ object Codec extends CodecCompanionCompat {
     override def encode(a: Option[A]): Either[AvroError, Any] = {
       a match {
         case Some(value) => codec.encode(value)
-        case None        => Codec.none.encode(None)
+        case None | null => Codec.none.encode(None)
       }
     }
 

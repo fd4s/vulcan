@@ -11,6 +11,7 @@ import org.apache.avro.Schema
 import shapeless.{:+:, CNil, Coproduct}
 import vulcan._
 import vulcan.generic.examples._
+import org.apache.avro.generic.GenericData
 
 final class CoproductCodecSpec extends CodecBase {
   describe("Codec") {
@@ -176,6 +177,18 @@ final class CoproductCodecSpec extends CodecBase {
             unsafeEncode(Coproduct[A](CaseClassField(10))),
             unsafeSchema[CNil],
             "Error decoding Coproduct: Missing schema CaseClassField in union"
+          )
+        }
+
+        it("should encode as record using default values") {
+          assertEncodeIs[CaseClassDefaultFields](
+            CaseClassDefaultFields(age = Some(7)),
+            Right {
+              val record = new GenericData.Record(unsafeSchema[CaseClassDefaultFields])
+              record.put(0, unsafeEncode("Pikachu"))
+              record.put(1, unsafeEncode(7))
+              record
+            }
           )
         }
       }

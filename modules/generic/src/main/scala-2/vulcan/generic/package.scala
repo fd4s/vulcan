@@ -48,7 +48,6 @@ package object generic {
     selector: Selector[C, A]
   ): Prism[C, A] =
     Prism.instance(selector(_))(inject(_))
-
   implicit final class MagnoliaCodec private[generic] (
     private val codec: Codec.type
   ) extends AnyVal {
@@ -90,6 +89,15 @@ package object generic {
                     }
 
                 implicit val codec = param.typeclass
+                val defautlValue: Option[param.PType] = param.default
+                  .map {
+                    case null  => None.asInstanceOf[param.PType]
+                    case other => other
+                  }
+                  .orElse {
+                    (if (codec.schema.exists(_.isNullable) && nullDefaultField) Some(None)
+                     else None).asInstanceOf[Option[param.PType]] // TODO: remove cast
+                  }
 
                 f(
                   name = renamedField.getOrElse(param.label),
@@ -97,8 +105,7 @@ package object generic {
                   doc = param.annotations.collectFirst {
                     case AvroDoc(doc) => doc
                   },
-                  default = (if (codec.schema.exists(_.isNullable) && nullDefaultField) Some(None)
-                             else None).asInstanceOf[Option[param.PType]] // TODO: remove cast
+                  default = defautlValue
                 ).widen
               }
               .map(caseClass.rawConstruct(_))

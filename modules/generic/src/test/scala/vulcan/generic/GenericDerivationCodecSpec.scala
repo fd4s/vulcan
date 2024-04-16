@@ -267,6 +267,12 @@ final class GenericDerivationCodecSpec extends CodecBase {
               Right(CaseClassInSealedTrait(0))
             )
           }
+
+          it("should use default constructor parameters for default values") {
+            assertSchemaIs[CaseClassDefaultFields](
+              """{"type":"record","name":"CaseClassDefaultFields","namespace":"vulcan.generic.examples","fields":[{"name":"name","type":"string","default":"Pikachu"},{"name":"age","type":["null","int"],"default":null},{"name":"weight","type":["null","float"],"default":null}]}"""
+            )
+          }
         }
       }
     }
