@@ -51,7 +51,6 @@ class CodecBase extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValu
   )(implicit codec: Codec[A]): Assertion =
     assert(codec.schema.swap.value.message == expectedErrorMessage)
 
-  
   def assertSchemaError[A](implicit codec: Codec[A]): Assertion =
     assert(codec.schema.isLeft, codec.schema)
 

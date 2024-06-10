@@ -8,7 +8,6 @@ package vulcan.generic
 
 import vulcan.{AvroError, Codec}
 
-
 sealed trait Enum extends Product {
   self =>
   def value: String = self.productPrefix
@@ -23,8 +22,8 @@ object Enum {
     symbols = List(A.value, B.value),
     encode = _.value,
     decode = {
-      case "A" => Right(A)
-      case "B" => Right(B)
+      case "A"   => Right(A)
+      case "B"   => Right(B)
       case other => Left(AvroError(s"Invalid S: $other"))
     }
   )
@@ -42,7 +41,7 @@ object Union {
 
 case class Foo(
   a: Int = 1,
-  b: String = "foo",
+  b: String = "foo"
 )
 
 object Foo {
@@ -108,7 +107,7 @@ final class AvroFieldDefaultSpec extends CodecBase {
       assert(HasSSecond.codec.schema.exists(_.getField("s").defaultVal() == "B"))
     }
 
-    it("should succeed with the first member of a union"){
+    it("should succeed with the first member of a union") {
       assertSchemaIs[HasUnion](
         """{"type":"record","name":"HasUnion","namespace":"vulcan.generic","fields":[{"name":"u","type":[{"type":"record","name":"A","namespace":"vulcan.generic.Union","fields":[{"name":"a","type":"int"}]},{"type":"record","name":"B","namespace":"vulcan.generic.Union","fields":[{"name":"b","type":"string"}]}],"default":{"a":1}}]}"""
       )
@@ -116,7 +115,7 @@ final class AvroFieldDefaultSpec extends CodecBase {
       assert(result == HasUnion(Union.A(1)))
     }
 
-    it("should fail with the second member of a union"){
+    it("should fail with the second member of a union") {
       assertSchemaError[HasUnionSecond]
     }
   }
