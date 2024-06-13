@@ -322,6 +322,7 @@ lazy val noPublishSettings =
 lazy val scalaSettings = Seq(
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala212, scala213),
+  javacOptions ++= Seq("--release", "8"),
   scalacOptions ++= {
     val commonScalacOptions =
       Seq(
@@ -343,7 +344,9 @@ lazy val scalaSettings = Seq(
           "-Ywarn-numeric-widen",
           "-Ywarn-value-discard",
           "-Ywarn-unused",
-          "-Wconf:cat=unused-nowarn:s"
+          "-Wconf:cat=unused-nowarn:s",
+          "-release",
+          "8"
         )
       } else Seq()
 
@@ -363,7 +366,9 @@ lazy val scalaSettings = Seq(
     val scala3ScalacOptions =
       if (scalaVersion.value.startsWith("3")) {
         Seq(
-          "-Ykind-projector"
+          "-Ykind-projector",
+          "-java-output-version",
+          "8"
         )
       } else Seq()
 
