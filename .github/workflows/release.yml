@@ -18,5 +18,4 @@ jobs:
       - run: echo "PGP_SECRET=${{ secrets.PGP_SECRET }}" >> $GITHUB_ENV
       - run: echo "SONATYPE_PASSWORD=${{ secrets.SONATYPE_PASSWORD }}" >> $GITHUB_ENV
       - run: echo "SONATYPE_USERNAME=${{ secrets.SONATYPE_USERNAME }}" >> $GITHUB_ENV
-#      - run: sbt ci-release docs/docusaurusPublishGhpages
-      - run: sbt ci-release
+      - run: sbt ci-release docs/docusaurusPublishGhpages
