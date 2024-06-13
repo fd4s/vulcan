@@ -52,8 +52,8 @@ object Props {
 
     override final def toString: String =
       toChain match {
-        case Right(props) =>
-          props.toList
+        case Right(pairs) =>
+          pairs.toList
             .map { case (name, value) => s"$name -> $value" }
             .mkString("Props(", ", ", ")")
 
