@@ -8,13 +8,15 @@ val magnolia3Version = "1.3.4"
 val munitVersion = "0.7.29"
 val refinedVersion = "0.11.0"
 val scalaCollectionCompatVersion = "2.11.0"
-val shapeless3Version = "3.3.0"
+val shapeless3Version = "3.4.1"
 val shapelessVersion = "2.3.12"
-val slf4jNopVersion = "2.0.10"
+val slf4jNopVersion = "2.0.13"
 
 val scala212 = "2.12.18"
 val scala213 = "2.13.12"
 val scala3 = "3.3.1"
+
+ThisBuild / versionScheme := Some("early-semver")
 
 lazy val vulcan = project
   .in(file("."))
@@ -94,6 +96,10 @@ lazy val generic = project
     scalaSettings ++ Seq(
       crossScalaVersions += scala3
     ),
+    // magnolia requires compilation with the -Yretain-trees flag to support case class field default values on Scala 3
+    Test / scalacOptions ++= (if (CrossVersion.partialVersion(scalaVersion.value).exists(_._1 == 3))
+                                Seq("-Yretain-trees")
+                              else Nil),
     testSettings
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -141,7 +147,7 @@ lazy val dependencySettings = Seq(
     else {
       Seq(
         "org.scala-lang.modules" %% "scala-collection-compat" % scalaCollectionCompatVersion % Test,
-        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full))
+        compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.3").cross(CrossVersion.full))
       )
     }
   },
@@ -316,6 +322,7 @@ lazy val noPublishSettings =
 lazy val scalaSettings = Seq(
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala212, scala213),
+  javacOptions ++= Seq("--release", "8"),
   scalacOptions ++= {
     val commonScalacOptions =
       Seq(
@@ -337,7 +344,9 @@ lazy val scalaSettings = Seq(
           "-Ywarn-numeric-widen",
           "-Ywarn-value-discard",
           "-Ywarn-unused",
-          "-Wconf:cat=unused-nowarn:s"
+          "-Wconf:cat=unused-nowarn:s",
+          "-release",
+          "8"
         )
       } else Seq()
 
@@ -357,7 +366,9 @@ lazy val scalaSettings = Seq(
     val scala3ScalacOptions =
       if (scalaVersion.value.startsWith("3")) {
         Seq(
-          "-Ykind-projector"
+          "-Ykind-projector",
+          "-java-output-version",
+          "8"
         )
       } else Seq()
 
