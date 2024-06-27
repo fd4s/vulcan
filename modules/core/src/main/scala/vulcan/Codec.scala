@@ -241,7 +241,7 @@ object Codec extends CodecCompanionCompat {
       extends Codec.InstanceForTypes[Avro.Boolean, Boolean](
         "Boolean",
         SchemaBuilder.builder().booleanType(),
-        _.asRight, { case (boolean: Boolean, _) => Right(boolean) },
+        _.asRight, { case (value: Boolean, _) => Right(value) },
         Some("Boolean")
       )
 
@@ -361,11 +361,11 @@ object Codec extends CodecCompanionCompat {
     override def decode(value: Any, writerSchema: Schema): Either[AvroError, BigDecimal] = {
       if (writerSchema.getType == Schema.Type.BYTES) {
         value match {
-          case bytes: Avro.Bytes =>
+          case avroBytes: Avro.Bytes =>
             writerSchema.getLogicalType match {
               case decimal: LogicalTypes.Decimal =>
                 val conversion = new Conversions.DecimalConversion()
-                val bigDecimal = BigDecimal(conversion.fromBytes(bytes, writerSchema, decimal))
+                val bigDecimal = BigDecimal(conversion.fromBytes(avroBytes, writerSchema, decimal))
                 if (bigDecimal.precision <= decimal.getPrecision) {
                   Right(bigDecimal)
                 } else
@@ -580,15 +580,15 @@ object Codec extends CodecCompanionCompat {
                 Left(AvroError.encodeExceedsFixedSize(bytes.length, size))
               }
             }, {
-              case (fixed: Avro.Fixed, schema) =>
+              case (fixed: Avro.Fixed, avroSchema) =>
                 val bytes = fixed.bytes()
-                if (bytes.length == schema.getFixedSize) {
+                if (bytes.length == avroSchema.getFixedSize) {
                   decode(bytes)
                 } else {
                   Left {
                     AvroError.decodeNotEqualFixedSize(
                       bytes.length,
-                      schema.getFixedSize
+                      avroSchema.getFixedSize
                     )
                   }
                 }
@@ -770,14 +770,14 @@ object Codec extends CodecCompanionCompat {
               Right(coll)
             }
           }, {
-            case (as: java.util.Collection[_], schema) =>
+            case (as: java.util.Collection[_], avroShema) =>
               val it = as.iterator()
               val coll: ju.Collection[A] = new ju.ArrayList
               AvroError.catchNonFatal {
                 while (it.hasNext)(coll
                   .add(
                     codec
-                      .decode(it.next(), schema.getElementType)
+                      .decode(it.next(), avroShema.getElementType)
                       .fold(err => throw err.throwable, identity)
                   ))
                 Right(coll)
@@ -887,11 +887,11 @@ object Codec extends CodecCompanionCompat {
                     .tupleLeft(Avro.String(key))
               }
               .map(_.toMap.asJava), {
-              case (map: java.util.Map[_, _], schema) =>
+              case (map: java.util.Map[_, _], avroSchema) =>
                 map.asScala.toList
                   .traverse {
                     case (key: Avro.String, value) =>
-                      codec.decode(value, schema.getValueType).tupleLeft(key.toString)
+                      codec.decode(value, avroSchema.getValueType).tupleLeft(key.toString)
                     case (key, _) => Left(AvroError.decodeUnexpectedMapKey(key))
                   }
                   .map(_.toMap)
@@ -1191,8 +1191,8 @@ object Codec extends CodecCompanionCompat {
           value match {
             case string: String          => Right(string)
             case avroString: Avro.String => Right(avroString.toString)
-            case bytes: Avro.Bytes =>
-              AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(bytes).toString))
+            case avroBytes: Avro.Bytes =>
+              AvroError.catchNonFatal(Right(StandardCharsets.UTF_8.decode(avroBytes).toString))
             case other =>
               Left {
                 AvroError
