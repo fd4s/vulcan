@@ -6,7 +6,6 @@
 
 package vulcan.generic
 
-import cats.implicits._
 import org.scalatest.Assertion
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -50,6 +49,9 @@ class CodecBase extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValu
     expectedErrorMessage: String
   )(implicit codec: Codec[A]): Assertion =
     assert(codec.schema.swap.value.message == expectedErrorMessage)
+
+  def assertSchemaError[A](implicit codec: Codec[A]): Assertion =
+    assert(codec.schema.isLeft, codec.schema)
 
   def assertDecodeError[A](
     value: Any,
