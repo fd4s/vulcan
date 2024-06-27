@@ -6,7 +6,6 @@
 
 package vulcan.generic
 
-import cats.implicits._
 import org.scalatest.Assertion
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
