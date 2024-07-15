@@ -6,48 +6,16 @@
 
 package vulcan
 
-import scala.language.experimental.macros
-import scala.reflect.runtime.universe.WeakTypeTag
-import cats.implicits._
-import magnolia._
-import shapeless.{:+:, CNil, Coproduct, Inl, Inr, Lazy}
-import shapeless.ops.coproduct.{Inject, Selector}
-import vulcan.internal.tags._
 import cats.data.Chain
 import cats.free.FreeApplicative
+import cats.implicits._
+import magnolia._
+import vulcan.internal.tags._
+
+import scala.language.experimental.macros
+import scala.reflect.runtime.universe.WeakTypeTag
 
 package object generic {
-  implicit final val cnilCodec: Codec.Aux[Nothing, CNil] =
-    Codec.UnionCodec(Chain.empty).asInstanceOf[Codec.Aux[Nothing, CNil]].withTypeName("Coproduct")
-
-  implicit final def coproductCodec[H, T <: Coproduct](
-    implicit headCodec: Codec[H],
-    tailCodec: Lazy[Codec[T]]
-  ): Codec[H :+: T] =
-    tailCodec.value match {
-      case Codec.WithTypeName(Codec.Validated(u: Codec.UnionCodec[T], _), typeName) =>
-        val tailAlts: Chain[Codec.Alt[H :+: T]] =
-          u.alts.map(_.imap[H :+: T](_.eliminate(_ => None, Some(_)), Inr(_)))
-        Codec
-          .UnionCodec(
-            tailAlts
-              .prepend(
-                Codec.Alt(headCodec, Prism.instance[H :+: T, H](_.select)(Inl(_)))
-              )
-          )
-          .withTypeName(typeName)
-      case Codec.Fail(error) => Codec.Fail(error)
-      case other =>
-        throw new IllegalArgumentException(
-          s"cannot derive coproduct codec from non-union ${other.getClass()}"
-        )
-    }
-
-  implicit final def coproductPrism[C <: Coproduct, A](
-    implicit inject: Inject[C, A],
-    selector: Selector[C, A]
-  ): Prism[C, A] =
-    Prism.instance(selector(_))(inject(_))
 
   implicit final class MagnoliaCodec private[generic] (
     private val codec: Codec.type
