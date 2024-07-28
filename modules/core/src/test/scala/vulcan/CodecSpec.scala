@@ -2050,6 +2050,24 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
             }
           }
 
+          it("should support record array default value") {
+            case class Test(value: List[Element])
+            case class Element(value: Int)
+
+            implicit val elementCodec: Codec[Element] =
+              Codec.record("Element", "") { field =>
+                field("value", _.value).map(Element(_))
+              }
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test", "") { field =>
+                field("value", _.value, default = Some(List(Element(123), Element(456)))).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"array","items":{"type":"record","name":"Element","fields":[{"name":"value","type":"int"}]}},"default":[{"value":123},{"value":456}]}]}"""
+            }
+          }
+
           it("should support map default value") {
             case class Test(value: Map[String, Int])
 
@@ -2060,6 +2078,24 @@ final class CodecSpec extends BaseSpec with CodecSpecHelpers {
 
             assertSchemaIs[Test] {
               """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"map","values":"int"},"default":{"key":0}}]}"""
+            }
+          }
+
+          it("should support record map default value") {
+            case class Test(value: Map[String, Value])
+            case class Value(value: Int)
+
+            implicit val valueCodec: Codec[Value] =
+              Codec.record("Value", "") { field =>
+                field("value", _.value).map(Value(_))
+              }
+            implicit val testCodec: Codec[Test] =
+              Codec.record("Test", "") { field =>
+                field("value", _.value, default = Some(Map("key" -> Value(0)))).map(Test(_))
+              }
+
+            assertSchemaIs[Test] {
+              """{"type":"record","name":"Test","fields":[{"name":"value","type":{"type":"map","values":{"type":"record","name":"Value","fields":[{"name":"value","type":"int"}]}},"default":{"key":{"value":0}}}]}"""
             }
           }
 
