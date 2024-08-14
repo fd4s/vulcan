@@ -10,6 +10,8 @@ import java.nio.ByteBuffer
 import org.apache.avro.generic.{GenericEnumSymbol, GenericFixed, IndexedRecord}
 import vulcan.internal.converters.collection._
 
+import java.{util => ju}
+
 private[vulcan] object schema {
   final def adaptForSchema(encoded: Any): Any =
     encoded match {
@@ -26,6 +28,11 @@ private[vulcan] object schema {
               map.updated(field.name, adaptForSchema(record.get(index)))
           }
           .asJava
+      case array: ju.Collection[?] =>
+        array.asScala.map(adaptForSchema).asJava
+      case map: ju.Map[?, ?] =>
+        // Avro only supports maps with String key, so we only have to adapt the values
+        map.asScala.map { case (key, value) => key -> adaptForSchema(value) }.asJava
       case _ =>
         encoded
     }
