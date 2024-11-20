@@ -80,7 +80,6 @@ lazy val generic = project
         if (scalaVersion.value.startsWith("2"))
           Seq(
             "com.propensive" %% "magnolia" % magnolia2Version,
-            "com.chuusai" %% "shapeless" % shapelessVersion,
             "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
           )
         else
