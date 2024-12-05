@@ -18,6 +18,15 @@ private[vulcan] object tags {
         doc.substring(1, doc.length - 1)
     }
 
+  final def aliasFrom[A](tag: WeakTypeTag[A]): Seq[String] =
+    tag.tpe.typeSymbol.annotations.collectFirst {
+      case annotation
+          if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroAlias" ||
+            annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroAlias" =>
+        val doc = annotation.tree.children.last.toString
+        doc.substring(1, doc.length - 1)
+    }.toList
+
   final def nameFrom[A](tag: WeakTypeTag[A]): String =
     tag.tpe.typeSymbol.annotations
       .collectFirst {

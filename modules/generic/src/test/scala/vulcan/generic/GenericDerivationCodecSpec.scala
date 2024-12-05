@@ -47,6 +47,12 @@ final class GenericDerivationCodecSpec extends CodecBase {
             }
           }
 
+          it("should support annotation for record alias") {
+            assertSchemaIs[CaseClassAvroAlias] {
+              """{"type":"record","name":"CaseClassAvroAlias","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"],"aliases":["otherValueAlias"]}],"aliases":["CaseClassOtherAlias"]}"""
+            }
+          }
+
           it("should capture errors on invalid names") {
             assertSchemaError[CaseClassFieldInvalidName] {
               """org.apache.avro.SchemaParseException: Illegal initial character: -value"""

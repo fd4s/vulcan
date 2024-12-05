@@ -39,7 +39,10 @@ package object generic {
               .getOrElse(caseClass.typeInfo.owner),
             doc = caseClass.annotations.collectFirst {
               case AvroDoc(doc) => doc
-            }
+            },
+            aliases = caseClass.annotations.collectFirst {
+              case AvroAlias(alias) => alias
+            }.toList
           ) { (f: Codec.FieldBuilder[A]) =>
             val nullDefaultBase = caseClass.annotations
               .collectFirst { case AvroNullDefault(enabled) => enabled }
@@ -68,6 +71,9 @@ package object generic {
                   doc = param.annotations.collectFirst {
                     case AvroDoc(doc) => doc
                   },
+                  aliases = param.annotations.collectFirst {
+                    case AvroAlias(alias) => alias
+                  }.toList,
                   default = param.default.orElse(
                     Option.when(codec.schema.exists(_.isNullable) && nullDefaultField)(
                       None.asInstanceOf[param.PType]  // TODO: remove cast
@@ -112,7 +118,8 @@ package object generic {
       encode = encode,
       decode = decode,
       namespace = namespaceOf[A],
-      doc = docOf[A]
+      doc = docOf[A],
+      aliases = aliasOf[A]
     )
 
   /**
@@ -133,7 +140,8 @@ package object generic {
       encode = encode,
       decode = decode,
       namespace = namespaceOf[A],
-      doc = docOf[A]
+      doc = docOf[A],
+      aliases = aliasOf[A]
     )
 
 
@@ -150,5 +158,10 @@ package object generic {
   private inline def docOf[A]: Option[String] = summonFrom {
     case a: Annotation[AvroDoc, A] => Some(a().doc)
     case _ => None
+  }
+
+  private inline def aliasOf[A]: Seq[String] = summonFrom {
+    case a: Annotation[AvroAlias, A] => Seq(a().alias)
+    case _ => Seq()
   }
 }
