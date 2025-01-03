@@ -47,6 +47,12 @@ final class GenericDerivationCodecSpec extends CodecBase {
             }
           }
 
+          it("should support annotation for props") {
+            assertSchemaIs[CaseClassAvroProps] {
+              """{"type":"record","name":"CaseClassAvroProps","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"],"prop1":"A","prop2":"B"}]}"""
+            }
+          }
+
           it("should capture errors on invalid names") {
             assertSchemaError[CaseClassFieldInvalidName] {
               """org.apache.avro.SchemaParseException: Illegal initial character: -value"""
