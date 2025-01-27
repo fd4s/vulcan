@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 OVO Energy Limited
+ * Copyright 2019-2025 OVO Energy Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -17,6 +17,15 @@ private[vulcan] object tags {
         val doc = annotation.tree.children.last.toString
         doc.substring(1, doc.length - 1)
     }
+
+  final def aliasFrom[A](tag: WeakTypeTag[A]): Seq[String] =
+    tag.tpe.typeSymbol.annotations.collectFirst {
+      case annotation
+          if annotation.tree.tpe.typeSymbol.fullName == "vulcan.AvroAlias" ||
+            annotation.tree.tpe.typeSymbol.fullName == "vulcan.generic.AvroAlias" =>
+        val doc = annotation.tree.children.last.toString
+        doc.substring(1, doc.length - 1)
+    }.toList
 
   final def nameFrom[A](tag: WeakTypeTag[A]): String =
     tag.tpe.typeSymbol.annotations
