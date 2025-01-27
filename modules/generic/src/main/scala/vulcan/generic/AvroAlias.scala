@@ -9,26 +9,26 @@ package vulcan.generic
 import scala.annotation.StaticAnnotation
 
 /**
-  * Annotation which can be used to include documentation
+  * Annotation which can be used to include the record alias
   * in derived schemas.
   *
   * The annotation can be used in the following situations.<br>
-  * - Annotate a type for enum documentation when using
+  * - Annotate a type for enum alias when using
   *   [[deriveEnum]].<br>
-  * - Annotate a type for fixed documentation when using
+  * - Annotate a type for fixed alias when using
   *   [[deriveFixed]].<br>
-  * - Annotate a `case class` for record documentation
+  * - Annotate a `case class` for record alias
   *   when using `Codec.derive` from the generic module.<br>
   * - Annotate a `case class` parameter for record field
-  *   documentation when using `Codec.derive` from the
+  *   alias when using `Codec.derive` from the
   *   generic module.
   */
-final class AvroDoc(final val doc: String) extends StaticAnnotation {
+final class AvroAlias(final val alias: String) extends StaticAnnotation {
   override final def toString: String =
-    s"AvroDoc($doc)"
+    s"AvroAlias($alias)"
 }
 
-private[vulcan] object AvroDoc {
-  final def unapply(avroDoc: AvroDoc): Some[String] =
-    Some(avroDoc.doc)
+private[vulcan] object AvroAlias {
+  final def unapply(avroAlias: AvroAlias): Some[String] =
+    Some(avroAlias.alias)
 }
