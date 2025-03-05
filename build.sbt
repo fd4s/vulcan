@@ -8,7 +8,7 @@ val magnolia3Version = "1.3.8"
 val munitVersion = "1.1.0"
 val refinedVersion = "0.11.3"
 val scalaCollectionCompatVersion = "2.12.0"
-val shapeless3Version = "3.4.3"
+val shapeless3Version = "3.5.0"
 val shapelessVersion = "2.3.12"
 val slf4jNopVersion = "2.0.16"
 
