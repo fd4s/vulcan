@@ -47,6 +47,12 @@ final class GenericDerivationCodecSpec extends CodecBase {
             }
           }
 
+          it("should support annotation for record alias") {
+            assertSchemaIs[CaseClassAvroAlias] {
+              """{"type":"record","name":"CaseClassAvroAlias","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"],"aliases":["otherValueAlias"]}],"aliases":["CaseClassOtherAlias"]}"""
+            }
+          }
+
           it("should support annotation for props") {
             assertSchemaIs[CaseClassAvroProps] {
               """{"type":"record","name":"CaseClassAvroProps","namespace":"vulcan.generic.examples","fields":[{"name":"value","type":["null","string"],"prop1":"A","prop2":"B"}]}"""
