@@ -1,3 +1,9 @@
+/*
+ * Copyright 2019-2025 OVO Energy Limited
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package vulcan.generic.examples
 
 import vulcan.{Codec, Props}
