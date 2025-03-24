@@ -27,7 +27,6 @@ final class AvroPropsSpec extends BaseSpec {
         assert(new AvroProps(Props.one(name, value)) match {
           case AvroProps(props) =>
             props.toChain.toOption.exists(_.exists { case (n, _) => n == name })
-          case _ => false
         })
       }
     }
