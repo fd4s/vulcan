@@ -63,6 +63,12 @@ package object generic {
                       case AvroName(newName) => newName
                     }
 
+                def getProps =
+                  param.annotations
+                    .collectFirst {
+                      case AvroProps(props) => props
+                    }
+
                 implicit val codec = param.typeclass
 
                 f(
@@ -78,7 +84,8 @@ package object generic {
                     Option.when(codec.schema.exists(_.isNullable) && nullDefaultField)(
                       None.asInstanceOf[param.PType]  // TODO: remove cast
                     )
-                  )
+                  ),
+                  props = getProps.getOrElse(Props.empty)
                 ).widen
               }
               .map(caseClass.rawConstruct(_))
