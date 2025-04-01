@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 OVO Energy Limited
+ * Copyright 2019-2025 OVO Energy Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -68,7 +68,10 @@ package object generic {
               .getOrElse(caseClass.typeName.owner),
             doc = caseClass.annotations.collectFirst {
               case AvroDoc(doc) => doc
-            }
+            },
+            aliases = caseClass.annotations.collectFirst {
+              case AvroAlias(alias) => alias
+            }.toList
           ) { (f: Codec.FieldBuilder[A]) =>
             val nullDefaultBase = caseClass.annotations
               .collectFirst { case AvroNullDefault(enabled) => enabled }
@@ -89,6 +92,12 @@ package object generic {
                       case AvroName(newName) => newName
                     }
 
+                def getProps =
+                  param.annotations
+                    .collectFirst {
+                      case AvroProps(props) => props
+                    }
+
                 implicit val codec = param.typeclass
 
                 f(
@@ -97,11 +106,15 @@ package object generic {
                   doc = param.annotations.collectFirst {
                     case AvroDoc(doc) => doc
                   },
+                  aliases = param.annotations.collectFirst {
+                    case AvroAlias(alias) => alias
+                  }.toList,
                   default = param.default.orElse(
                     if (codec.schema.exists(_.isNullable) && nullDefaultField)
                       Some(None.asInstanceOf[param.PType]) // TODO: remove cast
                     else None
-                  )
+                  ),
+                  props = getProps.getOrElse(Props.empty)
                 ).widen
               }
               .map(caseClass.rawConstruct(_))
@@ -149,7 +162,8 @@ package object generic {
       encode = encode,
       decode = decode,
       namespace = namespaceFrom(tag),
-      doc = docFrom(tag)
+      doc = docFrom(tag),
+      aliases = aliasFrom(tag)
     )
 
   /**
@@ -170,6 +184,7 @@ package object generic {
       encode = encode,
       decode = decode,
       namespace = namespaceFrom(tag),
-      doc = docFrom(tag)
+      doc = docFrom(tag),
+      aliases = aliasFrom(tag)
     )
 }

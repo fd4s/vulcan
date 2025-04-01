@@ -6,29 +6,30 @@
 
 package vulcan.generic
 
+import vulcan.Props
 import scala.annotation.StaticAnnotation
 
 /**
-  * Annotation which can be used to include documentation
+  * Annotation which can be used to alter props
   * in derived schemas.
   *
   * The annotation can be used in the following situations.<br>
-  * - Annotate a type for enum documentation when using
+  * - Annotate a type for enum props when using
   *   [[deriveEnum]].<br>
-  * - Annotate a type for fixed documentation when using
+  * - Annotate a type for fixed props when using
   *   [[deriveFixed]].<br>
-  * - Annotate a `case class` for record documentation
+  * - Annotate a `case class` for record props
   *   when using `Codec.derive` from the generic module.<br>
   * - Annotate a `case class` parameter for record field
-  *   documentation when using `Codec.derive` from the
+  *   props when using `Codec.derive` from the
   *   generic module.
   */
-final class AvroDoc(final val doc: String) extends StaticAnnotation {
+final class AvroProps(final val prop: Props) extends StaticAnnotation {
   override final def toString: String =
-    s"AvroDoc($doc)"
+    s"AvroProps($prop)"
 }
 
-private[vulcan] object AvroDoc {
-  final def unapply(avroDoc: AvroDoc): Some[String] =
-    Some(avroDoc.doc)
+private[vulcan] object AvroProps {
+  final def unapply(avroProps: AvroProps): Some[Props] =
+    Some(avroProps.prop)
 }
