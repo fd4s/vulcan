@@ -16,7 +16,14 @@ import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDate, LocalTime}
 import java.util.concurrent.TimeUnit
 import java.util.{Arrays, UUID}
-import org.apache.avro.{Conversions, LogicalType, LogicalTypes, Schema, SchemaBuilder}
+import org.apache.avro.{
+  Conversions,
+  LogicalType,
+  LogicalTypes,
+  Schema,
+  SchemaBuilder,
+  SchemaFormatter
+}
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic._
 import vulcan.Avro.Bytes
@@ -48,6 +55,8 @@ sealed abstract class Codec[A] {
     * according to the Avro type they represent.
     */
   type AvroType
+
+  private val schemaFormater = SchemaFormatter.getInstance("json/pretty")
 
   @deprecated("Use AvroType", "1.8.0")
   type Repr = AvroType
@@ -108,7 +117,7 @@ sealed abstract class Codec[A] {
 
   override final def toString: String =
     schema match {
-      case Right(schema) => s"Codec(${schema.toString(true)})"
+      case Right(schema) => s"Codec(${schemaFormater.format(schema)})"
       case Left(error)   => error.toString
     }
 }
