@@ -1,10 +1,10 @@
 val avroVersion = "1.12.0"
 val catsVersion = "2.12.0"
 val disciplineScalaTestVersion = "2.3.0"
-val enumeratumVersion = "1.7.6"
-val jacksonVersion = "2.18.3"
+val enumeratumVersion = "1.9.0"
+val jacksonVersion = "2.19.0"
 val magnolia2Version = "0.17.0"
-val magnolia3Version = "1.3.16"
+val magnolia3Version = "1.3.18"
 val munitVersion = "1.1.0"
 val refinedVersion = "0.11.3"
 val scalaCollectionCompatVersion = "2.13.0"
@@ -14,7 +14,7 @@ val slf4jNopVersion = "2.0.17"
 
 val scala212 = "2.12.20"
 val scala213 = "2.13.16"
-val scala3 = "3.3.5"
+val scala3 = "3.3.6"
 
 ThisBuild / versionScheme := Some("early-semver")
 
