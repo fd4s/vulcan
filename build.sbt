@@ -1,5 +1,5 @@
 val avroVersion = "1.11.4"
-val catsVersion = "2.12.0"
+val catsVersion = "2.13.0"
 val disciplineScalaTestVersion = "2.3.0"
 val enumeratumVersion = "1.9.0"
 val jacksonVersion = "2.19.0"
@@ -8,6 +8,7 @@ val magnolia3Version = "1.3.18"
 val munitVersion = "1.1.0"
 val refinedVersion = "0.11.3"
 val scalaCollectionCompatVersion = "2.13.0"
+val scalacCompatVersion = "0.1.4"
 val shapeless3Version = "3.5.0"
 val shapelessVersion = "2.3.13"
 val slf4jNopVersion = "2.0.17"
@@ -39,7 +40,8 @@ lazy val core = project
         "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
         "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
         "org.apache.avro" % "avro" % avroVersion,
-        "org.typelevel" %% "cats-free" % catsVersion
+        "org.typelevel" %% "cats-free" % catsVersion,
+        "org.typelevel" %% "scalac-compat-annotation" % scalacCompatVersion % Test
       ) ++ {
         if (scalaVersion.value.startsWith("3")) Nil
         else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
