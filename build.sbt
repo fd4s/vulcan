@@ -273,7 +273,7 @@ lazy val publishSettings =
     licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     startYear := Some(2019),
     headerLicense := Some(
-      de.heikoseeberger.sbtheader.License.ALv2(
+      sbtheader.License.ALv2(
         s"${startYear.value.get}-${java.time.Year.now}",
         "OVO Energy Limited",
         HeaderLicenseStyle.SpdxSyntax
