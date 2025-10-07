@@ -14,7 +14,7 @@ val shapelessVersion = "2.3.13"
 val slf4jNopVersion = "2.0.17"
 
 val scala212 = "2.12.20"
-val scala213 = "2.13.16"
+val scala213 = "2.13.17"
 val scala3 = "3.3.6"
 
 ThisBuild / versionScheme := Some("early-semver")
