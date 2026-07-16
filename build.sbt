@@ -79,9 +79,14 @@ lazy val enumeratum = project
     ),
     scalatestSettings,
     publishSettings,
-    mimaSettings(),
-    scalaSettings,
-    testSettings
+    mimaSettings(excludeScala3 = true),
+    scalaSettings ++ Seq(
+      crossScalaVersions += scala3
+    ),
+    testSettings,
+    Test / scalacOptions ++= {
+      if (scalaVersion.value.startsWith("3")) List("-Yretain-trees") else Nil
+    }
   )
   .dependsOn(core, generic)
 

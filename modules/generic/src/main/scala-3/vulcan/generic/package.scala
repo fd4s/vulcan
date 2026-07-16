@@ -19,6 +19,7 @@ import magnolia1._
 import org.apache.avro.generic._
 import org.apache.avro.Schema
 import vulcan.internal.converters.collection._
+import vulcan.internal.Names
 
 package object generic {
 
@@ -114,15 +115,15 @@ package object generic {
     symbols: Seq[String],
     encode: A => String,
     decode: String => Either[AvroError, A]
-  ): Codec.Aux[Avro.EnumSymbol, A] =
+  )(using names: Names[A]): Codec.Aux[Avro.EnumSymbol, A] =
     Codec.enumeration(
-      name = nameOf[A],
+      name = names.typeName,
       symbols = symbols,
       encode = encode,
       decode = decode,
-      namespace = namespaceOf[A],
-      doc = docOf[A],
-      aliases = aliasOf[A]
+      namespace = names.namespace,
+      doc = names.doc,
+      aliases = names.aliasOf.toSeq
     )
 
   /** Returns a fixed `Codec` for type `A`, deriving details like the name, namespace, and
@@ -134,34 +135,15 @@ package object generic {
     size: Int,
     encode: A => Array[Byte],
     decode: Array[Byte] => Either[AvroError, A]
-  ): Codec.Aux[Avro.Fixed, A] =
+  )(using names: Names[A]): Codec.Aux[Avro.Fixed, A] =
     Codec.fixed(
-      name = nameOf[A],
+      name = names.typeName,
       size = size,
       encode = encode,
       decode = decode,
-      namespace = namespaceOf[A],
-      doc = docOf[A],
-      aliases = aliasOf[A]
+      namespace = names.namespace,
+      doc = names.doc,
+      aliases = names.aliasOf.toSeq
     )
 
-  private inline def nameOf[A]: String = summonFrom {
-    case a: Annotation[AvroName, A] => a().name
-    case ct: ClassTag[A]            => ct.runtimeClass.getSimpleName
-  }
-
-  private inline def namespaceOf[A]: String = summonFrom {
-    case a: Annotation[AvroNamespace, A] => a().namespace
-    case ct: ClassTag[A]                 => ct.runtimeClass.getPackage.getName
-  }
-
-  private inline def docOf[A]: Option[String] = summonFrom {
-    case a: Annotation[AvroDoc, A] => Some(a().doc)
-    case _                         => None
-  }
-
-  private inline def aliasOf[A]: Seq[String] = summonFrom {
-    case a: Annotation[AvroAlias, A] => Seq(a().alias)
-    case _                           => Seq()
-  }
 }
