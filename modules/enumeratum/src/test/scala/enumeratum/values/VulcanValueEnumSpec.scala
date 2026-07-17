@@ -11,242 +11,168 @@ import org.scalacheck.Gen
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import vulcan.Codec
-import vulcan.generic.{AvroDoc, AvroNamespace}
 
 final class VulcanValueEnumSpec extends AnyFunSpec with ScalaCheckPropertyChecks with EitherValues {
+
   describe("ByteVulcanEnum") {
-    sealed abstract class CustomEnum(val value: Byte) extends ByteEnumEntry
-
-    object CustomEnum extends ByteEnum[CustomEnum] with ByteVulcanEnum[CustomEnum] {
-      case object First extends CustomEnum(1)
-      case object Second extends CustomEnum(2)
-      case object Third extends CustomEnum(3)
-
-      val values = findValues
-
-      override def withValueOpt(i: Byte): Option[CustomEnum] =
-        if (i == 3) None
-        else super.withValueOpt(i)
-    }
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
+        Codec[CustomByteEnum].schema.value.toString ===
           Codec[Byte].schema.value.toString
       }
     }
 
     it("should roundtrip enumeration values") {
-      val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
+      val gen = Gen.oneOf[CustomByteEnum](CustomByteEnum.First, CustomByteEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomByteEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
+      val roundtrip =
+        Codec.encode[CustomByteEnum](CustomByteEnum.Third).flatMap(Codec.decode[CustomByteEnum])
       assert {
         roundtrip.swap.value.message ===
-          """3 is not a member of CustomEnum (1, 2, 3)"""
+          """3 is not a member of CustomByteEnum (1, 2, 3)"""
       }
     }
   }
 
   describe("CharVulcanEnum") {
-    sealed abstract class CustomEnum(val value: Char) extends CharEnumEntry
-
-    object CustomEnum extends CharEnum[CustomEnum] with CharVulcanEnum[CustomEnum] {
-      case object First extends CustomEnum('1')
-      case object Second extends CustomEnum('2')
-      case object Third extends CustomEnum('3')
-
-      val values = findValues
-
-      override def withValueOpt(c: Char): Option[CustomEnum] =
-        if (c == '3') None
-        else super.withValueOpt(c)
-    }
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
+        Codec[CustomCharEnum].schema.value.toString ===
           Codec[Char].schema.value.toString
       }
     }
 
     it("should roundtrip enumeration values") {
-      val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
+      val gen = Gen.oneOf[CustomCharEnum](CustomCharEnum.First, CustomCharEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomCharEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
+      val roundtrip =
+        Codec.encode[CustomCharEnum](CustomCharEnum.Third).flatMap(Codec.decode[CustomCharEnum])
       assert {
         roundtrip.swap.value.message ===
-          """3 is not a member of CustomEnum (1, 2, 3)"""
+          """3 is not a member of CustomCharEnum (1, 2, 3)"""
       }
     }
   }
 
   describe("IntVulcanEnum") {
-    sealed abstract class CustomEnum(val value: Int) extends IntEnumEntry
-
-    object CustomEnum extends IntEnum[CustomEnum] with IntVulcanEnum[CustomEnum] {
-      case object First extends CustomEnum(1)
-      case object Second extends CustomEnum(2)
-      case object Third extends CustomEnum(3)
-
-      val values = findValues
-
-      override def withValueOpt(i: Int): Option[CustomEnum] =
-        if (i == 3) None
-        else super.withValueOpt(i)
-    }
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
+        Codec[CustomIntEnum].schema.value.toString ===
           Codec[Int].schema.value.toString
       }
     }
 
     it("should roundtrip enumeration values") {
-      val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
+      val gen = Gen.oneOf[CustomIntEnum](CustomIntEnum.First, CustomIntEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomIntEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
+      val roundtrip =
+        Codec.encode[CustomIntEnum](CustomIntEnum.Third).flatMap(Codec.decode[CustomIntEnum])
       assert {
         roundtrip.swap.value.message ===
-          """3 is not a member of CustomEnum (1, 2, 3)"""
+          """3 is not a member of CustomIntEnum (1, 2, 3)"""
       }
     }
   }
 
   describe("LongVulcanEnum") {
-    sealed abstract class CustomEnum(val value: Long) extends LongEnumEntry
-
-    object CustomEnum extends LongEnum[CustomEnum] with LongVulcanEnum[CustomEnum] {
-      case object First extends CustomEnum(1L)
-      case object Second extends CustomEnum(2L)
-      case object Third extends CustomEnum(3L)
-
-      val values = findValues
-
-      override def withValueOpt(l: Long): Option[CustomEnum] =
-        if (l == 3L) None
-        else super.withValueOpt(l)
-    }
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
+        Codec[CustomLongEnum].schema.value.toString ===
           Codec[Long].schema.value.toString
       }
     }
 
     it("should roundtrip enumeration values") {
-      val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
+      val gen = Gen.oneOf[CustomLongEnum](CustomLongEnum.First, CustomLongEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomLongEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
+      val roundtrip =
+        Codec.encode[CustomLongEnum](CustomLongEnum.Third).flatMap(Codec.decode[CustomLongEnum])
       assert {
         roundtrip.swap.value.message ===
-          """3 is not a member of CustomEnum (1, 2, 3)"""
+          """3 is not a member of CustomLongEnum (1, 2, 3)"""
       }
     }
   }
 
   describe("ShortVulcanEnum") {
-    sealed abstract class CustomEnum(val value: Short) extends ShortEnumEntry
-
-    object CustomEnum extends ShortEnum[CustomEnum] with ShortVulcanEnum[CustomEnum] {
-      case object First extends CustomEnum(1)
-      case object Second extends CustomEnum(2)
-      case object Third extends CustomEnum(3)
-
-      val values = findValues
-
-      override def withValueOpt(s: Short): Option[CustomEnum] =
-        if (s == 3) None
-        else super.withValueOpt(s)
-    }
 
     it("schema should be same as for underlying type") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
+        Codec[CustomShortEnum].schema.value.toString ===
           Codec[Short].schema.value.toString
       }
     }
 
     it("should roundtrip enumeration values") {
-      val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
+      val gen = Gen.oneOf[CustomShortEnum](CustomShortEnum.First, CustomShortEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomShortEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
+      val roundtrip =
+        Codec.encode[CustomShortEnum](CustomShortEnum.Third).flatMap(Codec.decode[CustomShortEnum])
       assert {
         roundtrip.swap.value.message ===
-          """3 is not a member of CustomEnum (1, 2, 3)"""
+          """3 is not a member of CustomShortEnum (1, 2, 3)"""
       }
     }
   }
 
   describe("StringVulcanEnum") {
 
-    @AvroNamespace("com.example")
-    @AvroDoc("Custom enumeration")
-    sealed abstract class CustomEnum(val value: String) extends StringEnumEntry
-
-    object CustomEnum extends StringEnum[CustomEnum] with StringVulcanEnum[CustomEnum] {
-      case object First extends CustomEnum("first")
-      case object Second extends CustomEnum("second")
-      case object Third extends CustomEnum("third")
-
-      val values = findValues
-
-      override def withValueOpt(s: String): Option[CustomEnum] =
-        if (s == "third") None
-        else super.withValueOpt(s)
-    }
-
     it("schema should be enum") {
       assert {
-        Codec[CustomEnum].schema.value.toString ===
-          """{"type":"enum","name":"CustomEnum","namespace":"com.example","doc":"Custom enumeration","symbols":["first","second","third"]}"""
+        Codec[CustomStringEnum].schema.value.toString ===
+          """{"type":"enum","name":"CustomStringEnum","namespace":"com.example","doc":"Custom enumeration","symbols":["first","second","third"]}"""
       }
     }
 
     it("should roundtrip enumeration values") {
-      val gen = Gen.oneOf[CustomEnum](CustomEnum.First, CustomEnum.Second)
+      val gen = Gen.oneOf[CustomStringEnum](CustomStringEnum.First, CustomStringEnum.Second)
       forAll(gen) { customEnum =>
-        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomEnum])
+        val roundtrip = Codec.encode(customEnum).flatMap(Codec.decode[CustomStringEnum])
         assert(roundtrip.value === customEnum)
       }
     }
 
     it("should error if withValueOpt does not handle schema value") {
-      val roundtrip = Codec.encode[CustomEnum](CustomEnum.Third).flatMap(Codec.decode[CustomEnum])
+      val roundtrip = Codec
+        .encode[CustomStringEnum](CustomStringEnum.Third)
+        .flatMap(Codec.decode[CustomStringEnum])
       assert {
         roundtrip.swap.value.message ===
-          """Error decoding com.example.CustomEnum: third is not a member of CustomEnum (first, second, third)"""
+          """Error decoding com.example.CustomStringEnum: third is not a member of CustomStringEnum (first, second, third)"""
       }
     }
   }
