@@ -12,7 +12,7 @@ val scalaCollectionCompatVersion = "2.14.0"
 val scalacCompatVersion = "0.1.4"
 val shapeless3Version = "3.6.0"
 val shapelessVersion = "2.3.13"
-val slf4jNopVersion = "2.0.18"
+val slf4jNopVersion = "2.0.19"
 
 val scala212 = "2.12.21"
 val scala213 = "2.13.18"
